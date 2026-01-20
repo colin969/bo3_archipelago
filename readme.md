@@ -1,6 +1,15 @@
 # Install Instructions
 1. Get the mod folder from Releases
-2. Copy it to `Call of Duty Black Ops III\mods` 
+2. Copy it to `Call of Duty Black Ops III\mods`
+# Build Instructions
+1. Clone to `Call of Duty Black Ops III\mods\bo3_archipelago`
+2. Install L3akMod from https://wiki.modme.co/wiki/black_ops_3/lua_(lui)/Installation.html
+3. Open Black Ops III - Mod Tools
+4. Tick `core_mod` and `zm_mod` under `bo3_archipelago` on the left side, `Compile` and `Link` on the right side, and `Run` if you want to test
+5. Press `Build`
+
+Note: Archi-T7Overcharged.dll includes supports AP 0.6.5
+
 # Usage Instructions
 1. Load the mod in the mod menu
 2. Use the Archipelago Menu to Validate your slot/connection to the AP World
