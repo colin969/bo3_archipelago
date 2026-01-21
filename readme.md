@@ -1,3 +1,9 @@
+## Useful Links
+
+- AP World: https://github.com/colin969/Call-of-Duty-BO3-Zombies-Archipelago
+- BO3 Mod: https://github.com/colin969/bo3_archipelago
+- BO3 APClient DLL: https://github.com/colin969/Archi-T7Overcharged
+
 # Install Instructions
 1. Get the mod folder from Releases
 2. Copy it to `Call of Duty Black Ops III\mods`
