@@ -14,6 +14,25 @@ local APItemList = {
 	--ap_item_widows_wine = "specialty_giant_widows_wine_zombies"
 }
 
+local APWeaponList = {
+    [1] = {[1] = "ap_weapon_ar_icr", [2] = "archipelago_weapon_ar_icr"},
+    [2] = {[1] = "ap_weapon_ar_hvk", [2] = "archipelago_weapon_ar_hvk"},
+    [3] = {[1] = "ap_weapon_ar_manowar", [2] = "archipelago_weapon_ar_manowar"},
+    [4] = {[1] = "ap_weapon_ar_m8a7", [2] = "archipelago_weapon_ar_m8a7"},
+    [5] = {[1] = "ap_weapon_ar_sheiva", [2] = "archipelago_weapon_ar_sheiva"},
+    [6] = {[1] = "ap_weapon_ar_kn44", [2] = "archipelago_weapon_ar_kn44"},
+    [7] = {[1] = "ap_weapon_ar_ffar", [2] = "archipelago_weapon_ar_ffar"},
+    [8] = {[1] = "ap_weapon_ar_garand", [2] = "archipelago_weapon_ar_garand"},
+    [9] = {[1] = "ap_weapon_ar_peacekeeper", [2] = "archipelago_weapon_ar_peacekeeper"},
+    [10] = {[1] = "ap_weapon_ar_an94", [2] = "archipelago_weapon_ar_an94"},
+    [11] = {[1] = "ap_weapon_ar_galil", [2] = "archipelago_weapon_ar_galil"},
+    [12] = {[1] = "ap_weapon_ar_m14", [2] = "archipelago_weapon_ar_m14"},
+    [13] = {[1] = "ap_weapon_ar_m16", [2] = "archipelago_weapon_ar_m16"},
+    [14] = {[1] = "ap_weapon_ar_basilisk", [2] = "archipelago_weapon_ar_basilisk"},
+    [15] = {[1] = "ap_weapon_ar_xr2", [2] = "archipelago_weapon_ar_xr2"},
+    [16] = {[1] = "ap_weapon_ar_stg44", [2] = "archipelago_weapon_ar_stg44"}
+}
+
 local TheGiantRegionList = {
     [1] ={[1] = "ap_item_region_0",[2] = "archipelago_the_giant_courtyard"},
     [2] ={[1] = "ap_item_region_1",[2] = "archipelago_the_giant_animal_testing"},

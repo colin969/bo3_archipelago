@@ -2120,6 +2120,8 @@ function blocker_trigger_think()
 
 			// tracking when player boarding a window.
 			player notify( "boarding_window", self );
+			// AP: Notify repaired board
+			level notify( "ap_boarding_window" );
 			
 			if(isdefined(self.zbarrier))
 			{
@@ -2127,7 +2129,6 @@ function blocker_trigger_think()
 				
 				// sound played in handle_post_board_repair_rewards(cost,zbarrier)
 				//playsoundatposition ("zmb_cha_ching", self.origin);
-				
 				self thread replace_chunk( self, chunk, has_perk, IS_TRUE( player.pers_upgrades_awarded["board"] ) ); // writing out
 			}
 			else

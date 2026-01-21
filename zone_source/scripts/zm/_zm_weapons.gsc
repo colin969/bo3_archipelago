@@ -2119,15 +2119,17 @@ function weapon_spawn_think()
 				continue; 
 			}
 		}
-				
+
+
 		// If the player does not have the weapon
 		if ( !player_has_weapon )
 		{
 			// Else make the weapon show and give it
-			//AP: added check
-			if (isdefined(level.archi.wallbuys_on) &&  level.archi.wallbuys_on == false)
+			//AP: Check weapon unlocks before allowing purchase
+			if (isdefined(level.archi.weapons) && level.archi.weapons[self.weapon.name] == false)
 			{
 				zm_utility::play_sound_on_ent( "no_purchase" );
+				IPrintLn( "Weapon Locked :(" );
 			}
 			else if ( player zm_score::can_player_purchase( cost ) )
 			{

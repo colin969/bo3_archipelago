@@ -4,6 +4,7 @@
 #using scripts\shared\array_shared;
 #using scripts\shared\util_shared;
 #using scripts\zm\_zm_score;
+#using scripts\zm\_zm_utility;
 
 #insert scripts\shared\shared.gsh;
 
@@ -41,11 +42,6 @@ function give_Victory()
     iPrintln("Giving Victory");
     //if in game, end game
     level notify("end_game");
-}
-
-function give_Wallbuys()
-{
-    level.archi.wallbuys_on = true;
 }
 
 
@@ -136,9 +132,88 @@ function give_MuleKick()
 	level notify("ap_additionalprimaryweapon_on");
     util::wait_network_frame();
     level notify("ap_specialty_additionalprimaryweapon_power_on");
-    
 }
-	
+
+// Weapons
+function give_Weapon_ICR()
+{
+    enableWeapon("ar_accurate");
+}
+
+function give_Weapon_HVK()
+{
+    enableWeapon("ar_cqb");
+}
+
+function give_Weapon_ManOWar()
+{
+    enableWeapon("ar_damage");
+}
+
+function give_Weapon_M8A7()
+{
+    enableWeapon("ar_longburst");
+}
+
+function give_Weapon_Sheiva()
+{
+    enableWeapon("ar_marksman");
+}
+
+function give_Weapon_KN44()
+{
+    enableWeapon("ar_standard");
+}
+
+function give_Weapon_FFAR()
+{
+    enableWeapon("ar_famas");
+}
+
+function give_Weapon_Garand()
+{
+    enableWeapon("ar_garand");
+}
+
+function give_Weapon_Peacekeeper()
+{
+    enableWeapon("ar_peacekeeper");
+}
+
+function give_Weapon_AN94()
+{
+    enableWeapon("ar_an94");
+}
+
+function give_Weapon_Galil()
+{
+    enableWeapon("ar_galil");
+}
+
+function give_Weapon_M14()
+{
+    enableWeapon("ar_m14");
+}
+
+function give_Weapon_M16()
+{
+    enableWeapon("ar_m16");
+}
+
+function give_Weapon_Basilisk()
+{
+    enableWeapon("ar_pulse");
+}
+
+function give_Weapon_XR2()
+{
+    enableWeapon("ar_fastburst");
+}
+
+function give_Weapon_STG44()
+{
+    enableWeapon("ar_stg44");
+}
 
 
 // function give_Staminup()
@@ -159,6 +234,14 @@ function give_MuleKick()
 //     level notify ("ap_Pack_A_Punch_on");
 //     util::wait_network_frame();
 // }
+
+function enableWeapon(itemName)
+{
+    if (isdefined(level.archi.weapons) && isdefined(level.archi.weapons[itemName]))
+    {
+        level.archi.weapons[itemName] = true;
+    }
+}
 
 function enableBlocker(number)
 {

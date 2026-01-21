@@ -41,6 +41,23 @@ function __init__()
     clientfield::register("world", "ap_item_region_4", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
     clientfield::register("world", "ap_item_region_5", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
     clientfield::register("world", "ap_item_region_6", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+
+    clientfield::register("world", "ap_weapon_ar_icr", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_hvk", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_manowar", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_m8a7", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_sheiva", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_kn44", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_ffar", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_garand", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_peacekeeper", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_an94", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_galil", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_m14", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_m16", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_basilisk", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_xr2", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
+    clientfield::register("world", "ap_weapon_ar_stg44", VERSION_SHIP, 2, "int", &zm_utility::setSharedInventoryUIModels, false, true);
 }
 
 function __main__()
