@@ -12,6 +12,7 @@
 #using scripts\zm\_zm_score;
 
 #using scripts\zm\archi_items;
+#using scripts\zm\archi_commands;
 
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\shared\shared.gsh;
@@ -30,8 +31,6 @@ REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
 function __init__()
 {
-
-
     SetDvar( "MOD_VERSION", MOD_VERSION );
     //
     //Message Passing Dvars
@@ -98,6 +97,7 @@ function __init__()
 
 function __main__()
 {
+    archi_commands::init_commands();
     level thread round_start_location();
     level thread round_end_noti();
     level thread repaired_board_noti();
@@ -233,7 +233,6 @@ function game_start()
             archi_items::RegisterItem("(The Giant) Teleporter 2",&archi_items::give_The_Giant_Teleporter_2,"ap_item_region_5");
             archi_items::RegisterItem("(The Giant) Teleporter 3",&archi_items::give_The_Giant_Teleporter_3,"ap_item_region_6");
 
-
             // Register Possible Global Items - Item name, callback, clientfield
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -286,6 +285,7 @@ function game_start()
         on_archi_connect_settings();
 
     }
+
     //Setup default map changes
     default_map_changes();
 }
