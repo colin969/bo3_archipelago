@@ -49,11 +49,20 @@ function __init__()
     //Clientfields (Mostly Tracker stuff)
     //TODO Put this in a library?
     //TODO Figure out if I need to set these to 0 if maps are swapped down the line
-    clientfield::register("world", "ap_item_juggernog", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_double_tap", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_quick_revive", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_speed_cola", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_mule_kick", VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_JUGGERNOG, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_QUICK_REVIVE, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_SLEIGHT_OF_HAND, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_DOUBLETAP2, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_STAMINUP, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_PHDFLOPPER, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_DEAD_SHOT, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_ADDITIONAL_PRIMARY_WEAPON, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_ELECTRIC_CHERRY, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_TOMBSTONE, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_WHOSWHO, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_VULTUREAID, VERSION_SHIP, 2, "int");
+    clientfield::register("world", "ap_item_" + PERK_WIDOWS_WINE, VERSION_SHIP, 2, "int");
+
     clientfield::register("world", "ap_item_wunderfizz", VERSION_SHIP, 2, "int");
     clientfield::register("world", "ap_item_power_on", VERSION_SHIP, 2, "int");
     clientfield::register("world", "ap_item_wallbuys", VERSION_SHIP, 2, "int");
@@ -144,85 +153,77 @@ function game_start()
 
     if (!isdefined(level.archi))
     {
-        //Hold server-wide Archipelago Information
+        // Hold server-wide Archipelago Information
         level.archi = SpawnStruct();
 
-        // Populate location mappings
-
-
-        //Get Map Name String
+        // Get Map Name String
         mapName = GetDvarString( "mapname" );
 
         level.archi.boarded_windows = 0;
 
-        //Lock Weapons
-        level.archi.weapons["ar_accurate"] = false;
-        level.archi.weapons["ar_cqb"] = false;
-        level.archi.weapons["ar_damage"] = false;
-        level.archi.weapons["ar_longburst"] = false;
-        level.archi.weapons["ar_marksman"] = false;
-        level.archi.weapons["ar_standard"] = false;
-        level.archi.weapons["ar_famas"] = false;
-        level.archi.weapons["ar_garand"] = false;
-        level.archi.weapons["ar_peacekeeper"] = false;
-        level.archi.weapons["ar_an94"] = false;
-        level.archi.weapons["ar_galil"] = false;
-        level.archi.weapons["ar_m14"] = false;
-        level.archi.weapons["ar_m16"] = false;
-        level.archi.weapons["ar_pulse"] = false;
-        level.archi.weapons["ar_fastburst"] = false;
-        level.archi.weapons["ar_stg44"] = false;
+        // // Lock Weapons
+        // level.archi.weapons["ar_accurate"] = false;
+        // level.archi.weapons["ar_cqb"] = false;
+        // level.archi.weapons["ar_damage"] = false;
+        // level.archi.weapons["ar_longburst"] = false;
+        // level.archi.weapons["ar_marksman"] = false;
+        // level.archi.weapons["ar_standard"] = false;
+        // level.archi.weapons["ar_famas"] = false;
+        // level.archi.weapons["ar_garand"] = false;
+        // level.archi.weapons["ar_peacekeeper"] = false;
+        // level.archi.weapons["ar_an94"] = false;
+        // level.archi.weapons["ar_galil"] = false;
+        // level.archi.weapons["ar_m14"] = false;
+        // level.archi.weapons["ar_m16"] = false;
+        // level.archi.weapons["ar_pulse"] = false;
+        // level.archi.weapons["ar_fastburst"] = false;
+        // level.archi.weapons["ar_stg44"] = false;
 
-        // Sub Machine Guns
-        level.archi.weapons["smg_burst"] = false;
-        level.archi.weapons["smg_capacity"] = false;
-        level.archi.weapons["smg_fastfire"] = false;
-        level.archi.weapons["smg_standard"] = false;
-        level.archi.weapons["smg_versatile"] = false;
-        level.archi.weapons["smg_sten"] = false;
-        level.archi.weapons["smg_mp40"] = false;
-        level.archi.weapons["smg_ppsh"] = false;
-        level.archi.weapons["smg_thompson"] = false;
-        level.archi.weapons["smg_longrange"] = false;
-        level.archi.weapons["smg_ak74u"] = false;
-        level.archi.weapons["smg_msmc"] = false;
-        level.archi.weapons["smg_nailgun"] = false;
-        level.archi.weapons["smg_rechamber"] = false;
-        level.archi.weapons["smg_sten2"] = false;
-        level.archi.weapons["smg_mp40_1940"] = false;
+        // // Sub Machine Guns
+        // level.archi.weapons["smg_burst"] = false;
+        // level.archi.weapons["smg_capacity"] = false;
+        // level.archi.weapons["smg_fastfire"] = false;
+        // level.archi.weapons["smg_standard"] = false;
+        // level.archi.weapons["smg_versatile"] = false;
+        // level.archi.weapons["smg_sten"] = false;
+        // level.archi.weapons["smg_mp40"] = false;
+        // level.archi.weapons["smg_ppsh"] = false;
+        // level.archi.weapons["smg_thompson"] = false;
+        // level.archi.weapons["smg_longrange"] = false;
+        // level.archi.weapons["smg_ak74u"] = false;
+        // level.archi.weapons["smg_msmc"] = false;
+        // level.archi.weapons["smg_nailgun"] = false;
+        // level.archi.weapons["smg_rechamber"] = false;
+        // level.archi.weapons["smg_sten2"] = false;
+        // level.archi.weapons["smg_mp40_1940"] = false;
 
-        // Shotguns
-        level.archi.weapons["shotgun_fullauto"] = false;
-        level.archi.weapons["shotgun_precision"] = false;
-        level.archi.weapons["shotgun_pump"] = false;
-        level.archi.weapons["shotgun_semiauto"] = false;
-        level.archi.weapons["shotgun_energy"] = false;
-        level.archi.weapons["shotgun_olympia"] = false;
+        // // Shotguns
+        // level.archi.weapons["shotgun_fullauto"] = false;
+        // level.archi.weapons["shotgun_precision"] = false;
+        // level.archi.weapons["shotgun_pump"] = false;
+        // level.archi.weapons["shotgun_semiauto"] = false;
+        // level.archi.weapons["shotgun_energy"] = false;
+        // level.archi.weapons["shotgun_olympia"] = false;
 
-        // Pistols
-        level.archi.weapons["pistol_revolver38"] = false;
-        level.archi.weapons["pistol_standard"] = false;
-        level.archi.weapons["pistol_burst"] = false;
-        level.archi.weapons["pistol_fullauto"] = false;
-        level.archi.weapons["pistol_energy"] = false;
-        level.archi.weapons["pistol_m1911"] = false;
-        level.archi.weapons["pistol_shotgun_dw"] = false;
-        level.archi.weapons["pistol_c96"] = false;
+        // // Pistols
+        // level.archi.weapons["pistol_revolver38"] = false;
+        // level.archi.weapons["pistol_standard"] = false;
+        // level.archi.weapons["pistol_burst"] = false;
+        // level.archi.weapons["pistol_fullauto"] = false;
+        // level.archi.weapons["pistol_energy"] = false;
+        // level.archi.weapons["pistol_m1911"] = false;
+        // level.archi.weapons["pistol_shotgun_dw"] = false;
+        // level.archi.weapons["pistol_c96"] = false;
 
-        // Melee
-        level.archi.weapons["melee_bowie"] = false;
+        // // Melee
+        // level.archi.weapons["melee_bowie"] = false;
         
         if (mapName == "zm_factory")
         {
             level.archi.mapString = "(The Giant)";
             init_string_mappings();
 
-            //Register Items
-            archi_items::RegisterItem("(The Giant) Juggernog",&archi_items::give_Juggernog,"ap_item_juggernog");
-            archi_items::RegisterItem("(The Giant) Quick Revive",&archi_items::give_QuickRevive,"ap_item_quick_revive");
-            archi_items::RegisterItem("(The Giant) Speed Cola",&archi_items::give_SpeedCola,"ap_item_speed_cola");
-            archi_items::RegisterItem("(The Giant) Double Tap",&archi_items::give_DoubleTap,"ap_item_double_tap");
-            archi_items::RegisterItem("(The Giant) Mule Kick",&archi_items::give_MuleKick,"ap_item_mule_kick");
+            // Register Map Unique Items - Item name, callback, clientfield
             archi_items::RegisterItem("(The Giant) Victory",&archi_items::give_Victory,undefined);
             
             archi_items::RegisterItem("(The Giant) Animal Testing",&archi_items::give_The_Giant_Animal_Testing,"ap_item_region_1");
@@ -232,21 +233,29 @@ function game_start()
             archi_items::RegisterItem("(The Giant) Teleporter 2",&archi_items::give_The_Giant_Teleporter_2,"ap_item_region_5");
             archi_items::RegisterItem("(The Giant) Teleporter 3",&archi_items::give_The_Giant_Teleporter_3,"ap_item_region_6");
 
+
+            // Register Possible Global Items - Item name, callback, clientfield
+            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+
             // Assault Rifles
-            archi_items::RegisterItem("(Weapon) HVK-30",&archi_items::give_Weapon_HVK,"ap_weapon_ar_hvk");
-            archi_items::RegisterItem("(Weapon) M8A7",&archi_items::give_Weapon_M8A7,"ap_weapon_ar_m8a7");
-            archi_items::RegisterItem("(Weapon) Sheiva",&archi_items::give_Weapon_Sheiva,"ap_weapon_ar_sheiva");
-            archi_items::RegisterItem("(Weapon) KN-44",&archi_items::give_Weapon_KN44,"ap_weapon_ar_kn44");
+            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
             // Sub Machine Guns
-            archi_items::RegisterItem("(Weapon) Kuda",&archi_items::give_Weapon_Kuda,"ap_weapon_smg_standard");
-            archi_items::RegisterItem("(Weapon) VMP",&archi_items::give_Weapon_VMP,"ap_weapon_smg_versatile");
+            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
             // Shotguns
-            archi_items::RegisterItem("(Weapon) KRM-262",&archi_items::give_Weapon_KRM,"ap_weapon_shotgun_pump");
+            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
             // Pistols
-            archi_items::RegisterItem("(Weapon) L-CAR",&archi_items::give_Weapon_LCAR,"ap_weapon_pistol_fullauto");
-            archi_items::RegisterItem("(Weapon) RK5",&archi_items::give_Weapon_RK5,"ap_weapon_pistol_burst");
+            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
             // Melee
-            archi_items::RegisterItem("(Weapon) Bowie Knife",&archi_items::give_Weapon_BowieKnife,"ap_weapon_melee_bowie");
+            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
             
             //Lock Blockers
             level.archi.blockers[5] = false;

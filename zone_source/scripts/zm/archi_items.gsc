@@ -20,6 +20,37 @@ function RegisterItem(itemName, getFunc,clientField) {
     level.archi.items[itemName] = item;
 }
 
+function RegisterWeapon(itemName, getFunc, consoleName) {
+    item = SpawnStruct();
+    item.name = itemName;
+    item.getFunc = getFunc;
+    item.clientfield = "ap_weapon_" + consoleName;
+
+    globalItem = SpawnStruct();
+    globalItem.name = level.archi.mapString + " " + itemName;
+    globalItem.getFunc = getFunc;
+    globalItem.clientfield = "ap_weapon_" + consoleName;
+
+    level.archi.weapons[consoleName] = false;
+    level.archi.items[item.name] = item;
+    level.archi.items[globalItem.name] = globalItem;
+}
+
+function RegisterPerk(itemName, getFunc, specialtyName) {
+    item = SpawnStruct();
+    item.name = itemName;
+    item.getFunc = getFunc;
+    item.clientfield = "ap_item_" + specialtyName;
+
+    globalItem = SpawnStruct();
+    globalItem.name = level.archi.mapString + " " + itemName;
+    globalItem.getFunc = getFunc;
+    globalItem.clientfield = "ap_item_" + specialtyName;
+
+    level.archi.items[item.name] = item;
+    level.archi.items[globalItem.name] = globalItem;
+}
+
 //General/Universal gives
 function give_500Points()
 {
