@@ -36,6 +36,7 @@ function __init__()
     //Message Passing Dvars
     SetDvar("ARCHIPELAGO_ITEM_GET", "NONE");
     SetDvar("ARCHIPELAGO_LOCATION_SEND", "NONE");
+    SetDvar("ARCHIPELAGO_SAY_SEND", "NONE");
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
 

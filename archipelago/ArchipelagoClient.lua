@@ -131,6 +131,12 @@ Archi.FromGSC = function (model)
       end
       Engine.SetDvar( "ARCHIPELAGO_LOCATION_SEND", "NONE" )
     end
+
+    local message = Engine.DvarString(nil,"ARCHIPELAGO_SAY_SEND")
+    if message ~= "NONE" then
+      Archipelago.Say(message)
+      Engine.SetDvar( "ARCHIPELAGO_SAY_SEND", "NONE" )
+    end
   end
 end
 

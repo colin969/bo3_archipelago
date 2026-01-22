@@ -20,6 +20,7 @@
 function init_commands()
 {
   level thread _send_location_command_response();
+  level thread _send_message_response();
 }
 
 function private _send_location_command_response(command_args)
@@ -28,7 +29,7 @@ function private _send_location_command_response(command_args)
 
   ModVar("ap_send_location", "");
 
-  while ( 1 )
+  while(true)
   {
     WAIT_SERVER_FRAME
 
@@ -40,6 +41,31 @@ function private _send_location_command_response(command_args)
       ModVar("ap_send_location", "");
 
       archi_core::send_location(dvar_value);
+    }
+  }
+}
+
+function private _send_message_response(command_args)
+{
+  level endon("end_game");
+
+  ModVar("ap", "");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString("ap", "");
+
+    if(isdefined(dvar_value) && dvar_value != "")
+    {
+      IPrintLn("Sending message");
+      ModVar("ap", "");
+      SetDvar("ARCHIPELAGO_SAY_SEND", dvar_value);
+      LUINotifyEvent(&"ap_notification", 0);
+
+      //Send notification for Send UI Image
+      LUINotifyEvent(&"ap_ui_send", 0);
     }
   }
 }
