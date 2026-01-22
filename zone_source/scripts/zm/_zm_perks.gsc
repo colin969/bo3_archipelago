@@ -31,6 +31,7 @@
 
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\zm\_zm_utility.gsh;
+#insert scripts\zm\archi_core.gsh;
 
 #precache( "fx", "_t6/misc/fx_zombie_cola_dtap_on" );
 #precache( "fx", "_t6/misc/fx_zombie_cola_jugg_on" );
@@ -481,8 +482,11 @@ function vending_trigger_think()
 		}
 	}
 
-	self SetHintString( "Perk Item Not Collected" );
-	// self SetHintString( &"ZOMBIE_NEED_POWER" );
+	if ( isdefined( level.archi ) && isdefined( level.archi.perk_strings_to_names[perk] )) {
+		self SetHintString( level.archi.perk_strings_to_names[perk] + " is required" );
+	} else {
+		self SetHintString( &"ZOMBIE_NEED_POWER" );
+	}
 
 	self SetCursorHint( "HINT_NOICON" );
 	self UseTriggerRequireLookAt();

@@ -20,7 +20,6 @@
 
 #insert scripts\zm\archi_core.gsh;
 
-
 #namespace archi_core;
 
 #precache( "eventstring", "ap_notification" );
@@ -103,113 +102,39 @@ function on_archi_connect_settings()
 	
 }
 
-function init_location_mapping()
+function init_string_mappings(mapString)
 {
-    level.archi.location_to_id = [];
+    if (!isdefined(level.archi.perk_strings_to_names))
+    {
+        level.archi.perk_strings_to_names = [];
+    }
 
-    // Round locations (IDs 1-99)
-    level.archi.location_to_id["(The Giant) Round 01"] = 1;
-    level.archi.location_to_id["(The Giant) Round 02"] = 2;
-    level.archi.location_to_id["(The Giant) Round 03"] = 3;
-    level.archi.location_to_id["(The Giant) Round 04"] = 4;
-    level.archi.location_to_id["(The Giant) Round 05"] = 5;
-    level.archi.location_to_id["(The Giant) Round 06"] = 6;
-    level.archi.location_to_id["(The Giant) Round 07"] = 7;
-    level.archi.location_to_id["(The Giant) Round 08"] = 8;
-    level.archi.location_to_id["(The Giant) Round 09"] = 9;
-    level.archi.location_to_id["(The Giant) Round 10"] = 10;
-    level.archi.location_to_id["(The Giant) Round 11"] = 11;
-    level.archi.location_to_id["(The Giant) Round 12"] = 12;
-    level.archi.location_to_id["(The Giant) Round 13"] = 13;
-    level.archi.location_to_id["(The Giant) Round 14"] = 14;
-    level.archi.location_to_id["(The Giant) Round 15"] = 15;
-    level.archi.location_to_id["(The Giant) Round 16"] = 16;
-    level.archi.location_to_id["(The Giant) Round 17"] = 17;
-    level.archi.location_to_id["(The Giant) Round 18"] = 18;
-    level.archi.location_to_id["(The Giant) Round 19"] = 19;
-    level.archi.location_to_id["(The Giant) Round 20"] = 20;
-    level.archi.location_to_id["(The Giant) Round 21"] = 21;
-    level.archi.location_to_id["(The Giant) Round 22"] = 22;
-    level.archi.location_to_id["(The Giant) Round 23"] = 23;
-    level.archi.location_to_id["(The Giant) Round 24"] = 24;
-    level.archi.location_to_id["(The Giant) Round 25"] = 25;
-    level.archi.location_to_id["(The Giant) Round 26"] = 26;
-    level.archi.location_to_id["(The Giant) Round 27"] = 27;
-    level.archi.location_to_id["(The Giant) Round 28"] = 28;
-    level.archi.location_to_id["(The Giant) Round 29"] = 29;
-    level.archi.location_to_id["(The Giant) Round 30"] = 30;
-    level.archi.location_to_id["(The Giant) Round 31"] = 31;
-    level.archi.location_to_id["(The Giant) Round 32"] = 32;
-    level.archi.location_to_id["(The Giant) Round 33"] = 33;
-    level.archi.location_to_id["(The Giant) Round 34"] = 34;
-    level.archi.location_to_id["(The Giant) Round 35"] = 35;
-    level.archi.location_to_id["(The Giant) Round 36"] = 36;
-    level.archi.location_to_id["(The Giant) Round 37"] = 37;
-    level.archi.location_to_id["(The Giant) Round 38"] = 38;
-    level.archi.location_to_id["(The Giant) Round 39"] = 39;
-    level.archi.location_to_id["(The Giant) Round 40"] = 40;
-    level.archi.location_to_id["(The Giant) Round 41"] = 41;
-    level.archi.location_to_id["(The Giant) Round 42"] = 42;
-    level.archi.location_to_id["(The Giant) Round 43"] = 43;
-    level.archi.location_to_id["(The Giant) Round 44"] = 44;
-    level.archi.location_to_id["(The Giant) Round 45"] = 45;
-    level.archi.location_to_id["(The Giant) Round 46"] = 46;
-    level.archi.location_to_id["(The Giant) Round 47"] = 47;
-    level.archi.location_to_id["(The Giant) Round 48"] = 48;
-    level.archi.location_to_id["(The Giant) Round 49"] = 49;
-    level.archi.location_to_id["(The Giant) Round 50"] = 50;
-    level.archi.location_to_id["(The Giant) Round 51"] = 51;
-    level.archi.location_to_id["(The Giant) Round 52"] = 52;
-    level.archi.location_to_id["(The Giant) Round 53"] = 53;
-    level.archi.location_to_id["(The Giant) Round 54"] = 54;
-    level.archi.location_to_id["(The Giant) Round 55"] = 55;
-    level.archi.location_to_id["(The Giant) Round 56"] = 56;
-    level.archi.location_to_id["(The Giant) Round 57"] = 57;
-    level.archi.location_to_id["(The Giant) Round 58"] = 58;
-    level.archi.location_to_id["(The Giant) Round 59"] = 59;
-    level.archi.location_to_id["(The Giant) Round 60"] = 60;
-    level.archi.location_to_id["(The Giant) Round 61"] = 61;
-    level.archi.location_to_id["(The Giant) Round 62"] = 62;
-    level.archi.location_to_id["(The Giant) Round 63"] = 63;
-    level.archi.location_to_id["(The Giant) Round 64"] = 64;
-    level.archi.location_to_id["(The Giant) Round 65"] = 65;
-    level.archi.location_to_id["(The Giant) Round 66"] = 66;
-    level.archi.location_to_id["(The Giant) Round 67"] = 67;
-    level.archi.location_to_id["(The Giant) Round 68"] = 68;
-    level.archi.location_to_id["(The Giant) Round 69"] = 69;
-    level.archi.location_to_id["(The Giant) Round 70"] = 70;
-    level.archi.location_to_id["(The Giant) Round 71"] = 71;
-    level.archi.location_to_id["(The Giant) Round 72"] = 72;
-    level.archi.location_to_id["(The Giant) Round 73"] = 73;
-    level.archi.location_to_id["(The Giant) Round 74"] = 74;
-    level.archi.location_to_id["(The Giant) Round 75"] = 75;
-    level.archi.location_to_id["(The Giant) Round 76"] = 76;
-    level.archi.location_to_id["(The Giant) Round 77"] = 77;
-    level.archi.location_to_id["(The Giant) Round 78"] = 78;
-    level.archi.location_to_id["(The Giant) Round 79"] = 79;
-    level.archi.location_to_id["(The Giant) Round 80"] = 80;
-    level.archi.location_to_id["(The Giant) Round 81"] = 81;
-    level.archi.location_to_id["(The Giant) Round 82"] = 82;
-    level.archi.location_to_id["(The Giant) Round 83"] = 83;
-    level.archi.location_to_id["(The Giant) Round 84"] = 84;
-    level.archi.location_to_id["(The Giant) Round 85"] = 85;
-    level.archi.location_to_id["(The Giant) Round 86"] = 86;
-    level.archi.location_to_id["(The Giant) Round 87"] = 87;
-    level.archi.location_to_id["(The Giant) Round 88"] = 88;
-    level.archi.location_to_id["(The Giant) Round 89"] = 89;
-    level.archi.location_to_id["(The Giant) Round 90"] = 90;
-    level.archi.location_to_id["(The Giant) Round 91"] = 91;
-    level.archi.location_to_id["(The Giant) Round 92"] = 92;
-    level.archi.location_to_id["(The Giant) Round 93"] = 93;
-    level.archi.location_to_id["(The Giant) Round 94"] = 94;
-    level.archi.location_to_id["(The Giant) Round 95"] = 95;
-    level.archi.location_to_id["(The Giant) Round 96"] = 96;
-    level.archi.location_to_id["(The Giant) Round 97"] = 97;
-    level.archi.location_to_id["(The Giant) Round 98"] = 98;
-    level.archi.location_to_id["(The Giant) Round 99"] = 99;
-    
-    // Misc location
-    level.archi.location_to_id["Repair Windows 5 Times"] = 9001;
+    if (!isdefined(level.archi.blocker_ids_to_names))
+    {
+        level.archi.blocker_ids_to_names = [];
+    }
+
+    level.archi.perk_strings_to_names[PERK_JUGGERNOG] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_JUGGERNOG;
+    level.archi.perk_strings_to_names[PERK_QUICK_REVIVE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_QUICK_REVIVE;
+    level.archi.perk_strings_to_names[PERK_SLEIGHT_OF_HAND] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_SLEIGHT_OF_HAND;
+    level.archi.perk_strings_to_names[PERK_DOUBLETAP2] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_DOUBLETAP2;
+    level.archi.perk_strings_to_names[PERK_STAMINUP] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_STAMINUP;
+    level.archi.perk_strings_to_names[PERK_PHDFLOPPER] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_PHDFLOPPER;
+    level.archi.perk_strings_to_names[PERK_DEAD_SHOT] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_DEAD_SHOT;
+    level.archi.perk_strings_to_names[PERK_ADDITIONAL_PRIMARY_WEAPON] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_ADDITIONAL_PRIMARY_WEAPON;
+    level.archi.perk_strings_to_names[PERK_ELECTRIC_CHERRY] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_ELECTRIC_CHERRY;
+    level.archi.perk_strings_to_names[PERK_TOMBSTONE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_TOMBSTONE;
+    level.archi.perk_strings_to_names[PERK_WHOSWHO] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_WHOSWHO;
+    level.archi.perk_strings_to_names[PERK_VULTUREAID] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_VULTUREAID;
+    level.archi.perk_strings_to_names[PERK_WIDOWS_WINE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_WIDOWS_WINE;
+
+    level.archi.blocker_ids_to_names[5] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING; 
+    level.archi.blocker_ids_to_names[4] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
+    level.archi.blocker_ids_to_names[10] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING;
+    level.archi.blocker_ids_to_names[11] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
+    level.archi.blocker_ids_to_names[6] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_1; 
+    level.archi.blocker_ids_to_names[7] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_2; 
+    level.archi.blocker_ids_to_names[0] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_3; 
 }
 
 function game_start()
@@ -224,16 +149,73 @@ function game_start()
 
         // Populate location mappings
 
-        init_location_mapping();
 
         //Get Map Name String
         mapName = GetDvarString( "mapname" );
 
         level.archi.boarded_windows = 0;
+
+        //Lock Weapons
+        level.archi.weapons["ar_accurate"] = false;
+        level.archi.weapons["ar_cqb"] = false;
+        level.archi.weapons["ar_damage"] = false;
+        level.archi.weapons["ar_longburst"] = false;
+        level.archi.weapons["ar_marksman"] = false;
+        level.archi.weapons["ar_standard"] = false;
+        level.archi.weapons["ar_famas"] = false;
+        level.archi.weapons["ar_garand"] = false;
+        level.archi.weapons["ar_peacekeeper"] = false;
+        level.archi.weapons["ar_an94"] = false;
+        level.archi.weapons["ar_galil"] = false;
+        level.archi.weapons["ar_m14"] = false;
+        level.archi.weapons["ar_m16"] = false;
+        level.archi.weapons["ar_pulse"] = false;
+        level.archi.weapons["ar_fastburst"] = false;
+        level.archi.weapons["ar_stg44"] = false;
+
+        // Sub Machine Guns
+        level.archi.weapons["smg_burst"] = false;
+        level.archi.weapons["smg_capacity"] = false;
+        level.archi.weapons["smg_fastfire"] = false;
+        level.archi.weapons["smg_standard"] = false;
+        level.archi.weapons["smg_versatile"] = false;
+        level.archi.weapons["smg_sten"] = false;
+        level.archi.weapons["smg_mp40"] = false;
+        level.archi.weapons["smg_ppsh"] = false;
+        level.archi.weapons["smg_thompson"] = false;
+        level.archi.weapons["smg_longrange"] = false;
+        level.archi.weapons["smg_ak74u"] = false;
+        level.archi.weapons["smg_msmc"] = false;
+        level.archi.weapons["smg_nailgun"] = false;
+        level.archi.weapons["smg_rechamber"] = false;
+        level.archi.weapons["smg_sten2"] = false;
+        level.archi.weapons["smg_mp40_1940"] = false;
+
+        // Shotguns
+        level.archi.weapons["shotgun_fullauto"] = false;
+        level.archi.weapons["shotgun_precision"] = false;
+        level.archi.weapons["shotgun_pump"] = false;
+        level.archi.weapons["shotgun_semiauto"] = false;
+        level.archi.weapons["shotgun_energy"] = false;
+        level.archi.weapons["shotgun_olympia"] = false;
+
+        // Pistols
+        level.archi.weapons["pistol_revolver38"] = false;
+        level.archi.weapons["pistol_standard"] = false;
+        level.archi.weapons["pistol_burst"] = false;
+        level.archi.weapons["pistol_fullauto"] = false;
+        level.archi.weapons["pistol_energy"] = false;
+        level.archi.weapons["pistol_m1911"] = false;
+        level.archi.weapons["pistol_shotgun_dw"] = false;
+        level.archi.weapons["pistol_c96"] = false;
+
+        // Melee
+        level.archi.weapons["melee_bowie"] = false;
         
         if (mapName == "zm_factory")
         {
             level.archi.mapString = "(The Giant)";
+            init_string_mappings();
 
             //Register Items
             archi_items::RegisterItem("(The Giant) Juggernog",&archi_items::give_Juggernog,"ap_item_juggernog");
@@ -250,23 +232,22 @@ function game_start()
             archi_items::RegisterItem("(The Giant) Teleporter 2",&archi_items::give_The_Giant_Teleporter_2,"ap_item_region_5");
             archi_items::RegisterItem("(The Giant) Teleporter 3",&archi_items::give_The_Giant_Teleporter_3,"ap_item_region_6");
 
-            archi_items::RegisterItem("(Weapon) ICR-1",&archi_items::give_Weapon_ICR,"ap_weapon_ar_icr");
+            // Assault Rifles
             archi_items::RegisterItem("(Weapon) HVK-30",&archi_items::give_Weapon_HVK,"ap_weapon_ar_hvk");
-            archi_items::RegisterItem("(Weapon) Man-o-War",&archi_items::give_Weapon_ManoWar,"ap_weapon_ar_manowar");
             archi_items::RegisterItem("(Weapon) M8A7",&archi_items::give_Weapon_M8A7,"ap_weapon_ar_m8a7");
             archi_items::RegisterItem("(Weapon) Sheiva",&archi_items::give_Weapon_Sheiva,"ap_weapon_ar_sheiva");
             archi_items::RegisterItem("(Weapon) KN-44",&archi_items::give_Weapon_KN44,"ap_weapon_ar_kn44");
-            archi_items::RegisterItem("(Weapon) FFAR",&archi_items::give_Weapon_FFAR,"ap_weapon_ar_ffar");
-            archi_items::RegisterItem("(Weapon) MX Garand",&archi_items::give_Weapon_Garand,"ap_weapon_ar_garand");
-            archi_items::RegisterItem("(Weapon) Peacekeeper MK2",&archi_items::give_Weapon_Peacekeeper,"ap_weapon_ar_peacekeeper");
-            archi_items::RegisterItem("(Weapon) AN-94",&archi_items::give_Weapon_AN94,"ap_weapon_ar_an94");
-            archi_items::RegisterItem("(Weapon) Galil",&archi_items::give_Weapon_Galil,"ap_weapon_ar_galil");
-            archi_items::RegisterItem("(Weapon) M14",&archi_items::give_Weapon_M14,"ap_weapon_ar_m14");
-            archi_items::RegisterItem("(Weapon) M16",&archi_items::give_Weapon_M16,"ap_weapon_ar_m16");
-            archi_items::RegisterItem("(Weapon) LV8 Basilisk",&archi_items::give_Weapon_Basilisk,"ap_weapon_ar_basilisk");
-            archi_items::RegisterItem("(Weapon) XR-2",&archi_items::give_Weapon_XR2,"ap_weapon_ar_xr2");
-            archi_items::RegisterItem("(Weapon) STG-44",&archi_items::give_Weapon_STG44,"ap_weapon_ar_stg44");
-
+            // Sub Machine Guns
+            archi_items::RegisterItem("(Weapon) Kuda",&archi_items::give_Weapon_Kuda,"ap_weapon_smg_standard");
+            archi_items::RegisterItem("(Weapon) VMP",&archi_items::give_Weapon_VMP,"ap_weapon_smg_versatile");
+            // Shotguns
+            archi_items::RegisterItem("(Weapon) KRM-262",&archi_items::give_Weapon_KRM,"ap_weapon_shotgun_pump");
+            // Pistols
+            archi_items::RegisterItem("(Weapon) L-CAR",&archi_items::give_Weapon_LCAR,"ap_weapon_pistol_fullauto");
+            archi_items::RegisterItem("(Weapon) RK5",&archi_items::give_Weapon_RK5,"ap_weapon_pistol_burst");
+            // Melee
+            archi_items::RegisterItem("(Weapon) Bowie Knife",&archi_items::give_Weapon_BowieKnife,"ap_weapon_melee_bowie");
+            
             //Lock Blockers
             level.archi.blockers[5] = false;
             level.archi.blockers[6] = false;
@@ -275,24 +256,6 @@ function game_start()
             level.archi.blockers[10] = false;
             level.archi.blockers[7] = false;
             level.archi.blockers[0] = false;
-
-            //Lock Weapons
-            level.archi.weapons["ar_accurate"] = false;
-            level.archi.weapons["ar_cqb"] = false;
-            level.archi.weapons["ar_damage"] = false;
-            level.archi.weapons["ar_longburst"] = false;
-            level.archi.weapons["ar_marksman"] = false;
-            level.archi.weapons["ar_standard"] = false;
-            level.archi.weapons["ar_famas"] = false;
-            level.archi.weapons["ar_garand"] = false;
-            level.archi.weapons["ar_peacekeeper"] = false;
-            level.archi.weapons["ar_an94"] = false;
-            level.archi.weapons["ar_galil"] = false;
-            level.archi.weapons["ar_m14"] = false;
-            level.archi.weapons["ar_m16"] = false;
-            level.archi.weapons["ar_pulse"] = false;
-            level.archi.weapons["ar_fastburst"] = false;
-            level.archi.weapons["ar_stg44"] = false;
         }
         
         //TODO: Error if map doesnt exist

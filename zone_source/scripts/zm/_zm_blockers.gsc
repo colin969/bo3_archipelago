@@ -286,6 +286,8 @@ function door_buy()
 {
 	self waittill( "trigger", who, force ); 
 
+	IPrintLn(self.id);
+
 	if ( isdefined( level.custom_door_buy_check ) )
 	{
 		if ( !who [[ level.custom_door_buy_check ]]( self ) )
@@ -871,11 +873,18 @@ function door_think()
 			break;
 
 		default:
+			if ( isdefined( level.archi.blocker_ids_to_names[self.id] )) {
+        self SetHintString( level.archi.blocker_ids_to_names[self.id] + " is required" );
+			} else {
+				self SetHintString( " (Unknown) is required" );
+			}
 			if(isDefined( level._default_door_custom_logic))
 			{
 				self [[level._default_door_custom_logic]]();
 				break;
 			}		
+
+
 			if ( !self door_buy() )
 			{
 				continue;

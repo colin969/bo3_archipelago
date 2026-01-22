@@ -135,6 +135,7 @@ function give_MuleKick()
 }
 
 // Weapons
+// Assault Rifles
 function give_Weapon_ICR()
 {
     enableWeapon("ar_accurate");
@@ -213,6 +214,161 @@ function give_Weapon_XR2()
 function give_Weapon_STG44()
 {
     enableWeapon("ar_stg44");
+}
+
+// Sub Machine Guns
+function give_Weapon_Pharo()
+{
+    enableWeapon("smg_burst");
+}
+
+function give_Weapon_Weevil()
+{
+    enableWeapon("smg_capacity");
+}
+
+function give_Weapon_Vesper()
+{
+    enableWeapon("smg_fastfire");
+}
+
+function give_Weapon_Kuda()
+{
+    enableWeapon("smg_standard");
+}
+
+function give_Weapon_VMP()
+{
+    enableWeapon("smg_versatile");
+}
+
+function give_Weapon_Bootlegger()
+{
+    enableWeapon("smg_sten");
+}
+
+function give_Weapon_HG40()
+{
+    enableWeapon("smg_mp40");
+}
+
+function give_Weapon_PPSH()
+{
+    enableWeapon("smg_ppsh");
+}
+
+function give_Weapon_Razorback()
+{
+    enableWeapon("smg_thompson");
+}
+
+function give_Weapon_AK47u()
+{
+    enableWeapon("smg_ak47u");
+}
+
+function give_Weapon_MSMC()
+{
+    enableWeapon("smg_msmc");
+}
+
+function give_Weapon_Nailgun()
+{
+    enableWeapon("smg_nailgun");
+}
+
+function give_Weapon_HLX4()
+{
+    enableWeapon("smg_rechamber");
+}
+
+function give_Weapon_Sten()
+{
+    enableWeapon("smg_sten2");
+}
+
+function give_Weapon_MP40()
+{
+    enableWeapon("smg_mp40_1940");
+}
+
+// Shotguns
+function give_Weapon_Haymaker()
+{
+    enableWeapon("shotgun_fullauto");
+}
+
+function give_Weapon_Argus()
+{
+    enableWeapon("shotgun_precision");
+}
+
+function give_Weapon_KRM()
+{
+    enableWeapon("shotgun_pump");
+}
+
+function give_Weapon_Brecci()
+{
+    enableWeapon("shotgun_semiauto");
+}
+
+function give_Weapon_Banshii()
+{
+    enableWeapon("shotgun_energy");
+}
+
+function give_Weapon_Olympia()
+{
+    enableWeapon("shotgun_olympia");
+}
+
+// Pistols
+function give_Weapon_Bloodhound()
+{
+    enableWeapon("pistol_revolver38");
+}
+
+function give_Weapon_MR6()
+{
+    enableWeapon("pistol_standard");
+}
+
+function give_Weapon_RK5()
+{
+    enableWeapon("pistol_burst");
+}
+
+function give_Weapon_LCAR()
+{
+    enableWeapon("pistol_fullauto");
+}
+
+function give_Weapon_RiftE9()
+{
+    enableWeapon("pistol_energy");
+}
+
+function give_Weapon_M1911()
+{
+    enableWeapon("pistol_m1911");
+}
+
+function give_Weapon_Marshal()
+{
+    enableWeapon("pistol_shotgun_dw");
+}
+
+function give_Weapon_Mauser()
+{
+    enableWeapon("pistol_c96");
+}
+
+// Melee
+
+function give_Weapon_BowieKnife()
+{
+    enableWeapon("melee_bowie");
 }
 
 
