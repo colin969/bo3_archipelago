@@ -14,6 +14,7 @@ scriptparsetree,scripts/zm/_load.csc
 //Core item getting/setting
 scriptparsetree,scripts/zm/archi_core.gsc
 scriptparsetree,scripts/zm/archi_core.csc
+scriptparsetree,scripts/zm/archi_castle.gsc
 scriptparsetree,scripts/zm/archi_items.gsc
 
 //Commands

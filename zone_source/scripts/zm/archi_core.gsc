@@ -13,6 +13,7 @@
 
 #using scripts\zm\archi_items;
 #using scripts\zm\archi_commands;
+#using scripts\zm\archi_castle;
 
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\shared\shared.gsh;
@@ -243,6 +244,8 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_body"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Body";
             level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
+
+            archi_castle::setup_soul_catchers();
 
             // Register Map Unique Items - Item name, callback, clientfield
             archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);

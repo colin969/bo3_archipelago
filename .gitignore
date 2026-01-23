@@ -6,4 +6,6 @@ zone_source/loc/*
 
 *.pdn
 
+.vscode
+
 T7Overcharged.lua

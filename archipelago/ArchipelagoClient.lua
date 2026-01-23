@@ -29,6 +29,8 @@ Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Body"] = 2210
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Guards"] = 2211
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Handle"] = 2212
 
+Archi.LocationToID["(Castle) Feed the Dragonheads"] = 2300
+
 Archi.LocationToID["Repair Windows 5 Times"] = 9001
 
 Archi.FromGSC = function (model)
