@@ -22,9 +22,12 @@ for i = 1, 99 do
   Archi.LocationToID[roundName] = i + 2000
 end
 
-Archi.LocationToID["(Castle) Shield Part - Dolly"] = 2200
-Archi.LocationToID["(Castle) Shield Part - Door"] = 2201
-Archi.LocationToID["(Castle) Shield Part - Clamp"] = 2202
+Archi.LocationToID["(Castle) Shield Part Pickup - Dolly"] = 2200
+Archi.LocationToID["(Castle) Shield Part Pickup - Door"] = 2201
+Archi.LocationToID["(Castle) Shield Part Pickup - Clamp"] = 2202
+Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Body"] = 2210
+Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Guards"] = 2211
+Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Handle"] = 2212
 
 Archi.LocationToID["Repair Windows 5 Times"] = 9001
 

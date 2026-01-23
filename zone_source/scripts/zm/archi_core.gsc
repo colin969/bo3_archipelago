@@ -234,8 +234,15 @@ function game_start()
             init_string_mappings();
 
             // Replace craftable logic with AP locations
-            // TODO: Figure out how this behaves with pieces that spawn later?
             replace_craftable_onPickup("craft_shield_zm");
+            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+            replace_craftable_onPickup("gravityspike");
+            level.archi.craftable_piece_to_location["gravityspike_part_body"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Body";
+            level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
+            level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
             // Register Map Unique Items - Item name, callback, clientfield
             archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
@@ -260,9 +267,7 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
         
-            level.archi.craftable_piece_to_location["dolly"] = level.archi.mapString + " Shield Part - Dolly";
-            level.archi.craftable_piece_to_location["door"] = level.archi.mapString + " Shield Part - Door";
-            level.archi.craftable_piece_to_location["clamp"] = level.archi.mapString + " Shield Part - Clamp";
+            
         }
 
         if (mapName == "zm_factory")
@@ -319,7 +324,7 @@ function game_start()
         //TODO: Error if map doesnt exist
         archi_items::RegisterItem("50 Points",&archi_items::give_50Points);
         archi_items::RegisterItem("500 Points",&archi_items::give_500Points);
-        
+        archi_items::RegisterItem("50000 Points",&archi_items::give_50000Points);
 
         //Server-wide thread to get items from the Lua/LUI
         level thread item_get_from_lua();
@@ -572,9 +577,9 @@ function wrapped_craftable_onPickup( player )
 {
     IPrintLn("Piece picked up");
     
-    if ( isdefined(level.archi.craftable_piece_to_location[self.pieceName]) )
+    if ( isdefined(level.archi.craftable_piece_to_location[self.craftableName + "_" + self.pieceName]) )
     {
-        ap_location = level.archi.craftable_piece_to_location[self.pieceName];
+        ap_location = level.archi.craftable_piece_to_location[self.craftableName + "_" + self.pieceName];
         send_location(ap_location);
     }
 

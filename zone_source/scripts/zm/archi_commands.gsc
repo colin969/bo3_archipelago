@@ -136,13 +136,25 @@ function private _print_debug_craftableStubs_response()
     if(isdefined(dvar_value) && dvar_value != "")
     {
       ModVar("ap_debug_craftables", "");
-      foreach (index, struct in level.zombie_include_craftables)
+      foreach (name, struct in level.zombie_include_craftables)
       {
-        IPrintLn("Name: " + index);
-        IPrintLn("Weapon Name: " + struct.weaponname);
-        foreach (index, piece in struct.a_pieceStubs)
+        wait(5);
+        IPrintLn("Name: " + name);
+        if ( isdefined (struct.weaponname))
         {
-          IPrintLn("Piece Name: " + piece.pieceName);
+          IPrintLn("Weapon Name: " + struct.weaponname);
+        }
+        if ( isdefined (struct.a_pieceStubs) )
+        {
+          for (i = 0; i < struct.a_pieceStubs.size; i++)
+          {
+            piece = struct.a_pieceStubs[i];
+            if ( isdefined (piece.pieceName) ) {
+              IPrintLn("Piece Name: " + piece.pieceName);
+            }
+          }
+        } else {
+          IPrintLn("No Piece Structs Found");
         }
       }
     }

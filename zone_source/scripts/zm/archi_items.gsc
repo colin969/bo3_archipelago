@@ -70,6 +70,14 @@ function give_500Points()
     }
 }
 
+function give_50000Points()
+{
+    foreach (player in getPlayers())
+    {
+        player zm_score::add_to_player_score(50000);
+    }
+}
+
 function give_50Points()
 {
     foreach (player in getPlayers())
@@ -471,10 +479,13 @@ function give_Weapon_BowieKnife()
 
 function give_Trap_ThirdPerson()
 {
+    level thread _give_Trap_ThirdPerson();
+}
+
+function _give_Trap_ThirdPerson()
+{
     SetDvar("cg_thirdPerson", 1);
-
-    wait(30000);
-
+    wait(30);
     SetDvar("cg_thirdPerson", 0);
 }
 
