@@ -143,11 +143,11 @@ function give_The_Giant_Teleporter_3()
 
 
 //Simple Give Functions notifies
-function give_SpeedCola()
+function give_Juggernog()
 {
-    level notify( "ap_sleight_on" );
-	util::wait_network_frame();
-	level notify("ap_specialty_fastreload_power_on");
+    level notify("ap_juggernog_on");
+    util::wait_network_frame();
+	level notify("ap_specialty_armorvest_power_on");
 }
 function give_QuickRevive()
 {
@@ -155,17 +155,23 @@ function give_QuickRevive()
     util::wait_network_frame();
 	level notify("ap_specialty_quickrevive_power_on");
 }
+function give_SpeedCola()
+{
+    level notify( "ap_sleight_on" );
+	util::wait_network_frame();
+	level notify("ap_specialty_fastreload_power_on");
+}
 function give_DoubleTap()
 {
     level notify( "ap_doubletap_on" );
     util::wait_network_frame();
 	level notify("ap_specialty_rof_power_on");
 }
-function give_Juggernog()
+function give_StaminUp()
 {
-    level notify("ap_juggernog_on");
+    level notify( "ap_staminup_on" );
     util::wait_network_frame();
-	level notify("ap_specialty_armorvest_power_on");
+	level notify("ap_specialty_staminup_power_on");
 }
 function give_MuleKick()
 {
@@ -254,6 +260,42 @@ function give_Weapon_XR2()
 function give_Weapon_STG44()
 {
     enableWeapon("ar_stg44");
+}
+
+// Light Machine Guns
+function give_Weapon_Dingo()
+{
+    enableWeapon("lmg_cqb");
+}
+
+function give_Weapon_Dredge()
+{
+    enableWeapon("lmg_heavy");
+}
+
+function give_Weapon_BRM()
+{
+    enableWeapon("lmg_light");
+}
+
+function give_Weapon_Gorgon()
+{
+    enableWeapon("lmg_slowfire");
+}
+
+function give_Weapon_R70Ajax()
+{
+    enableWeapon("lmg_infinite");
+}
+
+function give_Weapon_RPK()
+{
+    enableWeapon("lmg_rpk");
+}
+
+function give_Weapon_MG08()
+{
+    enableWeapon("lmg_mg08");
 }
 
 // Sub Machine Guns
@@ -410,13 +452,6 @@ function give_Weapon_BowieKnife()
 {
     enableWeapon("melee_bowie");
 }
-
-
-// function give_Staminup()
-// {
-//     level notify ("ap_marathon_on");
-//     util::wait_network_frame();
-// }
 
 // function give_Deadshot()
 // {
