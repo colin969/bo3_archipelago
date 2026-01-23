@@ -29,6 +29,7 @@ function init_commands()
   {
     level thread _send_location_command_response();
     level thread _trigger_item_response();
+    level thread _print_debug_craftableStubs_response();
   }
 }
 
@@ -115,6 +116,34 @@ function private _trigger_item_response(command_args)
       else
       {
         IPrintLn("Item not found");
+      }
+    }
+  }
+}
+
+function private _print_debug_craftableStubs_response()
+{
+    level endon("end_game");
+
+  ModVar("ap_debug_craftables", "");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString("ap_debug_craftables", "");
+
+    if(isdefined(dvar_value) && dvar_value != "")
+    {
+      ModVar("ap_debug_craftables", "");
+      foreach (index, struct in level.zombie_include_craftables)
+      {
+        IPrintLn("Name: " + index);
+        IPrintLn("Weapon Name: " + struct.weaponname);
+        foreach (index, piece in struct.a_pieceStubs)
+        {
+          IPrintLn("Piece Name: " + piece.pieceName);
+        }
       }
     }
   }

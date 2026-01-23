@@ -14,8 +14,9 @@
 #using scripts\zm\_zm_powerup_full_ammo;
 #using scripts\zm\_zm_powerup_nuke;
 
-
 #insert scripts\shared\shared.gsh;
+
+#insert scripts\zm\archi_core.gsh;
 
 #namespace archi_items;
 
@@ -109,7 +110,7 @@ function give_The_Giant_Animal_Testing()
 function give_The_Giant_Garage()
 {
     enableBlocker(4);
-    if (checkItem("(The Giant) Power Room"))
+    if (checkItem(ARCHIPELAGO_MAP_THE_GIANT + " Power Room"))
     {
         //If power room is on, give us the back entrance
         enableBlocker(11);
@@ -117,12 +118,12 @@ function give_The_Giant_Garage()
 }
 function give_The_Giant_Power_Room()
 {
-    if (checkItem("(The Giant) Animal Testing"))
+    if (checkItem(ARCHIPELAGO_MAP_THE_GIANT + " Animal Testing"))
     {
         //If Animal Testing is On, give us that entrance
         enableBlocker(10);
     }
-    if (checkItem("(The Giant) Garage"))
+    if (checkItem(ARCHIPELAGO_MAP_THE_GIANT + " Garage"))
     {
         //If Garage is On, give us that entrance
         enableBlocker(11);

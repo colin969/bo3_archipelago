@@ -123,6 +123,11 @@ function init_string_mappings(mapString)
         level.archi.blocker_ids_to_names = [];
     }
 
+    if (!isdefined(level.archi.craftable_piece_to_location))
+    {
+        level.archi.craftable_piece_to_location = [];
+    }
+
     // TODO: Settings check for disabled map specific machine strings
     level.archi.perk_strings_to_names[PERK_JUGGERNOG] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_JUGGERNOG;
     level.archi.perk_strings_to_names[PERK_QUICK_REVIVE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_QUICK_REVIVE;
@@ -137,17 +142,6 @@ function init_string_mappings(mapString)
     level.archi.perk_strings_to_names[PERK_WHOSWHO] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_WHOSWHO;
     level.archi.perk_strings_to_names[PERK_VULTUREAID] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_VULTUREAID;
     level.archi.perk_strings_to_names[PERK_WIDOWS_WINE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_WIDOWS_WINE;
-
-    if (level.archi.mapString == "(The Giant)")
-    {
-        level.archi.blocker_ids_to_names[5] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING; 
-        level.archi.blocker_ids_to_names[4] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
-        level.archi.blocker_ids_to_names[10] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING;
-        level.archi.blocker_ids_to_names[11] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
-        level.archi.blocker_ids_to_names[6] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_1; 
-        level.archi.blocker_ids_to_names[7] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_2; 
-        level.archi.blocker_ids_to_names[0] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_3; 
-    }
 }
 
 function game_start()
@@ -236,11 +230,15 @@ function game_start()
 
         if (mapName == "zm_castle")
         {
-            level.archi.mapString = "(Castle)";
+            level.archi.mapString = ARCHIPELAGO_MAP_CASTLE;
             init_string_mappings();
 
+            // Replace craftable logic with AP locations
+            // TODO: Figure out how this behaves with pieces that spawn later?
+            replace_craftable_onPickup("craft_shield_zm");
+
             // Register Map Unique Items - Item name, callback, clientfield
-            archi_items::RegisterItem("(Castle) Victory",&archi_items::give_Victory,undefined);
+            archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
 
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -261,22 +259,26 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
             archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+        
+            level.archi.craftable_piece_to_location["dolly"] = level.archi.mapString + " Shield Part - Dolly";
+            level.archi.craftable_piece_to_location["door"] = level.archi.mapString + " Shield Part - Door";
+            level.archi.craftable_piece_to_location["clamp"] = level.archi.mapString + " Shield Part - Clamp";
         }
 
         if (mapName == "zm_factory")
         {
-            level.archi.mapString = "(The Giant)";
+            level.archi.mapString = ARCHIPELAGO_MAP_THE_GIANT;
             init_string_mappings();
 
             // Register Map Unique Items - Item name, callback, clientfield
-            archi_items::RegisterItem("(The Giant) Victory",&archi_items::give_Victory,undefined);
+            archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
             
-            archi_items::RegisterItem("(The Giant) Animal Testing",&archi_items::give_The_Giant_Animal_Testing,"ap_item_region_1");
-            archi_items::RegisterItem("(The Giant) Garage",&archi_items::give_The_Giant_Garage,"ap_item_region_2");
-            archi_items::RegisterItem("(The Giant) Power Room",&archi_items::give_The_Giant_Power_Room,"ap_item_region_3");
-            archi_items::RegisterItem("(The Giant) Teleporter 1",&archi_items::give_The_Giant_Teleporter_1,"ap_item_region_4");
-            archi_items::RegisterItem("(The Giant) Teleporter 2",&archi_items::give_The_Giant_Teleporter_2,"ap_item_region_5");
-            archi_items::RegisterItem("(The Giant) Teleporter 3",&archi_items::give_The_Giant_Teleporter_3,"ap_item_region_6");
+            archi_items::RegisterItem(level.archi.mapString + " Animal Testing",&archi_items::give_The_Giant_Animal_Testing,"ap_item_region_1");
+            archi_items::RegisterItem(level.archi.mapString + " Garage",&archi_items::give_The_Giant_Garage,"ap_item_region_2");
+            archi_items::RegisterItem(level.archi.mapString + " Power Room",&archi_items::give_The_Giant_Power_Room,"ap_item_region_3");
+            archi_items::RegisterItem(level.archi.mapString + " Teleporter 1",&archi_items::give_The_Giant_Teleporter_1,"ap_item_region_4");
+            archi_items::RegisterItem(level.archi.mapString + " Teleporter 2",&archi_items::give_The_Giant_Teleporter_2,"ap_item_region_5");
+            archi_items::RegisterItem(level.archi.mapString + " Teleporter 3",&archi_items::give_The_Giant_Teleporter_3,"ap_item_region_6");
 
             // Register Possible Global Items - Item name, callback, clientfield
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
@@ -304,6 +306,14 @@ function game_start()
             level.archi.blockers[10] = false;
             level.archi.blockers[7] = false;
             level.archi.blockers[0] = false;
+
+            level.archi.blocker_ids_to_names[5] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING; 
+            level.archi.blocker_ids_to_names[4] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
+            level.archi.blocker_ids_to_names[10] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING;
+            level.archi.blocker_ids_to_names[11] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
+            level.archi.blocker_ids_to_names[6] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_1; 
+            level.archi.blocker_ids_to_names[7] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_2; 
+            level.archi.blocker_ids_to_names[0] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_3; 
         }
         
         //TODO: Error if map doesnt exist
@@ -536,4 +546,40 @@ function archi_blocker_buy_check(blocker)
         return false;
     }
     return true;
+}
+
+function replace_craftable_onPickup( craftableName )
+{
+    if ( isdefined(level.zombie_include_craftables) && isdefined(level.zombie_include_craftables[ craftableName ]) )
+    {
+        craftable_struct = level.zombie_include_craftables[ craftableName ];
+        foreach (index, piece in craftable_struct.a_pieceStubs)
+        {
+            if (isdefined(piece.onPickup))
+            {
+                piece.original_onPickup = piece.onPickup;
+                piece.onPickup = &wrapped_craftable_onPickup;
+            } 
+            else
+            {
+                IPrintLn("No pickup defined for piece?");
+            }
+        }
+    }
+}
+
+function wrapped_craftable_onPickup( player )
+{
+    IPrintLn("Piece picked up");
+    
+    if ( isdefined(level.archi.craftable_piece_to_location[self.pieceName]) )
+    {
+        ap_location = level.archi.craftable_piece_to_location[self.pieceName];
+        send_location(ap_location);
+    }
+
+    if (isdefined(self.original_onPickup))
+    {
+        self [[self.original_onPickup]](player);
+    }
 }

@@ -22,6 +22,10 @@ for i = 1, 99 do
   Archi.LocationToID[roundName] = i + 2000
 end
 
+Archi.LocationToID["(Castle) Shield Part - Dolly"] = 2200
+Archi.LocationToID["(Castle) Shield Part - Door"] = 2201
+Archi.LocationToID["(Castle) Shield Part - Clamp"] = 2202
+
 Archi.LocationToID["Repair Windows 5 Times"] = 9001
 
 Archi.FromGSC = function (model)
