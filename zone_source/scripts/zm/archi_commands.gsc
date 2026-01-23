@@ -15,29 +15,40 @@
 
 #using scripts\zm\archi_core;
 
+#define AP_DEBUG_COMMANDS true
+
 #namespace archi_commands;
 
 function init_commands()
 {
-  level thread _send_location_command_response();
+  // Regular commands
   level thread _send_message_response();
+
+  // Development commands
+  if (IS_TRUE(AP_DEBUG_COMMANDS))
+  {
+    level thread _send_location_command_response();
+    level thread _trigger_item_response();
+  }
 }
 
 function private _send_location_command_response(command_args)
 {
   level endon("end_game");
 
+  // Set intiial empty value
   ModVar("ap_send_location", "");
 
   while(true)
   {
     WAIT_SERVER_FRAME
 
+    // Each frame, check if ap_send_location has been changed
     dvar_value = GetDvarString("ap_send_location", "");
 
     if(isdefined(dvar_value) && dvar_value != "")
     {
-      IPrintLn("Reading Send Location Command...");
+      // ap_send_location has changed, clear it and pass the value to send_location
       ModVar("ap_send_location", "");
 
       archi_core::send_location(dvar_value);
@@ -59,13 +70,52 @@ function private _send_message_response(command_args)
 
     if(isdefined(dvar_value) && dvar_value != "")
     {
-      IPrintLn("Sending message");
       ModVar("ap", "");
       SetDvar("ARCHIPELAGO_SAY_SEND", dvar_value);
       LUINotifyEvent(&"ap_notification", 0);
 
       //Send notification for Send UI Image
       LUINotifyEvent(&"ap_ui_send", 0);
+    }
+  }
+}
+
+function private _trigger_item_response(command_args)
+{
+  level endon("end_game");
+
+  ModVar("ap_trigger_item", "");
+
+  level waittill("initial_blackscreen_passed");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString("ap_trigger_item", "");
+
+    if(isdefined(dvar_value) && dvar_value != "")
+    {
+      ModVar("ap_trigger_item", "");
+      if (isdefined(level.archi.items[dvar_value]))
+      {
+          level.archi.items[dvar_value].count += 1;
+          self [[level.archi.items[dvar_value].getFunc]]();
+
+          if (isdefined(level.archi.items[dvar_value].clientField))
+          {
+              //TODO: make this safe, so it checks if the clientfield exists first
+              level clientfield::set(level.archi.items[dvar_value].clientField, 1);
+          }
+          //Notif happens a bit too early compared to log messages
+          wait .5;
+          LUINotifyEvent(&"ap_ui_get", 0);
+          IPrintLn("Given Item " + dvar_value);
+      }
+      else
+      {
+        IPrintLn("Item not found");
+      }
     }
   }
 }
