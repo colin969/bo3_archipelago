@@ -40,7 +40,6 @@ function __init__()
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
 
-
 	callback::on_start_gametype( &game_start );
 	callback::on_connect( &on_player_connect );
 	callback::on_spawned( &on_player_spawned ); 
@@ -218,7 +217,20 @@ function game_start()
 
         // // Melee
         // level.archi.weapons["melee_bowie"] = false;
+
+        // Traps
+        archi_items::RegisterItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson,"ap_trap_thirdperson");
         
+        // Gifts
+        // TODO: Figure out why powerup vo isn't playing
+        archi_items::RegisterItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup,"ap_gift_carpenter");
+        archi_items::RegisterItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup,"ap_gift_double_points");
+        archi_items::RegisterItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup,"ap_gift_instakill");
+        archi_items::RegisterItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup,"ap_gift_fire_sale");
+        archi_items::RegisterItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup,"ap_gift_max_ammo");
+        archi_items::RegisterItem("Gift - Nuke Powerup",&archi_items::give_Gift_NukePowerup,"ap_gift_nuke");
+        archi_items::RegisterItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup,"ap_gift_free_perk");
+
         if (mapName == "zm_factory")
         {
             level.archi.mapString = "(The Giant)";

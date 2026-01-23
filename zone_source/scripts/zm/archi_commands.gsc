@@ -13,9 +13,9 @@
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
 
-#using scripts\zm\archi_core;
+#insert scripts\zm\archi_core.gsh;
 
-#define AP_DEBUG_COMMANDS true
+#using scripts\zm\archi_core;
 
 #namespace archi_commands;
 
@@ -25,7 +25,7 @@ function init_commands()
   level thread _send_message_response();
 
   // Development commands
-  if (IS_TRUE(AP_DEBUG_COMMANDS))
+  if (IS_TRUE(ARCHIPELAGO_DEV_MODE))
   {
     level thread _send_location_command_response();
     level thread _trigger_item_response();

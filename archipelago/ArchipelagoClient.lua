@@ -187,8 +187,17 @@ Archi.KeepConnected = function ()
   
   if Archipelago then
     local server = Engine.DvarString(nil,"ARCHIPELAGO_SERVER")
+    if server == "" then
+      server = "localhost"
+    end
     local port = Engine.DvarString(nil,"ARCHIPELAGO_PORT")
+    if port == "" then
+      port = "38281"
+    end
     local slot = Engine.DvarString(nil,"ARCHIPELAGO_SLOT")
+    if slot == "" then
+      slot = "Player"
+    end
     --TODO: error out if any of these are null
 
     --TODO: change the \zone (base path) when its workshop
