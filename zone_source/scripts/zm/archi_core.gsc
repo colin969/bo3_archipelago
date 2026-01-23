@@ -246,6 +246,7 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
             archi_castle::setup_soul_catchers();
+            archi_castle::setup_landing_pads();
 
             // Register Map Unique Items - Item name, callback, clientfield
             archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);

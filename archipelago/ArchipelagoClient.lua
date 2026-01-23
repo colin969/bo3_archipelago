@@ -30,6 +30,7 @@ Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Guards"] = 2211
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Handle"] = 2212
 
 Archi.LocationToID["(Castle) Feed the Dragonheads"] = 2300
+Archi.LocationToID["(Castle) Turn on all Landing Pads"] = 2300
 
 Archi.LocationToID["Repair Windows 5 Times"] = 9001
 

@@ -19,11 +19,8 @@
 
 function setup_soul_catchers()
 {
-    foreach (index, soul_catcher in level.soul_catchers)
-    {
-        // Add thread to watch when each soul catcher fills
-        soul_catcher thread _soul_catcher_notify_thread();
-    }
+    // Add listeners for when each soul catcher finishes
+    array::thread_all(level.soul_catchers, &_soul_catcher_notify_thread);
 
     level thread _all_soul_catchers_filled_thread();
 }
@@ -53,4 +50,33 @@ function _soul_catcher_notify_thread()
     IPrintLn("Soul Catcher Filled");
 
     level notify("ap_castle_soul_catcher_charged");
+}
+
+function setup_landing_pads()
+{
+    // Add activate listener on each landing pad
+    landing_pads = struct::get_array("115_flinger_landing_pad", "targetname");
+    array::thread_all(landing_pads, &_landing_pad_notify_thread);
+
+    // Listen for activation events forwarded from landing pad threads
+    level thread _all_landing_pads_activated(landing_pads.size);
+}
+
+function _all_landing_pads_activated(pad_count)
+{
+    pads_activated = 0;
+    while (pads_activated < pad_count)
+    {
+        level waittill("ap_castle_landing_pad_activated");
+        pads_activated += 1;
+    }
+    archi_core::send_location(level.archi.mapString + " Turn on all Landing Pads");
+}
+
+
+function _landing_pad_notify_thread()
+{
+    level flag::wait_till(self.script_noteworthy);
+    IPrintLn("Landing Pad Activated");
+    level notify("ap_castle_landing_pad_activated");
 }
