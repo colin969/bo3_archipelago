@@ -29,8 +29,21 @@ Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Body"] = 2210
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Guards"] = 2211
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Handle"] = 2212
 
-Archi.LocationToID["(Castle) Feed the Dragonheads"] = 2300
-Archi.LocationToID["(Castle) Turn on all Landing Pads"] = 2300
+Archi.LocationToID["(Castle) All Spare Change Collected"] = 2300
+Archi.LocationToID["(Castle) Feed the Dragonheads"] = 2301
+Archi.LocationToID["(Castle) Turn on all Landing Pads"] = 2302
+
+Archi.LocationToID["(Castle) Music EE - Dead Again"] = 2400
+Archi.LocationToID["(Castle) Music EE - Requiem"] = 2400
+
+Archi.LocationToID["(Castle) Storm Bow - Take Broken Arrow"] = 2500
+Archi.LocationToID["(Castle) Storm Bow - Light the Beacons"] = 2501
+Archi.LocationToID["(Castle) Storm Bow - Wallrun Switches"] = 2502
+Archi.LocationToID["(Castle) Storm Bow - Charge the Batteries"] = 2503
+Archi.LocationToID["(Castle) Storm Bow - Charge the Beacons"] = 2504
+Archi.LocationToID["(Castle) Storm Bow - Repair the Arrow"] = 2505
+Archi.LocationToID["(Castle) Storm Bow - Forge the Bow"] = 2506
+
 
 Archi.LocationToID["Repair Windows 5 Times"] = 9001
 

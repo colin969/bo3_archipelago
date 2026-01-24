@@ -188,6 +188,12 @@ function give_MuleKick()
     util::wait_network_frame();
     level notify("ap_specialty_additionalprimaryweapon_power_on");
 }
+function give_DeadShot()
+{
+    level notify ("ap_deadshot_on");
+    util::wait_network_frame();
+    level notify("ap_specialty_deadshot_power_on");
+}
 
 // Weapons
 // Assault Rifles
@@ -461,12 +467,6 @@ function give_Weapon_BowieKnife()
 {
     enableWeapon("melee_bowie");
 }
-
-// function give_Deadshot()
-// {
-//     level notify ("ap_deadshot_on");
-//     util::wait_network_frame();
-// }
 
 
 // function give_PackAPunch()

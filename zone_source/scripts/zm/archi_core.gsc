@@ -248,6 +248,12 @@ function game_start()
             archi_castle::setup_soul_catchers();
             archi_castle::setup_landing_pads();
 
+            archi_castle::setup_music_ee_trackers();
+
+            archi_castle::setup_weapon_ee_storm_bow();
+
+            level thread setup_spare_change_trackers(6);
+
             // Register Map Unique Items - Item name, callback, clientfield
             archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
 
@@ -270,14 +276,15 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
             archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-        
-            
         }
 
         if (mapName == "zm_factory")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_THE_GIANT;
             init_string_mappings();
+
+            // 7 possible machines, 6 will spawn
+            level thread setup_spare_change_trackers(6);
 
             // Register Map Unique Items - Item name, callback, clientfield
             archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
@@ -295,6 +302,8 @@ function game_start()
             archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
             archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
             archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+            archi_items::RegisterPerk("Dead Shot",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
 
             archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
             archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
@@ -591,4 +600,51 @@ function wrapped_craftable_onPickup( player )
     {
         self [[self.original_onPickup]](player);
     }
+}
+
+function setup_spare_change_trackers(total_machines)
+{
+    // Wait until we're certain the triggers were spawned?
+    level waittill("initial_blackscreen_passed");
+
+    level thread track_all_change_collected_thread(total_machines);
+    a_triggers = getentarray("audio_bump_trigger", "targetname");
+    // IPrintLn("Found triggers");
+    foreach(t_audio_bump in a_triggers)
+	{
+		if(t_audio_bump.script_sound === "zmb_perks_bump_bottle")
+		{
+            // IPrintLn("Added thread to bottle bumper");
+			t_audio_bump thread track_change_collected_thread();
+		}
+	}
+}
+
+function track_all_change_collected_thread(total_machines)
+{
+    level endon("end_game");
+
+    checked_machines = 0;
+    while (checked_machines < total_machines)
+    {
+        level waittill("ap_spare_change");
+        IPrintLn("Spare Change Collected");
+        checked_machines += 1;
+    }
+
+    archi_core::send_location(level.archi.mapString + " All Spare Change Collected");
+}
+
+function track_change_collected_thread()
+{
+	while(true)
+	{
+		self waittill("trigger", e_player);
+		if(e_player getstance() == "prone")
+		{
+			level notify ("ap_spare_change");
+			break;
+		}
+		wait(0.15);
+	}
 }
