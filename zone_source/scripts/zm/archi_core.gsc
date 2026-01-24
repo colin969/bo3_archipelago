@@ -257,6 +257,10 @@ function game_start()
             // Register Map Unique Items - Item name, callback, clientfield
             archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
 
+            archi_items::RegisterItem(level.archi.mapString + " Shield Part - Door",&archi_items::give_Castle_ShieldPart_Door,undefined);
+            archi_items::RegisterItem(level.archi.mapString + " Shield Part - Dolly",&archi_items::give_Castle_ShieldPart_Dolly,undefined);
+            archi_items::RegisterItem(level.archi.mapString + " Shield Part - Clamp",&archi_items::give_Castle_ShieldPart_Clamp,undefined);
+
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
             archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
@@ -566,6 +570,11 @@ function archi_blocker_buy_check(blocker)
     return true;
 }
 
+// General setup of a craftable:
+// Create craftable stub struct
+// Populate with piece stubs
+// Create a craftable spawn
+// Populate with piece spawns based on those stubs, usually shared functions
 function replace_craftable_onPickup( craftableName )
 {
     if ( isdefined(level.zombie_include_craftables) && isdefined(level.zombie_include_craftables[ craftableName ]) )
@@ -586,6 +595,8 @@ function replace_craftable_onPickup( craftableName )
     }
 }
 
+// self should be piecespawn
+// piecespawn [[piecestub.onpickup]](self);
 function wrapped_craftable_onPickup( player )
 {
     IPrintLn("Piece picked up");
@@ -595,10 +606,14 @@ function wrapped_craftable_onPickup( player )
         ap_location = level.archi.craftable_piece_to_location[self.craftableName + "_" + self.pieceName];
         send_location(ap_location);
     }
-
-    if (isdefined(self.original_onPickup))
+    if (isdefined(self.piecestub.original_onPickup))
     {
-        self [[self.original_onPickup]](player);
+        IPrintLn("Executing original script");
+        self [[self.piecestub.original_onPickup]](player);
+    }
+    if(isdefined(self.piecestub.client_field_id))
+    {
+        IPrintLn(self.piecestub.client_field_id);
     }
 }
 

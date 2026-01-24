@@ -13,6 +13,7 @@
 #using scripts\zm\_zm_powerup_free_perk;
 #using scripts\zm\_zm_powerup_full_ammo;
 #using scripts\zm\_zm_powerup_nuke;
+#using scripts\zm\craftables\_zm_craftables;
 
 #insert scripts\shared\shared.gsh;
 
@@ -574,3 +575,21 @@ function checkItem(itemName)
 {
     return (isdefined(level.archi.items[itemName]) && level.archi.items[itemName].count>0);
 }
+
+// Castle
+
+function give_Castle_ShieldPart_Door()
+{
+    zm_craftables::player_get_craftable_piece("craft_shield_zm", "door");
+}
+
+function give_Castle_ShieldPart_Dolly()
+{
+    zm_craftables::player_get_craftable_piece("craft_shield_zm", "dolly");
+}
+
+function give_Castle_ShieldPart_Clamp()
+{
+    zm_craftables::player_get_craftable_piece("craft_shield_zm", "clamp");
+}
+
