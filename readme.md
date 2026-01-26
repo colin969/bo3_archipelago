@@ -32,6 +32,8 @@ The Black Ops 3 Modding Discord, especially Serious for answering all my beginne
 The D3V Team (DTZxPorter, SE2Dev, Nukem) for mod tools, examples and more
 Scobalula's Excellent re-creation of the Lobby Menu, as seen in the BO3Mutators project
 
+# Notes
+`dkjson` used for json parsing in lua, it has the global var stripped out
 
 
 # Attribution

@@ -27,10 +27,6 @@ scriptparsetree,scripts/zm/_zm_pack_a_punch.gsc
 //Weapon/Wallbuy Logic Overrise
 scriptparsetree,scripts/zm/_zm_weapons.gsc
 
-//Blocker(Door and Debris) Logic Override
-scriptparsetree,scripts/zm/_zm_blockers.gsc
-
-
 //The point our UI injects its widget
 rawfile,ui/uieditor/widgets/bubblegumbuffs/BubbleGumPackInGame.Lua
 
@@ -46,6 +42,10 @@ rawfile,ui/archipelago/ingame/widgets/ArchipelagoMessageContainer.lua
 
 //Archipelago Client
 rawfile,archipelago/ArchipelagoClient.lua
+rawfile,archipelago/JsonUtils/Decoder.lua
+rawfile,archipelago/JsonUtils/Encoder.lua
+rawfile,archipelago/JsonUtils/Sax.lua
+rawfile,archipelago/Json.lua
 rawfile,archipelago/Utils.lua
 
 

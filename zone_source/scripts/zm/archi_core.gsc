@@ -9,7 +9,10 @@
 #using scripts\shared\hud_util_shared;
 #using scripts\shared\lui_shared;
 #using scripts\shared\clientfield_shared;
+#using scripts\shared\ai\zombie_utility;
+#using scripts\zm\_zm;
 #using scripts\zm\_zm_score;
+#using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_items;
 #using scripts\zm\archi_commands;
@@ -24,6 +27,8 @@
 
 #namespace archi_core;
 
+#precache( "eventstring", "ap_save_data" );
+#precache( "eventstring", "ap_load_data" );
 #precache( "eventstring", "ap_notification" );
 #precache( "eventstring", "ap_ui_get" );
 #precache( "eventstring", "ap_ui_send" );
@@ -33,18 +38,21 @@ REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 function __init__()
 {
     SetDvar( "MOD_VERSION", MOD_VERSION );
-    //
+    
     //Message Passing Dvars
     SetDvar("ARCHIPELAGO_ITEM_GET", "NONE");
     SetDvar("ARCHIPELAGO_LOCATION_SEND", "NONE");
-    SetDvar("ARCHIPELAGO_SAY_SEND", "NONE");
+    SetDvar("ARCHIPELAGO_SAY_SEND", "NONE"); 
+    SetDvar("ARCHIPELAGO_SAVE_DATA", "NONE");
+    SetDvar("ARCHIPELAGO_LOAD_DATA", "NONE");
+    SetDvar("ARCHIPELAGO_LOAD_DATA_SEED", "NONE");
+    SetDvar("ARCHIPELAGO_SAVE_PROGRESS", "NONE");
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
 
 	callback::on_start_gametype( &game_start );
 	callback::on_connect( &on_player_connect );
 	callback::on_spawned( &on_player_spawned ); 
-
 
     //Clientfields (Mostly Tracker stuff)
     //TODO Put this in a library?
@@ -90,10 +98,30 @@ function __init__()
     clientfield::register("world", "ap_weapon_ar_basilisk", VERSION_SHIP, 2, "int");
     clientfield::register("world", "ap_weapon_ar_xr2", VERSION_SHIP, 2, "int");
     clientfield::register("world", "ap_weapon_ar_stg44", VERSION_SHIP, 2, "int");
+}
 
-    level.custom_door_buy_check = &archi_blocker_buy_check;
-    level.custom_debris_buy_check = &archi_blocker_buy_check;
+function wrapped_door_buy_check(blocker) {
+    if ( !self archi_blocker_buy_check(blocker) )
+    {
+        return false;
+    }
+    if (isdefined(level.archi.original_custom_door_buy_check))
+    {
+        return self [[ level.archi.original_custom_door_buy_check ]]( blocker );
+    }
+    return true;
+}
 
+function wrapped_debris_buy_check(blocker) {
+    if ( !self archi_blocker_buy_check(blocker) )
+    {
+        return false;
+    }
+    if (isdefined(level.archi.original_custom_debris_buy_check))
+    {
+        return self [[ level.archi.original_custom_debris_buy_check ]]( blocker );
+    }
+    return true;
 }
 
 function __main__()
@@ -148,6 +176,11 @@ function init_string_mappings(mapString)
 function game_start()
 {
 
+    zombie_doors = GetEntArray("zombie_door", "targetname");
+    array::thread_all(zombie_doors, &track_door_open);
+
+    zombie_debris = GetEntArray("zombie_debris", "targetname");
+    array::thread_all(zombie_debris, &track_debris_open);
     //TODO Error out here if there is no connection settings
 
     if (!isdefined(level.archi))
@@ -159,6 +192,22 @@ function game_start()
         mapName = GetDvarString( "mapname" );
 
         level.archi.boarded_windows = 0;
+        level.archi.blockers = [];
+
+        level.archi.opened_doors = [];
+        level.archi.opened_debris = [];
+
+        // Add AP blocker around existing door buy checks, incase a map uses them
+        if (isdefined(level.custom_door_buy_check))
+        {
+            level.archi.original_custom_door_buy_check = level.custom_door_buy_check;
+        }
+        level.custom_door_buy_check = &wrapped_door_buy_check;
+        if (isdefined(level.custom_debris_buy_check))
+        {
+            level.archi.original_custom_debris_buy_check = level.custom_debris_buy_check;
+        }
+        level.custom_debris_buy_check = &wrapped_debris_buy_check;
 
         // // Lock Weapons
         // level.archi.weapons["ar_accurate"] = false;
@@ -245,6 +294,7 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
+
             archi_castle::setup_soul_catchers();
             archi_castle::setup_landing_pads();
 
@@ -280,6 +330,9 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
             archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+        
+            level thread archi_castle::save_state_manager();
+            level thread archi_castle::load_state();
         }
 
         if (mapName == "zm_factory")
@@ -352,14 +405,21 @@ function game_start()
         //Collection of Locations that are checked, 
         level.archi.locationQueue = array();
 
-
         //Apply settings with Existing DVARS, should be set in menu during initial Room Connection
         on_archi_connect_settings();
-
     }
 
     //Setup default map changes
     default_map_changes();
+}
+
+function save_data_manager()
+{
+    level waittill("end_game");
+    if (IS_TRUE(level.host_ended_game)) 
+    {
+        // We didn't die, store points
+    }
 }
 
 function default_map_changes()
@@ -563,9 +623,9 @@ function location_check_to_lua()
 //Custom Door/Debris buy check
 function archi_blocker_buy_check(blocker)
 {
-    if (isdefined(level.archi.blockers[blocker.id]) && (!level.archi.blockers[blocker.id]) )
+    if ( isdefined(level.archi.blockers[blocker.id]) )
     {
-        return false;
+        return level.archi.blockers[blocker.id];
     }
     return true;
 }
@@ -595,7 +655,7 @@ function replace_craftable_onPickup( craftableName )
     }
 }
 
-// self should be piecespawn
+// self is piecespawn
 // piecespawn [[piecestub.onpickup]](self);
 function wrapped_craftable_onPickup( player )
 {
@@ -611,10 +671,17 @@ function wrapped_craftable_onPickup( player )
         IPrintLn("Executing original script");
         self [[self.piecestub.original_onPickup]](player);
     }
-    if(isdefined(self.piecestub.client_field_id))
-    {
-        IPrintLn(self.piecestub.client_field_id);
-    }
+    self thread _remove_piece();
+}
+
+// Remove a piecespawn from the shared inventory'
+// self is piecespawn
+function _remove_piece()
+{
+    WAIT_SERVER_FRAME
+    self.in_shared_inventory = 0; // Not sure if this bit actually does anything right now
+    IPrintLn(self.piecestub.client_field_id);
+    level clientfield::set(self.piecestub.client_field_id, 0);
 }
 
 function setup_spare_change_trackers(total_machines)
@@ -662,4 +729,45 @@ function track_change_collected_thread()
 		}
 		wait(0.15);
 	}
+}
+
+function change_to_round(round_number)
+{
+    // Kill remaining zombies
+    level.zombie_total = 0;
+
+    level notify("end_of_round");
+    wait 0.05;
+    zm::set_round_number(round_number);
+
+    zombie_utility::ai_calculate_health(round_number);
+    SetRoundsPlayed(round_number);
+
+    if (level.gamedifficulty == 0)
+    {
+        level.zombie_move_speed = round_number * level.zombie_vars["zombie_move_speed_multiplier_easy"];
+    } 
+    else
+    {
+        level.zombie_move_speed = round_number * level.zombie_vars["zombie_move_speed_multiplier"];
+    }
+
+    level.zombie_vars["zombie_spawn_delay"] = [[level.func_get_zombie_spawn_delay]](round_number);
+
+    level.sndGotoRoundOccurred = true;
+}
+
+function track_door_open()
+{
+    all_trigs = GetEntArray(self.target, "target");
+    all_trigs[0] waittill("door_opened");
+    IPrintLn("Debris opened: " + self.id);
+    level.archi.opened_doors[level.archi.opened_doors.size] = self.id;
+}
+
+function track_debris_open()
+{
+    self waittill("kill_debris_prompt_thread");
+    IPrintLn("Debris opened: " + self.id);
+    level.archi.opened_debris[level.archi.opened_debris.size] = self.id;
 }
