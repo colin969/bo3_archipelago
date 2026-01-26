@@ -1190,6 +1190,14 @@ function wall_weapon_update_prompt( player )
 			player_has_weapon = true;
 		}
 	}
+
+    if ( IsDefined(level.archi) && IsDefined(level.archi.func_override_wallbuy_prompt) )
+	{
+		if ( !self [[level.archi.func_override_wallbuy_prompt]]( player ) ) //can set hint text, disallows use of trigger if returns false
+		{
+			return false;
+		}
+	}
 	
 	if ( IsDefined(level.func_override_wallbuy_prompt) )
 	{
@@ -2125,13 +2133,7 @@ function weapon_spawn_think()
 		if ( !player_has_weapon )
 		{
 			// Else make the weapon show and give it
-			//AP: Check weapon unlocks before allowing purchase
-			if (isdefined(level.archi.weapons) && level.archi.weapons[self.weapon.name] == false)
-			{
-				zm_utility::play_sound_on_ent( "no_purchase" );
-				IPrintLn( "Weapon Locked :(" );
-			}
-			else if ( player zm_score::can_player_purchase( cost ) )
+			if ( player zm_score::can_player_purchase( cost ) )
 			{
 				if ( self.first_time_triggered == false )
 				{

@@ -12,6 +12,7 @@
 #using scripts\shared\ai\zombie_utility;
 #using scripts\zm\_zm;
 #using scripts\zm\_zm_score;
+#using scripts\zm\_zm_perks;
 #using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_items;
@@ -125,44 +126,80 @@ function get_ap_settings()
     level flag::set("ap_settings_ready");
 }
 
+function init_string_mappings()
+{
+    level.archi.perk_strings_to_names = [];
+    level.archi.craftable_piece_to_location = [];
+    level.archi.active_perk_machines = [];
+
+    perk_mappings = [];
+    perk_mappings[PERK_JUGGERNOG] = ARCHIPELAGO_ITEM_PERK_JUGGERNOG;
+    perk_mappings[PERK_QUICK_REVIVE] = ARCHIPELAGO_ITEM_PERK_QUICK_REVIVE;
+    perk_mappings[PERK_SLEIGHT_OF_HAND] = ARCHIPELAGO_ITEM_PERK_SLEIGHT_OF_HAND;
+    perk_mappings[PERK_DOUBLETAP2] = ARCHIPELAGO_ITEM_PERK_DOUBLETAP2;
+    perk_mappings[PERK_STAMINUP] = ARCHIPELAGO_ITEM_PERK_STAMINUP;
+    perk_mappings[PERK_PHDFLOPPER] = ARCHIPELAGO_ITEM_PERK_PHDFLOPPER;
+    perk_mappings[PERK_DEAD_SHOT] = ARCHIPELAGO_ITEM_PERK_DEAD_SHOT;
+    perk_mappings[PERK_ADDITIONAL_PRIMARY_WEAPON] = ARCHIPELAGO_ITEM_PERK_ADDITIONAL_PRIMARY_WEAPON;
+    perk_mappings[PERK_ELECTRIC_CHERRY] = ARCHIPELAGO_ITEM_PERK_ELECTRIC_CHERRY;
+    perk_mappings[PERK_TOMBSTONE] = ARCHIPELAGO_ITEM_PERK_TOMBSTONE;
+    perk_mappings[PERK_WHOSWHO] = ARCHIPELAGO_ITEM_PERK_WHOSWHO;
+    perk_mappings[PERK_VULTUREAID] = ARCHIPELAGO_ITEM_PERK_VULTUREAID;
+    perk_mappings[PERK_WIDOWS_WINE] = ARCHIPELAGO_ITEM_PERK_WIDOWS_WINE;
+
+	foreach (perk, ap_item in perk_mappings) 
+    {
+        ap_hint_string = "'" + ap_item + "' is required";
+        if (IS_TRUE(level.archi.map_specific_machines)) {
+            ap_hint_string = "'" + level.archi.mapString + " " + ap_item + "' is required";
+        }
+        level thread keep_perk_machine_locked(perk, ap_hint_string);
+    }
+
+    // Prevent buying perks we don't have the AP item for
+    if (isdefined(level.custom_perk_validation)) 
+    {
+        level.archi.original_custom_perk_validation = level.custom_perk_validation;
+    }
+    level.custom_perk_validation = &custom_perk_validation;
+
+    level.archi.func_override_wallbuy_prompt = &func_override_wallbuy_prompt;
+
+    // TODO: Settings check for disabled map specific machine strings
+    // level.archi.perk_strings_to_names[PERK_JUGGERNOG] = ARCHIPELAGO_ITEM_PERK_JUGGERNOG;
+    // level.archi.perk_strings_to_names[PERK_QUICK_REVIVE] = ARCHIPELAGO_ITEM_PERK_QUICK_REVIVE;
+    // level.archi.perk_strings_to_names[PERK_SLEIGHT_OF_HAND] = ARCHIPELAGO_ITEM_PERK_SLEIGHT_OF_HAND;
+    // level.archi.perk_strings_to_names[PERK_DOUBLETAP2] = ARCHIPELAGO_ITEM_PERK_DOUBLETAP2;
+    // level.archi.perk_strings_to_names[PERK_STAMINUP] = ARCHIPELAGO_ITEM_PERK_STAMINUP;
+    // level.archi.perk_strings_to_names[PERK_PHDFLOPPER] = ARCHIPELAGO_ITEM_PERK_PHDFLOPPER;
+    // level.archi.perk_strings_to_names[PERK_DEAD_SHOT] = ARCHIPELAGO_ITEM_PERK_DEAD_SHOT;
+    // level.archi.perk_strings_to_names[PERK_ADDITIONAL_PRIMARY_WEAPON] = ARCHIPELAGO_ITEM_PERK_ADDITIONAL_PRIMARY_WEAPON;
+    // level.archi.perk_strings_to_names[PERK_ELECTRIC_CHERRY] = ARCHIPELAGO_ITEM_PERK_ELECTRIC_CHERRY;
+    // level.archi.perk_strings_to_names[PERK_TOMBSTONE] = ARCHIPELAGO_ITEM_PERK_TOMBSTONE;
+    // level.archi.perk_strings_to_names[PERK_WHOSWHO] = ARCHIPELAGO_ITEM_PERK_WHOSWHO;
+    // level.archi.perk_strings_to_names[PERK_VULTUREAID] = ARCHIPELAGO_ITEM_PERK_VULTUREAID;
+    // level.archi.perk_strings_to_names[PERK_WIDOWS_WINE] = ARCHIPELAGO_ITEM_PERK_WIDOWS_WINE;
+
+    // if ( isdefined(level._custom_perks[PERK_JUGGERNOG] ))
+    // {
+    //     if ( isdefined(level._custom_perks[PERK_JUGGERNOG].hint_string) )
+    //     {
+    //         // Save original so we can restore it once we unlock the machine
+    //         level._custom_perks[PERK_JUGGERNOG].original_hint_string = level._custom_perks[PERK_JUGGERNOG].hint_string;
+    //     }
+    //     level._cuistom_perks[PERK_JUGGERNOG].hint_string = ARCHIPELAGO_ITEM_PERK_VULTUREAID + " is required";
+    // }
+}
+
 function on_archi_connect_settings()
 {
     level flag::wait_till("ap_settings_ready");
     level.archi.perk_limit_default_modifier = GetDvarInt("ARCHIPELAGO_PERK_LIMIT_DEFAULT_MODIFIER", 0);
-    level.archi.randomized_shield_parts = GetDvarInt("ARCHIPELAGO_RANDOMIZED_SHIELD_PARTS", 0);	
-}
+    level.archi.randomized_shield_parts = GetDvarInt("ARCHIPELAGO_RANDOMIZED_SHIELD_PARTS", 0);
+    level.archi.map_specific_wallbuys = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_WALLBUYS", 0);
+    level.archi.map_specific_machines = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_MACHINES", 0);
 
-function init_string_mappings(mapString)
-{
-    if (!isdefined(level.archi.perk_strings_to_names))
-    {
-        level.archi.perk_strings_to_names = [];
-    }
-
-    if (!isdefined(level.archi.blocker_ids_to_names))
-    {
-        level.archi.blocker_ids_to_names = [];
-    }
-
-    if (!isdefined(level.archi.craftable_piece_to_location))
-    {
-        level.archi.craftable_piece_to_location = [];
-    }
-
-    // TODO: Settings check for disabled map specific machine strings
-    level.archi.perk_strings_to_names[PERK_JUGGERNOG] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_JUGGERNOG;
-    level.archi.perk_strings_to_names[PERK_QUICK_REVIVE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_QUICK_REVIVE;
-    level.archi.perk_strings_to_names[PERK_SLEIGHT_OF_HAND] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_SLEIGHT_OF_HAND;
-    level.archi.perk_strings_to_names[PERK_DOUBLETAP2] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_DOUBLETAP2;
-    level.archi.perk_strings_to_names[PERK_STAMINUP] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_STAMINUP;
-    level.archi.perk_strings_to_names[PERK_PHDFLOPPER] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_PHDFLOPPER;
-    level.archi.perk_strings_to_names[PERK_DEAD_SHOT] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_DEAD_SHOT;
-    level.archi.perk_strings_to_names[PERK_ADDITIONAL_PRIMARY_WEAPON] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_ADDITIONAL_PRIMARY_WEAPON;
-    level.archi.perk_strings_to_names[PERK_ELECTRIC_CHERRY] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_ELECTRIC_CHERRY;
-    level.archi.perk_strings_to_names[PERK_TOMBSTONE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_TOMBSTONE;
-    level.archi.perk_strings_to_names[PERK_WHOSWHO] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_WHOSWHO;
-    level.archi.perk_strings_to_names[PERK_VULTUREAID] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_VULTUREAID;
-    level.archi.perk_strings_to_names[PERK_WIDOWS_WINE] = level.archi.mapString + " " + ARCHIPELAGO_ITEM_PERK_WIDOWS_WINE;
+    init_string_mappings();
 }
 
 function game_start()
@@ -182,14 +219,22 @@ function game_start()
         // Get Map Name String
         mapName = GetDvarString( "mapname" );
 
+        level.archi.wallbuy_mappings = [];
+        level.archi.wallbuys = [];
+        level.archi.check_override_wallbuy_purchase = &check_override_wallbuy_purchase;
         level.archi.boarded_windows = 0;
 
+        // Map State
         level.archi.opened_doors = [];
         level.archi.opened_debris = [];
-        level.archi.perk_limit_default_modifier = 0;
-        level.archi.randomized_shield_parts = 0;
         level.archi.progressive_perk_limit = 0;
         level.archi.craftable_parts = [];
+    
+        // Settings
+        level.archi.perk_limit_default_modifier = 0;
+        level.archi.randomized_shield_parts = 0;
+        level.archi.map_specific_wallbuys = 0;
+        level.archi.map_specific_machines = 0;
 
         // // Lock Weapons
         // level.archi.weapons["ar_accurate"] = false;
@@ -270,7 +315,6 @@ function game_start()
         if (mapName == "zm_castle")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_CASTLE;
-            init_string_mappings();
 
             // Replace craftable logic with AP locations
             replace_craftable_onPickup("craft_shield_zm");
@@ -326,7 +370,6 @@ function game_start()
         if (mapName == "zm_factory")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_THE_GIANT;
-            init_string_mappings();
 
             // 7 possible machines, 6 will spawn
             level thread setup_spare_change_trackers(6);
@@ -411,27 +454,7 @@ function save_data_manager()
 
 function default_map_changes()
 {
-
-    //
     level.initial_quick_revive_power_off = true;
-
-    //Give Every Door and Debris a number
-    doorCount = 0;
-    debrisCount = 0;
-    zombie_doors = getentarray("zombie_door", "targetname");
-    zombie_debris = getentarray("zombie_debris", "targetname");
-
-    for(; doorCount < zombie_doors.size; doorCount++)
-    {
-        IPrintLn(doorCount);
-        zombie_doors[doorCount].id = doorCount;
-    }
-    for(; debrisCount < zombie_debris.size; debrisCount++)
-    {
-        IPrintLn(doorCount + debrisCount);
-        total = debrisCount+doorCount;
-        zombie_debris[debrisCount].id = total;
-    }
 
     wait 1;
     //Turn off/Hide Gobblebum Machines by Yeeting them into the Sun
@@ -630,7 +653,6 @@ function replace_craftable_onPickup( craftableName )
 function wrapped_craftable_onPickup( player )
 {
     IPrintLn("Piece picked up");
-
     
     if ( isdefined(level.archi.craftable_piece_to_location[self.craftableName + "_" + self.pieceName]) )
     {
@@ -748,4 +770,98 @@ function track_debris_open()
     self waittill("kill_debris_prompt_thread");
     IPrintLn("Debris opened: " + self.id);
     level.archi.opened_debris[level.archi.opened_debris.size] = self.id;
+}
+
+function keep_perk_machine_locked(perk, ap_hint_string)
+{
+    s_custom_perk = level._custom_perks[perk];
+    if (!isdefined( s_custom_perk ))
+    {
+        return;
+    }
+
+    // Turn off perk if it's already on
+    machine_triggers = GetEntArray( s_custom_perk.radiant_machine_name, "target" );
+    if (machine_triggers[0].power_on)
+    {
+        level notify(s_custom_perk.alias + "_off");
+    }
+
+    while(true)
+    {
+        // Find the new machine and set our AP hint string
+        while(true)
+        {
+            wait (0.1);
+            t_perk = GetEnt(perk, "script_noteworthy");
+            if (isdefined(t_perk)) {
+                t_perk SetHintString(ap_hint_string);
+                break;
+            }
+        }
+
+        // Wait until something powers the machine on
+        level waittill(perk + "_power_on");
+        if (IS_TRUE(level.archi.active_perk_machines[perk]))
+        {
+            // We've got the AP item, we can stop turning it off
+            t_perk zm_perks::reset_vending_hint_string();
+            break;
+        }
+        wait(0.5);
+        level notify(s_custom_perk.alias + "_off");
+    }
+}
+
+// self is vending trigger
+function custom_perk_validation(player)
+{
+    perk = self.script_noteworthy;
+    if (!IS_TRUE(level.archi.active_perk_machines[perk]))
+    {
+        return false;
+    }
+    if (isdefined(level.archi.original_custom_perk_validation))
+    {
+        return self [[level.archi.original_custom_perk_validation]](player);
+    }
+    return true;
+}
+
+// self is weapon spawn
+function func_override_wallbuy_prompt(player)
+{
+    weapon = self.weapon;
+    if (IS_TRUE(level.archi.wallbuys[weapon.name])) 
+    {
+        return true;
+    } 
+    else
+    {
+        apItem = level.archi.wallbuy_mappings[weapon.name];
+        if (isdefined(apItem))
+        {
+            hint_string = "'" + apItem + "' is required";
+            if (level.archi.map_specific_wallbuys)
+            {
+                hint_string = "'" + level.archi.mapString + " " + apItem + "' is required";
+            }
+            self SetHintString(hint_string);
+            return false;
+        }
+    }
+    return true;
+}
+
+// self is player
+function check_override_wallbuy_purchase(weapon, weapon_spawn)
+{
+    IPrintLn("PIR");
+    IPrintLn("Checking " + weapon.name);
+    if (IS_TRUE(level.archi.wallbuys[weapon.name])) 
+    {
+        return false;
+    }
+    IPrintLn("Nope");
+    return true;
 }

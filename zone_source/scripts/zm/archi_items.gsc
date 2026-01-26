@@ -16,6 +16,7 @@
 #using scripts\zm\craftables\_zm_craftables;
 
 #insert scripts\shared\shared.gsh;
+#insert scripts\zm\_zm_perks.gsh;
 
 #insert scripts\zm\archi_core.gsh;
 
@@ -53,6 +54,9 @@ function RegisterUniversalItem(itemName, getFunc, clientField) {
 
 
 function RegisterWeapon(itemName, getFunc, consoleName) {
+    level.archi.wallbuy_mappings[consoleName] = itemName;
+    level.archi.wallbuys[consoleName] = false;
+
     item = SpawnStruct();
     item.name = itemName;
     item.getFunc = getFunc;
@@ -132,321 +136,314 @@ function give_ProgressivePerkLimit()
     level.archi.progressive_perk_limit += 1;
 }
 
+function give_Perk(perk)
+{
+    s_custom_perk = level._custom_perks[perk];
+    level.archi.active_perk_machines[perk] = true;
+    level notify(s_custom_perk.alias + "_on");
+}
+
 //Simple Give Functions notifies
 function give_Juggernog()
 {
-    level notify("ap_juggernog_on");
-    util::wait_network_frame();
-	level notify("ap_specialty_armorvest_power_on");
+    give_Perk(PERK_JUGGERNOG);
 }
 function give_QuickRevive()
 {
-    level notify( "ap_revive_on" );
-    util::wait_network_frame();
-	level notify("ap_specialty_quickrevive_power_on");
+    give_Perk(PERK_QUICK_REVIVE);
 }
 function give_SpeedCola()
 {
-    level notify( "ap_sleight_on" );
-	util::wait_network_frame();
-	level notify("ap_specialty_fastreload_power_on");
+    give_Perk(PERK_SLEIGHT_OF_HAND);
 }
 function give_DoubleTap()
 {
-    level notify( "ap_doubletap_on" );
-    util::wait_network_frame();
-	level notify("ap_specialty_rof_power_on");
+    give_Perk(PERK_DOUBLETAP2);
 }
 function give_StaminUp()
 {
-    level notify( "ap_staminup_on" );
-    util::wait_network_frame();
-	level notify("ap_specialty_staminup_power_on");
+    give_Perk(PERK_STAMINUP);
 }
 function give_MuleKick()
 {
-	level notify("ap_additionalprimaryweapon_on");
-    util::wait_network_frame();
-    level notify("ap_specialty_additionalprimaryweapon_power_on");
+    give_Perk(PERK_ADDITIONAL_PRIMARY_WEAPON);
 }
 function give_DeadShot()
 {
-    level notify ("ap_deadshot_on");
-    util::wait_network_frame();
-    level notify("ap_specialty_deadshot_power_on");
+    give_Perk(PERK_DEAD_SHOT);
 }
 
 // Weapons
 // Assault Rifles
 function give_Weapon_ICR()
 {
-    enableWeapon("ar_accurate");
+    enableWallbuy("ar_accurate");
 }
 
 function give_Weapon_HVK()
 {
-    enableWeapon("ar_cqb");
+    enableWallbuy("ar_cqb");
 }
 
 function give_Weapon_ManOWar()
 {
-    enableWeapon("ar_damage");
+    enableWallbuy("ar_damage");
 }
 
 function give_Weapon_M8A7()
 {
-    enableWeapon("ar_longburst");
+    enableWallbuy("ar_longburst");
 }
 
 function give_Weapon_Sheiva()
 {
-    enableWeapon("ar_marksman");
+    enableWallbuy("ar_marksman");
 }
 
 function give_Weapon_KN44()
 {
-    enableWeapon("ar_standard");
+    enableWallbuy("ar_standard");
 }
 
 function give_Weapon_FFAR()
 {
-    enableWeapon("ar_famas");
+    enableWallbuy("ar_famas");
 }
 
 function give_Weapon_Garand()
 {
-    enableWeapon("ar_garand");
+    enableWallbuy("ar_garand");
 }
 
 function give_Weapon_Peacekeeper()
 {
-    enableWeapon("ar_peacekeeper");
+    enableWallbuy("ar_peacekeeper");
 }
 
 function give_Weapon_AN94()
 {
-    enableWeapon("ar_an94");
+    enableWallbuy("ar_an94");
 }
 
 function give_Weapon_Galil()
 {
-    enableWeapon("ar_galil");
+    enableWallbuy("ar_galil");
 }
 
 function give_Weapon_M14()
 {
-    enableWeapon("ar_m14");
+    enableWallbuy("ar_m14");
 }
 
 function give_Weapon_M16()
 {
-    enableWeapon("ar_m16");
+    enableWallbuy("ar_m16");
 }
 
 function give_Weapon_Basilisk()
 {
-    enableWeapon("ar_pulse");
+    enableWallbuy("ar_pulse");
 }
 
 function give_Weapon_XR2()
 {
-    enableWeapon("ar_fastburst");
+    enableWallbuy("ar_fastburst");
 }
 
 function give_Weapon_STG44()
 {
-    enableWeapon("ar_stg44");
+    enableWallbuy("ar_stg44");
 }
 
 // Light Machine Guns
 function give_Weapon_Dingo()
 {
-    enableWeapon("lmg_cqb");
+    enableWallbuy("lmg_cqb");
 }
 
 function give_Weapon_Dredge()
 {
-    enableWeapon("lmg_heavy");
+    enableWallbuy("lmg_heavy");
 }
 
 function give_Weapon_BRM()
 {
-    enableWeapon("lmg_light");
+    enableWallbuy("lmg_light");
 }
 
 function give_Weapon_Gorgon()
 {
-    enableWeapon("lmg_slowfire");
+    enableWallbuy("lmg_slowfire");
 }
 
 function give_Weapon_R70Ajax()
 {
-    enableWeapon("lmg_infinite");
+    enableWallbuy("lmg_infinite");
 }
 
 function give_Weapon_RPK()
 {
-    enableWeapon("lmg_rpk");
+    enableWallbuy("lmg_rpk");
 }
 
 function give_Weapon_MG08()
 {
-    enableWeapon("lmg_mg08");
+    enableWallbuy("lmg_mg08");
 }
 
 // Sub Machine Guns
 function give_Weapon_Pharo()
 {
-    enableWeapon("smg_burst");
+    enableWallbuy("smg_burst");
 }
 
 function give_Weapon_Weevil()
 {
-    enableWeapon("smg_capacity");
+    enableWallbuy("smg_capacity");
 }
 
 function give_Weapon_Vesper()
 {
-    enableWeapon("smg_fastfire");
+    enableWallbuy("smg_fastfire");
 }
 
 function give_Weapon_Kuda()
 {
-    enableWeapon("smg_standard");
+    enableWallbuy("smg_standard");
 }
 
 function give_Weapon_VMP()
 {
-    enableWeapon("smg_versatile");
+    enableWallbuy("smg_versatile");
 }
 
 function give_Weapon_Bootlegger()
 {
-    enableWeapon("smg_sten");
+    enableWallbuy("smg_sten");
 }
 
 function give_Weapon_HG40()
 {
-    enableWeapon("smg_mp40");
+    enableWallbuy("smg_mp40");
 }
 
 function give_Weapon_PPSH()
 {
-    enableWeapon("smg_ppsh");
+    enableWallbuy("smg_ppsh");
 }
 
 function give_Weapon_Razorback()
 {
-    enableWeapon("smg_thompson");
+    enableWallbuy("smg_thompson");
 }
 
 function give_Weapon_AK47u()
 {
-    enableWeapon("smg_ak47u");
+    enableWallbuy("smg_ak47u");
 }
 
 function give_Weapon_MSMC()
 {
-    enableWeapon("smg_msmc");
+    enableWallbuy("smg_msmc");
 }
 
 function give_Weapon_Nailgun()
 {
-    enableWeapon("smg_nailgun");
+    enableWallbuy("smg_nailgun");
 }
 
 function give_Weapon_HLX4()
 {
-    enableWeapon("smg_rechamber");
+    enableWallbuy("smg_rechamber");
 }
 
 function give_Weapon_Sten()
 {
-    enableWeapon("smg_sten2");
+    enableWallbuy("smg_sten2");
 }
 
 function give_Weapon_MP40()
 {
-    enableWeapon("smg_mp40_1940");
+    enableWallbuy("smg_mp40_1940");
 }
 
 // Shotguns
 function give_Weapon_Haymaker()
 {
-    enableWeapon("shotgun_fullauto");
+    enableWallbuy("shotgun_fullauto");
 }
 
 function give_Weapon_Argus()
 {
-    enableWeapon("shotgun_precision");
+    enableWallbuy("shotgun_precision");
 }
 
 function give_Weapon_KRM()
 {
-    enableWeapon("shotgun_pump");
+    enableWallbuy("shotgun_pump");
 }
 
 function give_Weapon_Brecci()
 {
-    enableWeapon("shotgun_semiauto");
+    enableWallbuy("shotgun_semiauto");
 }
 
 function give_Weapon_Banshii()
 {
-    enableWeapon("shotgun_energy");
+    enableWallbuy("shotgun_energy");
 }
 
 function give_Weapon_Olympia()
 {
-    enableWeapon("shotgun_olympia");
+    enableWallbuy("shotgun_olympia");
 }
 
 // Pistols
 function give_Weapon_Bloodhound()
 {
-    enableWeapon("pistol_revolver38");
+    enableWallbuy("pistol_revolver38");
 }
 
 function give_Weapon_MR6()
 {
-    enableWeapon("pistol_standard");
+    enableWallbuy("pistol_standard");
 }
 
 function give_Weapon_RK5()
 {
-    enableWeapon("pistol_burst");
+    enableWallbuy("pistol_burst");
 }
 
 function give_Weapon_LCAR()
 {
-    enableWeapon("pistol_fullauto");
+    enableWallbuy("pistol_fullauto");
 }
 
 function give_Weapon_RiftE9()
 {
-    enableWeapon("pistol_energy");
+    enableWallbuy("pistol_energy");
 }
 
 function give_Weapon_M1911()
 {
-    enableWeapon("pistol_m1911");
+    enableWallbuy("pistol_m1911");
 }
 
 function give_Weapon_Marshal()
 {
-    enableWeapon("pistol_shotgun_dw");
+    enableWallbuy("pistol_shotgun_dw");
 }
 
 function give_Weapon_Mauser()
 {
-    enableWeapon("pistol_c96");
+    enableWallbuy("pistol_c96");
 }
 
 // Melee
 
 function give_Weapon_BowieKnife()
 {
-    enableWeapon("melee_bowie");
+    enableWallbuy("melee_bowie");
 }
 
 // Shield Parts
@@ -558,11 +555,11 @@ function give_Gift_NukePowerup()
 
 // Utils
 
-function enableWeapon(itemName)
+function enableWallbuy(itemName)
 {
-    if (isdefined(level.archi.weapons) && isdefined(level.archi.weapons[itemName]))
+    if (isdefined(level.archi.wallbuys))
     {
-        level.archi.weapons[itemName] = true;
+        level.archi.wallbuys[itemName] = true;
     }
 }
 

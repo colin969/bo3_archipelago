@@ -20,11 +20,9 @@ scriptparsetree,scripts/zm/archi_items.gsc
 //Commands
 scriptparsetree,scripts/zm/archi_commands.gsc
 
-//Perk System Logic Override
-scriptparsetree,scripts/zm/_zm_perks.gsc
 //PAP Logic override
 scriptparsetree,scripts/zm/_zm_pack_a_punch.gsc
-//Weapon/Wallbuy Logic Overrise
+//Weapon buy and prompt override
 scriptparsetree,scripts/zm/_zm_weapons.gsc
 
 //The point our UI injects its widget
