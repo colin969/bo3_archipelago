@@ -333,7 +333,6 @@ Archi.LogMessageLoop = function()
 	UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
 end
 
-
 Archi.KeepConnected = function ()
   
   if Archipelago then

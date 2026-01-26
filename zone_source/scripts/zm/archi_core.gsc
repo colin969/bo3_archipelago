@@ -52,7 +52,9 @@ function __init__()
 
 	callback::on_start_gametype( &game_start );
 	callback::on_connect( &on_player_connect );
-	callback::on_spawned( &on_player_spawned ); 
+	callback::on_spawned( &on_player_spawned );
+
+    level thread get_ap_settings();
 
     //Clientfields (Mostly Tracker stuff)
     //TODO Put this in a library?
@@ -100,30 +102,6 @@ function __init__()
     clientfield::register("world", "ap_weapon_ar_stg44", VERSION_SHIP, 2, "int");
 }
 
-function wrapped_door_buy_check(blocker) {
-    if ( !self archi_blocker_buy_check(blocker) )
-    {
-        return false;
-    }
-    if (isdefined(level.archi.original_custom_door_buy_check))
-    {
-        return self [[ level.archi.original_custom_door_buy_check ]]( blocker );
-    }
-    return true;
-}
-
-function wrapped_debris_buy_check(blocker) {
-    if ( !self archi_blocker_buy_check(blocker) )
-    {
-        return false;
-    }
-    if (isdefined(level.archi.original_custom_debris_buy_check))
-    {
-        return self [[ level.archi.original_custom_debris_buy_check ]]( blocker );
-    }
-    return true;
-}
-
 function __main__()
 {
     archi_commands::init_commands();
@@ -132,12 +110,26 @@ function __main__()
     level thread repaired_board_noti();
 }
 
+function get_ap_settings()
+{
+    // Wait until the LUA client has set the settings dvars
+    while (true)
+    {
+        dvar_value = GetDvarString("ARCHIPELAGO_SETTINGS_READY", "");
+        if (isdefined(dvar_value) && dvar_value != "")
+        {
+            break;
+        }       
+        WAIT_SERVER_FRAME
+    }   
+    level flag::set("ap_settings_ready");
+}
+
 function on_archi_connect_settings()
 {
-
-    //TODO: Add some Archipelago settings, then put them in here
-
-	
+    level flag::wait_till("ap_settings_ready");
+    level.archi.perk_limit_default_modifier = GetDvarInt("ARCHIPELAGO_PERK_LIMIT_DEFAULT_MODIFIER", 0);
+    level.archi.randomized_shield_parts = GetDvarInt("ARCHIPELAGO_RANDOMIZED_SHIELD_PARTS", 0);	
 }
 
 function init_string_mappings(mapString)
@@ -175,7 +167,6 @@ function init_string_mappings(mapString)
 
 function game_start()
 {
-
     zombie_doors = GetEntArray("zombie_door", "targetname");
     array::thread_all(zombie_doors, &track_door_open);
 
@@ -192,22 +183,13 @@ function game_start()
         mapName = GetDvarString( "mapname" );
 
         level.archi.boarded_windows = 0;
-        level.archi.blockers = [];
 
         level.archi.opened_doors = [];
         level.archi.opened_debris = [];
-
-        // Add AP blocker around existing door buy checks, incase a map uses them
-        if (isdefined(level.custom_door_buy_check))
-        {
-            level.archi.original_custom_door_buy_check = level.custom_door_buy_check;
-        }
-        level.custom_door_buy_check = &wrapped_door_buy_check;
-        if (isdefined(level.custom_debris_buy_check))
-        {
-            level.archi.original_custom_debris_buy_check = level.custom_debris_buy_check;
-        }
-        level.custom_debris_buy_check = &wrapped_debris_buy_check;
+        level.archi.perk_limit_default_modifier = 0;
+        level.archi.randomized_shield_parts = 0;
+        level.archi.progressive_perk_limit = 0;
+        level.archi.craftable_parts = [];
 
         // // Lock Weapons
         // level.archi.weapons["ar_accurate"] = false;
@@ -266,17 +248,24 @@ function game_start()
         // // Melee
         // level.archi.weapons["melee_bowie"] = false;
 
+        archi_items::RegisterUniversalItem("50 Points",&archi_items::give_50Points);
+        archi_items::RegisterUniversalItem("500 Points",&archi_items::give_500Points);
+        archi_items::RegisterUniversalItem("50000 Points",&archi_items::give_50000Points);
+
         // Traps
-        archi_items::RegisterItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson,"ap_trap_thirdperson");
+        archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson,"ap_trap_thirdperson");
         
         // Gifts
-        archi_items::RegisterItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup,"ap_gift_carpenter");
-        archi_items::RegisterItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup,"ap_gift_double_points");
-        archi_items::RegisterItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup,"ap_gift_instakill");
-        archi_items::RegisterItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup,"ap_gift_fire_sale");
-        archi_items::RegisterItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup,"ap_gift_max_ammo");
-        archi_items::RegisterItem("Gift - Nuke Powerup",&archi_items::give_Gift_NukePowerup,"ap_gift_nuke");
-        archi_items::RegisterItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup,"ap_gift_free_perk");
+        archi_items::RegisterUniversalItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup,"ap_gift_carpenter");
+        archi_items::RegisterUniversalItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup,"ap_gift_double_points");
+        archi_items::RegisterUniversalItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup,"ap_gift_instakill");
+        archi_items::RegisterUniversalItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup,"ap_gift_fire_sale");
+        archi_items::RegisterUniversalItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup,"ap_gift_max_ammo");
+        archi_items::RegisterUniversalItem("Gift - Nuke Powerup",&archi_items::give_Gift_NukePowerup,"ap_gift_nuke");
+        archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup,"ap_gift_free_perk");
+
+        // Progressives
+        archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit,"ap_progressive_perk_limit");
 
         if (mapName == "zm_castle")
         {
@@ -294,7 +283,6 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
-
             archi_castle::setup_soul_catchers();
             archi_castle::setup_landing_pads();
 
@@ -305,11 +293,11 @@ function game_start()
             level thread setup_spare_change_trackers(6);
 
             // Register Map Unique Items - Item name, callback, clientfield
-            archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
+            archi_items::RegisterItem("Victory",&archi_items::give_Victory,undefined,false);
 
-            archi_items::RegisterItem(level.archi.mapString + " Shield Part - Door",&archi_items::give_Castle_ShieldPart_Door,undefined);
-            archi_items::RegisterItem(level.archi.mapString + " Shield Part - Dolly",&archi_items::give_Castle_ShieldPart_Dolly,undefined);
-            archi_items::RegisterItem(level.archi.mapString + " Shield Part - Clamp",&archi_items::give_Castle_ShieldPart_Clamp,undefined);
+            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
 
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -344,15 +332,8 @@ function game_start()
             level thread setup_spare_change_trackers(6);
 
             // Register Map Unique Items - Item name, callback, clientfield
-            archi_items::RegisterItem(level.archi.mapString + " Victory",&archi_items::give_Victory,undefined);
+            archi_items::RegisterItem("Victory",&archi_items::give_Victory,undefined,false);
             
-            archi_items::RegisterItem(level.archi.mapString + " Animal Testing",&archi_items::give_The_Giant_Animal_Testing,"ap_item_region_1");
-            archi_items::RegisterItem(level.archi.mapString + " Garage",&archi_items::give_The_Giant_Garage,"ap_item_region_2");
-            archi_items::RegisterItem(level.archi.mapString + " Power Room",&archi_items::give_The_Giant_Power_Room,"ap_item_region_3");
-            archi_items::RegisterItem(level.archi.mapString + " Teleporter 1",&archi_items::give_The_Giant_Teleporter_1,"ap_item_region_4");
-            archi_items::RegisterItem(level.archi.mapString + " Teleporter 2",&archi_items::give_The_Giant_Teleporter_2,"ap_item_region_5");
-            archi_items::RegisterItem(level.archi.mapString + " Teleporter 3",&archi_items::give_The_Giant_Teleporter_3,"ap_item_region_6");
-
             // Register Possible Global Items - Item name, callback, clientfield
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -372,29 +353,10 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
             archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-            
-            //Lock Blockers
-            level.archi.blockers[5] = false;
-            level.archi.blockers[6] = false;
-            level.archi.blockers[4] = false;
-            level.archi.blockers[11] = false;
-            level.archi.blockers[10] = false;
-            level.archi.blockers[7] = false;
-            level.archi.blockers[0] = false;
 
-            level.archi.blocker_ids_to_names[5] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING; 
-            level.archi.blocker_ids_to_names[4] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
-            level.archi.blocker_ids_to_names[10] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_ANIMAL_TESTING;
-            level.archi.blocker_ids_to_names[11] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_POWER_ROOM + " and " + level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_GARAGE;
-            level.archi.blocker_ids_to_names[6] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_1; 
-            level.archi.blocker_ids_to_names[7] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_2; 
-            level.archi.blocker_ids_to_names[0] = level.archi.mapString + " " + ARCHIPELAGO_BLOCKER_GIANT_TELEPORTER_3; 
         }
-        
-        //TODO: Error if map doesnt exist
-        archi_items::RegisterItem("50 Points",&archi_items::give_50Points);
-        archi_items::RegisterItem("500 Points",&archi_items::give_500Points);
-        archi_items::RegisterItem("50000 Points",&archi_items::give_50000Points);
+
+        level thread setup_can_player_purchase_perk();
 
         //Server-wide thread to get items from the Lua/LUI
         level thread item_get_from_lua();
@@ -406,11 +368,36 @@ function game_start()
         level.archi.locationQueue = array();
 
         //Apply settings with Existing DVARS, should be set in menu during initial Room Connection
-        on_archi_connect_settings();
+        level thread on_archi_connect_settings();
     }
 
     //Setup default map changes
     default_map_changes();
+}
+
+function setup_can_player_purchase_perk()
+{
+    level waittill("initial_blackscreen_passed");
+
+	if(isdefined(level.get_player_perk_purchase_limit))
+    {
+        level.original_get_player_perk_purchase_limit = level.get_player_purchase_limit;
+    }
+    level.get_player_perk_purchase_limit = &can_player_purchase_perk;
+}
+
+function can_player_purchase_perk()
+{
+    // Run levels original perk limit check first
+    purchase_limit = level.perk_purchase_limit;
+    if (isdefined(level.original_get_player_perk_purchase_limit))
+    {
+        purchase_limit = self [[ level.original_get_player_perk_purchase_limit ]]();
+    }
+    // Add ours on top of the maps original perk limit
+    purchase_limit += level.archi.perk_limit_default_modifier;
+    purchase_limit += level.archi.progressive_perk_limit;
+    return purchase_limit;
 }
 
 function save_data_manager()
@@ -456,8 +443,6 @@ function default_map_changes()
             level.bgb_machines[i].unitrigger_stub.origin = (10000, 10000, 10000);
         }
     }
-
-
 }
 
 function on_player_connect()
@@ -620,21 +605,6 @@ function location_check_to_lua()
     }
 }
 
-//Custom Door/Debris buy check
-function archi_blocker_buy_check(blocker)
-{
-    if ( isdefined(level.archi.blockers[blocker.id]) )
-    {
-        return level.archi.blockers[blocker.id];
-    }
-    return true;
-}
-
-// General setup of a craftable:
-// Create craftable stub struct
-// Populate with piece stubs
-// Create a craftable spawn
-// Populate with piece spawns based on those stubs, usually shared functions
 function replace_craftable_onPickup( craftableName )
 {
     if ( isdefined(level.zombie_include_craftables) && isdefined(level.zombie_include_craftables[ craftableName ]) )
@@ -660,6 +630,7 @@ function replace_craftable_onPickup( craftableName )
 function wrapped_craftable_onPickup( player )
 {
     IPrintLn("Piece picked up");
+
     
     if ( isdefined(level.archi.craftable_piece_to_location[self.craftableName + "_" + self.pieceName]) )
     {
@@ -671,17 +642,24 @@ function wrapped_craftable_onPickup( player )
         IPrintLn("Executing original script");
         self [[self.piecestub.original_onPickup]](player);
     }
-    self thread _remove_piece();
+    if (self.craftableName == "craft_shield_zm" && level.archi.randomized_shield_parts == 1)
+    {
+        self thread _remove_piece();
+    }
 }
 
 // Remove a piecespawn from the shared inventory'
 // self is piecespawn
 function _remove_piece()
 {
-    WAIT_SERVER_FRAME
-    self.in_shared_inventory = 0; // Not sure if this bit actually does anything right now
-    IPrintLn(self.piecestub.client_field_id);
-    level clientfield::set(self.piecestub.client_field_id, 0);
+    id = self.craftableName + "_" + self.pieceName;
+    if (!isdefined(level.archi.craftable_parts[id]))
+    {
+        WAIT_SERVER_FRAME
+        self.in_shared_inventory = 0; // Not sure if this bit actually does anything right now
+        IPrintLn(self.piecestub.client_field_id);
+        level clientfield::set(self.piecestub.client_field_id, 0);
+    }
 }
 
 function setup_spare_change_trackers(total_machines)

@@ -30,6 +30,7 @@ function init_commands()
     level thread _send_location_command_response();
     level thread _trigger_item_response();
     level thread _print_debug_craftableStubs_response();
+    level thread _print_debug_settings();
   }
 }
 
@@ -121,9 +122,32 @@ function private _trigger_item_response(command_args)
   }
 }
 
+function private _print_debug_settings()
+{
+  level endon("end_game");
+
+  ModVar("ap_debug_settings", "");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString("ap_debug_settings", "");
+
+    if (isdefined(dvar_value) && dvar_value != "") {
+      ModVar("ap_debug_settings", "");
+
+      IPrintLn("Settings Ready: " + level flag::get("ap_settings_ready"));
+      IPrintLn("Perk Limit Modifier: " + level.archi.perk_limit_default_modifier);
+      IPrintLn("Perk Limit Increase: " + level.archi.progressive_perk_limit);
+      IPrintLn("Randomized Shield Parts: " + level.archi.randomized_shield_parts);
+    }
+  }
+}
+
 function private _print_debug_craftableStubs_response()
 {
-    level endon("end_game");
+  level endon("end_game");
 
   ModVar("ap_debug_craftables", "");
 

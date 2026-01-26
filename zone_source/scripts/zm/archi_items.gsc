@@ -21,7 +21,27 @@
 
 #namespace archi_items;
 
-function RegisterItem(itemName, getFunc,clientField) {
+function RegisterItem(itemName, getFunc, clientField, universal) {
+    globalItem = SpawnStruct();
+    globalItem.name = level.archi.mapString + " " + itemName;
+    globalItem.getFunc = getFunc;
+    globalItem.clientfield = clientField;
+    globalItem.count = 0;
+
+    if (IS_TRUE(universal)) {
+        item = SpawnStruct();
+        item.name = itemName;
+        item.getFunc = getFunc;
+        item.clientfield = clientField;
+        item.count = 0;
+
+        level.archi.items[itemName] = item;
+    }
+
+    level.archi.items[globalItem.name] = globalItem;
+}
+
+function RegisterUniversalItem(itemName, getFunc, clientField) {
     item = SpawnStruct();
     item.name = itemName;
     item.getFunc = getFunc;
@@ -30,6 +50,7 @@ function RegisterItem(itemName, getFunc,clientField) {
 
     level.archi.items[itemName] = item;
 }
+
 
 function RegisterWeapon(itemName, getFunc, consoleName) {
     item = SpawnStruct();
@@ -105,52 +126,11 @@ function give_TheGiantRandomPerk()
     //level flag::set("snow_ee_completed");
 }
 
-//Map Region Give Functions
-
-function give_The_Giant_Animal_Testing()
+// Progressive Perk Limits
+function give_ProgressivePerkLimit()
 {
-    enableBlocker(5);
-    if (checkItem("(The Giant) Power Room"))
-    {
-        //If power room is on, give us the back entrance
-        enableBlocker(10);
-    }
+    level.archi.progressive_perk_limit += 1;
 }
-function give_The_Giant_Garage()
-{
-    enableBlocker(4);
-    if (checkItem(ARCHIPELAGO_MAP_THE_GIANT + " Power Room"))
-    {
-        //If power room is on, give us the back entrance
-        enableBlocker(11);
-    }
-}
-function give_The_Giant_Power_Room()
-{
-    if (checkItem(ARCHIPELAGO_MAP_THE_GIANT + " Animal Testing"))
-    {
-        //If Animal Testing is On, give us that entrance
-        enableBlocker(10);
-    }
-    if (checkItem(ARCHIPELAGO_MAP_THE_GIANT + " Garage"))
-    {
-        //If Garage is On, give us that entrance
-        enableBlocker(11);
-    }
-}
-function give_The_Giant_Teleporter_1()
-{
-    enableBlocker(6);
-}
-function give_The_Giant_Teleporter_2()
-{
-    enableBlocker(7);
-}
-function give_The_Giant_Teleporter_3()
-{
-    enableBlocker(0);
-}
-
 
 //Simple Give Functions notifies
 function give_Juggernog()
@@ -469,6 +449,28 @@ function give_Weapon_BowieKnife()
     enableWeapon("melee_bowie");
 }
 
+// Shield Parts
+
+function give_ShieldPart_Dolly()
+{
+    give_piece("craft_shield_zm", "dolly");
+}
+
+function give_ShieldPart_Door()
+{
+    give_piece("craft_shield_zm", "door");
+}
+
+function give_ShieldPart_Clamp()
+{
+    give_piece("craft_shield_zm", "clamp");
+}
+
+function give_piece(craftableName, pieceName)
+{
+    level.archi.craftable_parts[craftableName + "_" + pieceName] = true;
+    zm_craftables::player_get_craftable_piece(craftableName, pieceName);
+}
 
 // function give_PackAPunch()
 // {
@@ -564,32 +566,7 @@ function enableWeapon(itemName)
     }
 }
 
-function enableBlocker(number)
-{
-    if (isdefined(level.archi.blockers) && isdefined(level.archi.blockers[number]))
-    {
-        level.archi.blockers[number] = true;
-    }
-}
 function checkItem(itemName)
 {
     return (isdefined(level.archi.items[itemName]) && level.archi.items[itemName].count>0);
 }
-
-// Castle
-
-function give_Castle_ShieldPart_Door()
-{
-    zm_craftables::player_get_craftable_piece("craft_shield_zm", "door");
-}
-
-function give_Castle_ShieldPart_Dolly()
-{
-    zm_craftables::player_get_craftable_piece("craft_shield_zm", "dolly");
-}
-
-function give_Castle_ShieldPart_Clamp()
-{
-    zm_craftables::player_get_craftable_piece("craft_shield_zm", "clamp");
-}
-

@@ -32,16 +32,6 @@ local APWeaponList = {
     [16] = {[1] = "ap_weapon_ar_stg44", [2] = "archipelago_weapon_ar_stg44"}
 }
 
-local TheGiantRegionList = {
-    [1] ={[1] = "ap_item_region_0",[2] = "archipelago_the_giant_courtyard"},
-    [2] ={[1] = "ap_item_region_1",[2] = "archipelago_the_giant_animal_testing"},
-    [3] ={[1] = "ap_item_region_2",[2] = "archipelago_the_giant_garage"},
-    [4] ={[1] = "ap_item_region_3",[2] = "archipelago_the_giant_power_room"},
-    [5] ={[1] = "ap_item_region_4",[2] = "archipelago_the_giant_teleporter_1"},
-    [6] ={[1] = "ap_item_region_5",[2] = "archipelago_the_giant_teleporter_2"},
-    [7] ={[1] = "ap_item_region_6",[2] = "archipelago_the_giant_teleporter_3"},
-}
-
 local TheGiantItemList = {2,3,4,5,6,7}
 
 CoD.ArchipelagoTracker = InheritFrom( LUI.UIElement )
@@ -78,7 +68,6 @@ CoD.ArchipelagoTracker.new = function (menu, controller)
 
     --TODO: Set this based on map name
     local CurrentMapItemList = TheGiantItemList
-    local CurrentMapRegionList = TheGiantRegionList
     --
     --Item Tracker
     for _,i in ipairs(CurrentMapItemList) do
@@ -112,41 +101,6 @@ CoD.ArchipelagoTracker.new = function (menu, controller)
             imageCount = 1
             startTop = startTop + itemHeight + padding
         end
-    end
-    --Map Tracker
-    for _,v in ipairs(CurrentMapRegionList) do
-        local imageFile = v[2]
-        local clientFieldName = v[1]
-        local regionImage = LUI.UIImage.new()
-
-        local mapWidth = 473/2
-        local mapHeight = 576/2
-
-        local leftPos = -125
-        local rightPos = leftPos + mapWidth
-        local topPos = 300
-        local bottomPos = topPos+mapHeight
-        regionImage:setLeftRight(true, false,leftPos,rightPos)
-        regionImage:setTopBottom(true, false,topPos,bottomPos)
-        regionImage:setImage(RegisterImage(imageFile))
-        if clientFieldName == "ap_item_region_0" then
-            regionImage:setAlpha(1)
-        else
-            regionImage:setAlpha(.5)
-            regionImage:subscribeToModel( Engine.GetModel( Engine.GetModelForController( controller ), "zmInventory."..clientFieldName ), function( modelRef  )
-                local val = Engine.GetModelValue( modelRef )
-                if val then
-                    if val == 1 then
-                        regionImage:setAlpha(1)
-                    else
-                        regionImage:setAlpha(0.5)
-                    end
-                end
-            end )
-        end
-
-        self:addElement(regionImage)
-        table.insert(self.regionImages,regionImage)
     end
     --
     self.clipsPerState = {
