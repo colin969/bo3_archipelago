@@ -12,6 +12,8 @@
 #using scripts\shared\ai\zombie_utility;
 #using scripts\zm\_zm;
 #using scripts\zm\_zm_score;
+#using scripts\zm\_zm_pack_a_punch;
+#using scripts\zm\_zm_pack_a_punch_util;
 #using scripts\zm\_zm_perks;
 #using scripts\zm\craftables\_zm_craftables;
 
@@ -155,6 +157,12 @@ function init_string_mappings()
         }
         level thread keep_perk_machine_locked(perk, ap_hint_string);
     }
+
+    if (isdefined(level.pack_a_punch.custom_validation))
+    {
+        level.archi.original_pap_custom_validation = level.pack_a_punch.custom_validation;
+    }
+    level.pack_a_punch.custom_validation = &custom_pap_validation;
 
     // Prevent buying perks we don't have the AP item for
     if (isdefined(level.custom_perk_validation)) 
@@ -311,6 +319,8 @@ function game_start()
 
         // Progressives
         archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit,"ap_progressive_perk_limit");
+
+        archi_items::RegisterPap();
 
         if (mapName == "zm_castle")
         {
@@ -772,6 +782,62 @@ function track_debris_open()
     level.archi.opened_debris[level.archi.opened_debris.size] = self.id;
 }
 
+function keep_pap_locked()
+{
+    level thread keep_pap_hint_string();
+    vending_weapon_upgrade_trigger = zm_pap_util::get_triggers();
+
+    foreach(t_machine in vending_weapon_upgrade_trigger)
+    {
+        t_machine SetHintString("'Pack-A-Punch Machine' is required");
+    }
+
+    while(true) 
+    {
+        level waittill("Pack_A_Punch_on");
+        wait (0.5);
+        if (IS_TRUE(level.archi.pap_active))
+        {
+            // Pap active, don't turn back off
+            break;
+        }
+        vending_weapon_upgrade_trigger = zm_pap_util::get_triggers();
+        foreach(t_machine in vending_weapon_upgrade_trigger)
+        {
+            t_machine.powered [[t_machine.powered.power_off_func]](undefined, undefined);
+        }
+        wait(0.5);
+        foreach(t_machine in vending_weapon_upgrade_trigger)
+        {
+            t_machine SetHintString("'Pack-A-Punch Machine' is required");
+        }
+    }
+}
+
+// This fixes the teleporting PaP from Castle
+function keep_pap_hint_string()
+{
+    level endon("end_game");
+
+    while(true)
+    {
+        level.pap_machine.zbarrier waittill("zbarrier_state_change");
+        wait(0.1);
+        if (IS_TRUE(level.archi.pap_active))
+        {
+            // Pap active, don't keep changing hint string
+            break;
+        }
+        vending_weapon_upgrade_trigger = zm_pap_util::get_triggers();
+        foreach(t_machine in vending_weapon_upgrade_trigger)
+        {
+            t_machine SetHintString("'Pack-A-Punch Machine' is required");
+        }
+    }
+
+
+}
+
 function keep_perk_machine_locked(perk, ap_hint_string)
 {
     s_custom_perk = level._custom_perks[perk];
@@ -811,6 +877,20 @@ function keep_perk_machine_locked(perk, ap_hint_string)
         wait(0.5);
         level notify(s_custom_perk.alias + "_off");
     }
+}
+
+// self is something pap related
+function custom_pap_validation(player)
+{
+    if (!IS_TRUE(level.archi.pap_active))
+    {
+        return false;
+    }
+    if (isdefined(level.archi.original_pap_custom_validation))
+    {
+        return self [[level.archi.original_pap_custom_validation]](player);
+    }
+    return true;
 }
 
 // self is vending trigger

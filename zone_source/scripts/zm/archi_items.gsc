@@ -87,6 +87,16 @@ function RegisterPerk(itemName, getFunc, specialtyName) {
     level.archi.items[globalItem.name] = globalItem;
 }
 
+function RegisterPap()
+{
+    item = SpawnStruct();
+    item.name = "Pack-A-Punch Machine";
+    item.getFunc = &give_Pap;
+    item.clientfield = "ap_item_pap";
+
+    level.archi.items[item.name] = item;
+}
+
 //General/Universal gives
 function give_500Points()
 {
@@ -134,6 +144,12 @@ function give_TheGiantRandomPerk()
 function give_ProgressivePerkLimit()
 {
     level.archi.progressive_perk_limit += 1;
+}
+
+function give_Pap()
+{
+    level.archi.pap_active = true;
+    level notify("Pack_A_Punch_on");
 }
 
 function give_Perk(perk)
