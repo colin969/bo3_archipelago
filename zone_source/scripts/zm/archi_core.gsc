@@ -515,6 +515,7 @@ function round_start_location()
 
 function send_location(loc_str)
 {
+    level notify("ap_location_found", loc_str);
     array::add(level.archi.locationQueue, loc_str);
 }
 

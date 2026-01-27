@@ -2,6 +2,8 @@ function map_save_zm_castle(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
+  save_zm_castle_dragonheads(mapData)
+  save_zm_castle_landingpads(mapData)
 
   save_player_func = function (xuid, playerData)
     save_player_score(xuid, playerData)
@@ -17,6 +19,8 @@ function map_restore_zm_castle(mapData)
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
+  restore_zm_castle_dragonheads(mapData)
+  restore_zm_castle_landingpads(mapData)
 
   Archi.LogMessage("Saving player data for castle");
   restore_player_func = function (xuid, playerData)
@@ -186,6 +190,36 @@ function save_player_loadout(xuid, playerData)
       alt_stock = weaponAltStock,
     })
     i = i + 1
+  end
+end
+
+function save_zm_castle_dragonheads(mapData)
+  local dragonheads = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_CASTLE_DRAGONHEADS")
+  if dragonheads and dragonheads > 0 then
+    mapData.dragonheads = 1
+  else 
+    mapData.dragonheads = 0
+  end
+end
+
+function save_zm_castle_landingpads(mapData)
+  local landingpads = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_CASTLE_LANDINGPADS")
+  if landingpads and landingpads > 0 then
+    mapData.landingpads = 1
+  else 
+    mapData.landingpads = 0
+  end
+end
+
+function restore_zm_castle_dragonheads(mapData)
+  if mapData["dragonheads"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_DRAGONHEADS", mapData["dragonheads"])
+  end
+end
+
+function restore_zm_castle_landingpads(mapData)
+  if mapData["landingpads"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_LANDINGPADS", mapData["landingpads"])
   end
 end
 

@@ -10,6 +10,7 @@
 # Build Instructions
 1. Clone to `Call of Duty Black Ops III\mods\bo3_archipelago`
 2. Install L3akMod from https://wiki.modme.co/wiki/black_ops_3/lua_(lui)/Installation.html
+3. Install T7MTEnhancements from https://github.com/Scobalula/T7MTEnhancements
 3. Open Black Ops III - Mod Tools
 4. Tick `core_mod` and `zm_mod` under `bo3_archipelago` on the left side, `Compile` and `Link` on the right side, and `Run` if you want to test
 5. Press `Build`

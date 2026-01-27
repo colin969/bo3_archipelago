@@ -22,9 +22,13 @@
 
 #insert scripts\zm\archi_core.gsh;
 
+#define AP_LOCATION_DRAGONHEADS " Feed the Dragonheads"
+#define AP_LOCATION_LANDINGPADS " Turn on all Landing Pads"
+
 function save_state_manager()
 {
     level waittill("end_game");
+    level thread location_state_tracker();
 
     if (level.host_ended_game == 1)
     {
@@ -56,6 +60,8 @@ function save_state()
     archi_save::save_round_number();
     archi_save::save_power_on();
     archi_save::save_doors_and_debris();
+    save_dragonheads();
+    save_landingpads();
 
     archi_save::save_players(&save_player_data);
 
@@ -76,6 +82,8 @@ function load_state()
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
+    level thread restore_dragonheads();
+    restore_landingpads();
 
     archi_save::restore_players(&restore_player_data);
 }
@@ -227,7 +235,7 @@ function _all_soul_catchers_filled_thread()
     level endon("end_game");
 
     level flag::wait_till("soul_catchers_charged");
-    archi_core::send_location(level.archi.mapString + " Feed the Dragonheads");
+    archi_core::send_location(level.archi.mapString + AP_LOCATION_DRAGONHEADS);
 }
 
 function _all_landing_pads_activated(pad_count)
@@ -240,7 +248,7 @@ function _all_landing_pads_activated(pad_count)
         level waittill("ap_castle_landing_pad_activated");
         pads_activated += 1;
     }
-    archi_core::send_location(level.archi.mapString + " Turn on all Landing Pads");
+    archi_core::send_location(level.archi.mapString + AP_LOCATION_LANDINGPADS);
 }
 
 
@@ -253,4 +261,79 @@ function _landing_pad_notify()
     level notify("ap_castle_landing_pad_activated");
 }
 
+function location_state_tracker()
+{
+    level endon("end_game");
 
+    while(true)
+    {
+        level waittill("ap_location_found", loc_str);
+
+        if (loc_str === level.archi.mapString + AP_LOCATION_DRAGONHEADS)
+        {
+            level.archi.zm_castle_dragonheads = 1;
+            continue;
+        }
+        if (loc_str === level.archi.mapString + AP_LOCATION_LANDINGPADS)
+        {
+            level.archi.zm_castle_landingpads = 1;
+            continue;
+        }
+    }
+} 
+
+function save_dragonheads()
+{
+    if (IS_TRUE(level.archi.zm_castle_dragonheads))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_CASTLE_DRAGONHEADS", 1);
+    }
+}
+
+function save_landingpads()
+{
+    if (IS_TRUE(level.archi.zm_castle_landingpads))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_CASTLE_LANDINGPADS", 1);
+    }
+}
+
+function save_flag_exists(dvar_name)
+{
+    dvar_value = GetDvarInt(dvar_name, 0);
+    if (dvar_value > 0){
+        return true;
+    }
+    return false;
+}
+
+function restore_dragonheads()
+{
+    if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_DRAGONHEADS"))
+    {
+        level.archi.zm_castle_dragonheads = 1;
+        foreach (soul_catcher in level.soul_catchers)
+        {
+            soul_catcher.var_98730ffa = 8;
+            wait(0.2);
+        }
+    }
+}
+
+function _autofeed_dragonhead()
+{
+
+}
+
+function restore_landingpads()
+{
+    if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_LANDINGPADS"))
+    {
+        level.archi.zm_castle_landingpads = 1;
+        landing_pads = struct::get_array("115_flinger_landing_pad", "targetname");
+        foreach(landing_pad in landing_pads)
+        {
+           level flag::set(landing_pad.script_noteworthy);
+        }
+    }
+}
