@@ -32,6 +32,7 @@
 
 #precache( "eventstring", "ap_save_data" );
 #precache( "eventstring", "ap_load_data" );
+#precache( "eventstring", "ap_clear_data" );
 #precache( "eventstring", "ap_notification" );
 #precache( "eventstring", "ap_ui_get" );
 #precache( "eventstring", "ap_ui_send" );
@@ -212,17 +213,31 @@ function on_archi_connect_settings()
 
 function game_start()
 {
-    zombie_doors = GetEntArray("zombie_door", "targetname");
-    array::thread_all(zombie_doors, &track_door_open);
-
-    zombie_debris = GetEntArray("zombie_debris", "targetname");
-    array::thread_all(zombie_debris, &track_debris_open);
+    
     //TODO Error out here if there is no connection settings
+
 
     if (!isdefined(level.archi))
     {
         // Hold server-wide Archipelago Information
         level.archi = SpawnStruct();
+
+        level.archi.opened_doors = [];
+        level.archi.opened_debris = [];
+
+        zombie_doors = GetEntArray("zombie_door", "targetname");
+        for (i = 0; i < zombie_doors.size; i++)
+        {
+            zombie_doors[i].id = i;
+        }
+        array::thread_all(zombie_doors, &track_door_open);
+
+        zombie_debris = GetEntArray("zombie_debris", "targetname");
+        for (i = 0; i < zombie_debris.size; i++)
+        {
+            zombie_debris[i].id = i;
+        }
+        array::thread_all(zombie_debris, &track_debris_open);
 
         // Get Map Name String
         mapName = GetDvarString( "mapname" );
@@ -233,8 +248,6 @@ function game_start()
         level.archi.boarded_windows = 0;
 
         // Map State
-        level.archi.opened_doors = [];
-        level.archi.opened_debris = [];
         level.archi.progressive_perk_limit = 0;
         level.archi.craftable_parts = [];
     
@@ -451,15 +464,6 @@ function can_player_purchase_perk()
     purchase_limit += level.archi.perk_limit_default_modifier;
     purchase_limit += level.archi.progressive_perk_limit;
     return purchase_limit;
-}
-
-function save_data_manager()
-{
-    level waittill("end_game");
-    if (IS_TRUE(level.host_ended_game)) 
-    {
-        // We didn't die, store points
-    }
 }
 
 function default_map_changes()
@@ -756,7 +760,7 @@ function change_to_round(round_number)
     if (level.gamedifficulty == 0)
     {
         level.zombie_move_speed = round_number * level.zombie_vars["zombie_move_speed_multiplier_easy"];
-    } 
+    }
     else
     {
         level.zombie_move_speed = round_number * level.zombie_vars["zombie_move_speed_multiplier"];
@@ -769,16 +773,19 @@ function change_to_round(round_number)
 
 function track_door_open()
 {
+    if (self.script_noteworthy == "electric_door" || self.script_noteworthy == "local_electric_door")
+    {
+        // Ignore non-buyable doors
+        return;
+    }
     all_trigs = GetEntArray(self.target, "target");
     all_trigs[0] waittill("door_opened");
-    IPrintLn("Debris opened: " + self.id);
     level.archi.opened_doors[level.archi.opened_doors.size] = self.id;
 }
 
 function track_debris_open()
 {
     self waittill("kill_debris_prompt_thread");
-    IPrintLn("Debris opened: " + self.id);
     level.archi.opened_debris[level.archi.opened_debris.size] = self.id;
 }
 

@@ -16,6 +16,7 @@
 #insert scripts\zm\archi_core.gsh;
 
 #using scripts\zm\archi_core;
+#using scripts\zm\archi_castle;
 
 #namespace archi_commands;
 
@@ -31,6 +32,7 @@ function init_commands()
     level thread _trigger_item_response();
     level thread _print_debug_craftableStubs_response();
     level thread _print_debug_settings();
+    level thread _force_save_response();
   }
 }
 
@@ -141,6 +143,27 @@ function private _print_debug_settings()
       IPrintLn("Perk Limit Modifier: " + level.archi.perk_limit_default_modifier);
       IPrintLn("Perk Limit Increase: " + level.archi.progressive_perk_limit);
       IPrintLn("Randomized Shield Parts: " + level.archi.randomized_shield_parts);
+    }
+  }
+}
+
+function private _force_save_response()
+{
+  level endon("end_game");
+
+  ModVar("ap_save", "");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString("ap_save", "");
+
+    if(isdefined(dvar_value) && dvar_value != "")
+    {
+      ModVar("ap_save", "");
+
+      archi_castle::save_state();
     }
   }
 }
