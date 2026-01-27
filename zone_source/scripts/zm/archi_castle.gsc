@@ -36,7 +36,7 @@ function save_state_manager()
         save_state();
     } else {
         IPrintLn("Host did not end game, clearing data...");
-        clear_state();
+        //clear_state();
     }
 }
 
@@ -79,6 +79,8 @@ function save_player_data(xuid)
 function load_state()
 {
     archi_save::wait_restore_ready("zm_castle");
+    // Disable rocket pad death plane
+    level flag::set("castle_teleporter_used");
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
@@ -194,9 +196,29 @@ function _track_trigger_requiem()
     level notify("ap_castle_requiem");
 }
 
+function setup_weapon_ee_rune_prison()
+{
+
+}
+
+function setup_weapon_ee_demon_gate()
+{
+    
+}
+
+function setup_weapon_ee_wolf_howl()
+{
+    level thread _flag_to_location_thread("wolf_howl_paintings", level.archi.mapString + " Wolf Howl - Painting Puzzle");
+    level thread _wolf_howl_take_broken_arrow();
+    level thread _wolf_howl_skull_collected();
+    level thread _flag_to_location_thread("wolf_howl_escort", level.archi.mapString + " Wolf Howl - Follow the Wolf");
+    level thread _flag_to_location_thread("wolf_howl_repaired", level.archi.mapString + " Wolf Howl - Repair the Arrow");
+    level thread _flag_to_location_thread("wolf_howl_spawned", level.archi.mapString + " Wolf Howl - Forge the Bow");
+}
+
 function setup_weapon_ee_storm_bow()
 {
-    level thread _elemental_storm_quest_started();
+    level thread _elemental_storm_take_broken_arrow();
     level thread _elemental_storm_beacons_thread();
     level thread _flag_to_location_thread("elemental_storm_wallrun", level.archi.mapString + " Storm Bow - Wallrun Switches");
     level thread _flag_to_location_thread("elemental_storm_batteries", level.archi.mapString + " Storm Bow - Charge the Batteries");
@@ -213,11 +235,27 @@ function _flag_to_location_thread(flag, location)
     archi_core::send_location(location);
 }
 
-function _elemental_storm_quest_started()
+function _wolf_howl_take_broken_arrow()
 {
     level endon("end_game");
 
-    level waittill(#"hash_6d0730ef");
+    level waittill("hash_44c83018");
+    archi_core::send_location(level.archi.mapString + " Wolf Howl - Take Broken Arrow");
+}
+
+function _wolf_howl_skull_collected()
+{
+    level endon("end_game");
+    
+    level waittill("hash_88b82583");
+    archi_core::send_location(level.archi.mapString + " Wolf Howl - Collect the Skull");
+}
+
+function _elemental_storm_take_broken_arrow()
+{
+    level endon("end_game");
+
+    level waittill("hash_6d0730ef");
     archi_core::send_location(level.archi.mapString + " Storm Bow - Take Broken Arrow");
 }
 
@@ -314,15 +352,12 @@ function restore_dragonheads()
         level.archi.zm_castle_dragonheads = 1;
         foreach (soul_catcher in level.soul_catchers)
         {
+            // Force eaten count to 8
+            // Animations won't work but quest will progress
             soul_catcher.var_98730ffa = 8;
             wait(0.2);
         }
     }
-}
-
-function _autofeed_dragonhead()
-{
-
 }
 
 function restore_landingpads()

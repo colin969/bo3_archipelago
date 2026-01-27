@@ -356,6 +356,7 @@ function game_start()
             archi_castle::setup_music_ee_trackers();
 
             archi_castle::setup_weapon_ee_storm_bow();
+            archi_castle::setup_weapon_ee_wolf_howl();
 
             level thread setup_spare_change_trackers(6);
 
@@ -668,11 +669,14 @@ function replace_craftable_onPickup( craftableName )
 function wrapped_craftable_onPickup( player )
 {
     IPrintLn("Piece picked up");
-    
-    if ( isdefined(level.archi.craftable_piece_to_location[self.craftableName + "_" + self.pieceName]) )
+    fullName = self.craftableName + "_" + self.pieceName;
+    IPrintLn(fullName);
+    if ( isdefined(level.archi.craftable_piece_to_location[fullName]) )
     {
-        ap_location = level.archi.craftable_piece_to_location[self.craftableName + "_" + self.pieceName];
+        ap_location = level.archi.craftable_piece_to_location[fullName];
         send_location(ap_location);
+    } else {
+        IPrintLn("No saved location for " + fullName);
     }
     if (isdefined(self.piecestub.original_onPickup))
     {
@@ -694,7 +698,6 @@ function _remove_piece()
     {
         WAIT_SERVER_FRAME
         self.in_shared_inventory = 0; // Not sure if this bit actually does anything right now
-        IPrintLn(self.piecestub.client_field_id);
         level clientfield::set(self.piecestub.client_field_id, 0);
     }
 }

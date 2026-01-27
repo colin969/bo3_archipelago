@@ -48,6 +48,13 @@ Archi.LocationToID["(Castle) Storm Bow - Charge the Beacons"] = 2504
 Archi.LocationToID["(Castle) Storm Bow - Repair the Arrow"] = 2505
 Archi.LocationToID["(Castle) Storm Bow - Forge the Bow"] = 2506
 
+Archi.LocationToID["(Castle) Wolf Howl - Painting Puzzle"] = 2510
+Archi.LocationToID["(Castle) Wolf Howl - Take Broken Arrow"] = 2511
+Archi.LocationToID["(Castle) Wolf Howl - Collect the Skull"] = 2512
+Archi.LocationToID["(Castle) Wolf Howl - Follow the Wolf"] = 2513
+Archi.LocationToID["(Castle) Wolf Howl - Repair the Arrow"] = 2514
+Archi.LocationToID["(Castle) Wolf Howl - Forge the Bow"] = 2515
+
 saveData = nil
 seed = nil
 
