@@ -43,13 +43,13 @@ function save_state_manager()
 function save_data_round_end()
 {
     level endon("end_game");
-    level waittill("initial_blackscreen_passed");
 
     while (true)
     {
         level waittill("start_of_round");
         if (level.round_number != 1)
         {
+            wait(1);
             save_state();
         }
     }
@@ -196,14 +196,28 @@ function _track_trigger_requiem()
     level notify("ap_castle_requiem");
 }
 
+
+// Notes:
+// Clientfields: quest_state_<bow>_<num> for ui progress
 function setup_weapon_ee_rune_prison()
 {
-
+    level thread _flag_to_location_thread("rune_prison_obelisk", level.archi.mapString + " Rune Prison - Take the Arrow");
+    level thread _flag_to_location_thread("rune_prison_magma_ball", level.archi.mapString + " Rune Prison - Shoot the Orb");
+    level thread _rune_prison_runic_circles();
+    level thread _flag_to_location_thread("rune_prison_golf", level.archi.mapString + " Rune Prison - Magma Ball Golf");
+    level thread _flag_to_location_thread("rune_prison_repaired", level.archi.mapString + " Rune Prison - Repair the Arrow");
+    level thread _flag_to_location_thread("rune_prison_spawned", level.archi.mapString + " Rune Prison - Forge the Bow");
 }
 
 function setup_weapon_ee_demon_gate()
 {
-    
+    level thread _demon_gate_take_broken_arrow();
+    level thread _flag_to_location_thread("demon_gate_seal", level.archi.mapString + " Demon Gate - Ritual Sacrifice on the Seal");
+    level thread _demon_gate_collect_skulls();
+    level thread _flag_to_location_thread("demon_gate_crawlers", level.archi.mapString + " Demon Gate - Sacrifice Crawlers");
+    level thread _flag_to_location_thread("demon_gate_runes", level.archi.mapString + " Demon Gate - Solve the Rune Puzzle");
+    level thread _flag_to_location_thread("demon_gate_repaired", level.archi.mapString + " Demon Gate - Repair the Arrow");
+    level thread _flag_to_location_thread("demon_gate_spawned", level.archi.mapString + " Demon Gate - Forge the Bow");
 }
 
 function setup_weapon_ee_wolf_howl()
@@ -227,12 +241,48 @@ function setup_weapon_ee_storm_bow()
     level thread _flag_to_location_thread("elemental_storm_spawned", level.archi.mapString + " Storm Bow - Forge the Bow");
 }
 
+function setup_main_ee()
+{
+    level thread _flag_to_location_thread("time_travel_teleporter_ready", level.archi.mapString + " Main Easter Egg - Activate Time Travel Teleporter"); // Wasn't paying attention
+    level thread _flag_to_location_thread("ee_safe_open", level.archi.mapString + " Main Easter Egg - Unlock the Safe"); // Works
+    level thread _flag_to_location_thread("start_channeling_stone_step", level.archi.mapString + " Main Easter Egg - Recover the Rocket"); // Works
+    level thread _flag_to_location_thread("see_keeper", level.archi.mapString + " Main Easter Egg - Open the MPD"); // Needs tested
+    level thread _flag_to_location_thread("boss_fight_completed", level.archi.mapString + " Main Easter Egg - Win the Boss Fight"); // Works
+    level thread _flag_to_location_thread("sent_rockets_to_the_moon", level.archi.mapString + " Main Easter Egg - Blow up the Moon"); // Works
+    level thread _flag_to_location_thread("ee_outro", level.archi.mapString + " Main Easter Egg - Victory"); // Works
+}
+
 function _flag_to_location_thread(flag, location)
 {
     level endon("end_game");
 
     level flag::wait_till(flag);
     archi_core::send_location(location);
+}
+
+function _demon_gate_take_broken_arrow()
+{
+    level endon("end__game");
+    
+    level waittill(#"hash_c8347a07");
+    archi_core::send_location(level.archi.mapString + " Demon Gate - Take Broken Arrow");
+}
+
+function _demon_gate_collect_skulls()
+{
+    level endon("end_game");
+
+    skulls = getentarray("aq_dg_fossil", "script_noteworthy");
+    array::wait_till(skulls, "returned");
+    wait(2); // Delay matches ingame
+    archi_core::send_location(level.archi.mapString + " Demon Gate - Collect the Skulls");
+}
+
+function _rune_prison_runic_circles()
+{
+    runic_circles = getentarray("aq_rp_runic_circle_volume", "script_noteworthy");
+    array::wait_till(runic_circles, "runic_circle_charged");
+    archi_core::send_location(level.archi.mapString + " Rune Prison - Charge the Runic Circles");
 }
 
 function _wolf_howl_take_broken_arrow()

@@ -55,12 +55,30 @@ Archi.LocationToID["(Castle) Wolf Howl - Follow the Wolf"] = 2513
 Archi.LocationToID["(Castle) Wolf Howl - Repair the Arrow"] = 2514
 Archi.LocationToID["(Castle) Wolf Howl - Forge the Bow"] = 2515
 
+Archi.LocationToID["(Castle) Rune Prison - Take the Arrow"] = 2520
+Archi.LocationToID["(Castle) Rune Prison - Shoot the Orb"] = 2521
+Archi.LocationToID["(Castle) Rune Prison - Charge the Runic Circles"] = 2522
+Archi.LocationToID["(Castle) Rune Prison - Magma Ball Golf"] = 2523
+Archi.LocationToID["(Castle) Rune Prison - Repair the Arrow"] = 2524
+Archi.LocationToID["(Castle) Rune Prison - Forge the Bow"] = 2525
+
+Archi.LocationToID["(Castle) Demon Gate - Take the Arrow"] = 2530
+Archi.LocationToID["(Castle) Demon Gate - Ritual Sacrifice on the Seal"] = 2531
+Archi.LocationToID["(Castle) Demon Gate - Collect the Skulls"] = 2532
+Archi.LocationToID["(Castle) Demon Gate - Sacrifice Crawlers"] = 2533
+Archi.LocationToID["(Castle) Demon Gate - Solve the Rune Puzzle"] = 2534
+Archi.LocationToID["(Castle) Demon Gate - Repair the Arrow"] = 2535
+Archi.LocationToID["(Castle) Demon Gate - Forge the Bow"] = 2536
+
 saveData = nil
 seed = nil
 
 Archi.LocationToID["Repair Windows 5 Times"] = 9001
 
 Archi.FromGSC = function (model)
+  if IsParamModelEqualToString(model, "ap_debug_magicbox") then
+    save_magicbox_list()
+  end
   if IsParamModelEqualToString(model, "ap_clear_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_CLEAR_DATA")
     if mapName ~= "NONE" then
@@ -471,4 +489,25 @@ function save_player_loadout(xuid, playerData)
     })
     i = i + 1
   end
+end
+
+function save_magicbox_list()
+  local i = 0
+  local content = "weapon,is_in_box\n"
+  while true do
+    local key = Engine.DvarString(nil, "ARCHIPELAGO_DEBUG_MAGICBOX_" .. i)
+    local key_in_box = Engine.DvarString(nil, "ARCHIPELAGO_DEBUG_MAGICBOX_" .. i .. "_INSIDE")
+    if not key or key == "" then
+      break
+    end
+    content = content .. key .. "," .. key_in_box .. "\n"
+    i = i + 1
+  end
+  local f = require("io").open("mods/bo3_archipelago/magicbox.csv", "w+")
+  if not f then
+    Archi.LogMessage("Failed to open file: " .. (err or "unknown error"))
+    return
+  end
+  f:write(content)
+  f:close()
 end

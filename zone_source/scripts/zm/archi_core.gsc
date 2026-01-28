@@ -33,6 +33,7 @@
 #precache( "eventstring", "ap_save_data" );
 #precache( "eventstring", "ap_load_data" );
 #precache( "eventstring", "ap_clear_data" );
+#precache( "eventstring", "ap_debug_magicbox" );
 #precache( "eventstring", "ap_notification" );
 #precache( "eventstring", "ap_ui_get" );
 #precache( "eventstring", "ap_ui_send" );
@@ -41,6 +42,10 @@ REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
 function __init__()
 {
+    // Some maps make requirements harder if not in a ranked match
+    level.rankedmatch = 1;
+    SetDvar("zm_private_rankedmatch", 1);
+
     SetDvar( "MOD_VERSION", MOD_VERSION );
     
     //Message Passing Dvars
@@ -132,7 +137,6 @@ function get_ap_settings()
 function init_string_mappings()
 {
     level.archi.perk_strings_to_names = [];
-    level.archi.craftable_piece_to_location = [];
     level.archi.active_perk_machines = [];
 
     perk_mappings = [];
@@ -244,6 +248,7 @@ function game_start()
 
         level.archi.wallbuy_mappings = [];
         level.archi.wallbuys = [];
+        level.archi.craftable_piece_to_location = [];
         level.archi.check_override_wallbuy_purchase = &check_override_wallbuy_purchase;
         level.archi.boarded_windows = 0;
 
@@ -355,8 +360,12 @@ function game_start()
 
             archi_castle::setup_music_ee_trackers();
 
-            archi_castle::setup_weapon_ee_storm_bow();
+            archi_castle::setup_weapon_ee_rune_prison();
+            archi_castle::setup_weapon_ee_demon_gate();
             archi_castle::setup_weapon_ee_wolf_howl();
+            archi_castle::setup_weapon_ee_storm_bow();
+
+            archi_castle::setup_main_ee();
 
             level thread setup_spare_change_trackers(6);
 
@@ -556,7 +565,6 @@ function repaired_board_noti()
     while (true) 
     {
         level waittill("ap_boarding_window");
-        IPrintLn("Boarded window");
 
         level.archi.boarded_windows += 1;
         if (level.archi.boarded_windows == 5)
@@ -668,9 +676,7 @@ function replace_craftable_onPickup( craftableName )
 // piecespawn [[piecestub.onpickup]](self);
 function wrapped_craftable_onPickup( player )
 {
-    IPrintLn("Piece picked up");
     fullName = self.craftableName + "_" + self.pieceName;
-    IPrintLn(fullName);
     if ( isdefined(level.archi.craftable_piece_to_location[fullName]) )
     {
         ap_location = level.archi.craftable_piece_to_location[fullName];
@@ -680,7 +686,6 @@ function wrapped_craftable_onPickup( player )
     }
     if (isdefined(self.piecestub.original_onPickup))
     {
-        IPrintLn("Executing original script");
         self [[self.piecestub.original_onPickup]](player);
     }
     if (self.craftableName == "craft_shield_zm" && level.archi.randomized_shield_parts == 1)

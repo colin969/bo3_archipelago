@@ -33,6 +33,8 @@ function init_commands()
     level thread _print_debug_craftableStubs_response();
     level thread _print_debug_settings();
     level thread _force_save_response();
+    level thread _godmode_response();
+    level thread _debug_magicbox_response();
   }
 }
 
@@ -204,6 +206,77 @@ function private _print_debug_craftableStubs_response()
           IPrintLn("No Piece Structs Found");
         }
       }
+    }
+  }
+}
+
+function _godmode_response()
+{
+  level endon("end_game");
+
+  ModVar("ap_godmode", "");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString("ap_godmode", "");
+
+    if(isdefined(dvar_value) && dvar_value != "")
+    {
+      ModVar("ap_godmode", "");
+      if (dvar_value == "0") 
+      {
+        foreach (player in level.players)
+        {
+          player DisableInvulnerability();
+          IPrintLn("Disable invuln for " + player.name);
+        }
+      }
+      else
+      {
+        foreach (player in level.players)
+        {
+          player EnableInvulnerability();
+          IPrintLn("Invuln for " + player.name);
+        }
+      }
+    }
+  }
+}
+
+
+// treasure_chest_chooseweightedrandomweapon
+function _debug_magicbox_response()
+{
+  level endon("end_game");
+
+  ModVar("ap_debug_magicbox", "");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString("ap_debug_magicbox", "");
+
+    if(isdefined(dvar_value) && dvar_value != "")
+    {
+      ModVar("ap_debug_magicbox", "");
+      keys = getarraykeys(level.zombie_weapons);
+      IPrintLn("Writing data for " + keys.size + " weapons");
+      for (i = 0; i < keys.size; i++)
+      {
+        SetDvar("ARCHIPELAGO_DEBUG_MAGICBOX_" + i, keys[i].name);
+        if (level.zombie_weapons[keys[i]].is_in_box)
+        {
+          SetDvar("ARCHIPELAGO_DEBUG_MAGICBOX_" + i + "_INSIDE", "true");
+        } else
+        {
+          SetDvar("ARCHIPELAGO_DEBUG_MAGICBOX_" + i + "_INSIDE", "false");
+        }
+      }
+      LUINotifyEvent(&"ap_debug_magicbox", 0);
+      IPrintLn("Saved to magicbox.csv");
     }
   }
 }
