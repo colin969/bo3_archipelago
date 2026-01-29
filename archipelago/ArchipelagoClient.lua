@@ -17,6 +17,11 @@ Archi.Debug = true
 Archi.LocationToID = {}
 
 for i = 1, 99 do
+  local roundName = string.format("(Shadows of Evil) Round %02d", i)
+  Archi.LocationToID[roundName] = i + 3000
+end
+
+for i = 1, 99 do
   local roundName = string.format("(The Giant) Round %02d", i)
   Archi.LocationToID[roundName] = i + 1000
 end
@@ -29,6 +34,7 @@ end
 Archi.LocationToID["(Castle) Shield Part Pickup - Dolly"] = 2200
 Archi.LocationToID["(Castle) Shield Part Pickup - Door"] = 2201
 Archi.LocationToID["(Castle) Shield Part Pickup - Clamp"] = 2202
+
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Body"] = 2210
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Guards"] = 2211
 Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Handle"] = 2212
@@ -69,6 +75,40 @@ Archi.LocationToID["(Castle) Demon Gate - Sacrifice Crawlers"] = 2533
 Archi.LocationToID["(Castle) Demon Gate - Solve the Rune Puzzle"] = 2534
 Archi.LocationToID["(Castle) Demon Gate - Repair the Arrow"] = 2535
 Archi.LocationToID["(Castle) Demon Gate - Forge the Bow"] = 2536
+
+Archi.LocationToID["(Castle) Main Easter Egg - Activate Time Travel Teleporter"] = 2600
+Archi.LocationToID["(Castle) Main Easter Egg - Unlock the Safe"] = 2601
+Archi.LocationToID["(Castle) Main Easter Egg - Recover the Rocket"] = 2602
+Archi.LocationToID["(Castle) Main Easter Egg - Open the MPD"] = 2603
+Archi.LocationToID["(Castle) Main Easter Egg - Win the Boss Fight"] = 2604
+Archi.LocationToID["(Castle) Main Easter Egg - Blow up the Moon"] = 2605
+Archi.LocationToID["(Castle) Main Easter Egg - Victory"] = 2606
+
+Archi.LocationToID["(Shadows of Evil) Main Quest - Magician's Ritual"] = 3100
+Archi.LocationToID["(Shadows of Evil) Main Quest - Boxer's Ritual"] = 3101
+Archi.LocationToID["(Shadows of Evil) Main Quest - Detectives's Ritual"] = 3102
+Archi.LocationToID["(Shadows of Evil) Main Quest - Femme Fatale's Ritual"] = 3103
+Archi.LocationToID["(Shadows of Evil) Main Quest - Open the Portal"] = 3104
+
+Archi.LocationToID["(Shadows of Evil) Apothicon Sword - Enter the Code"] = 3110
+Archi.LocationToID["(Shadows of Evil) Apothicon Sword - Collect your Sword"] = 3111
+Archi.LocationToID["(Shadows of Evil) Apothicon Sword - Collect your upgraded Sword"] = 3112
+
+Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Find Nero's Book"] = 3200
+Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Defeat the Shadowman"] = 3201
+Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Defeat the Giant Space Squid"] = 3202
+Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Victory"] = 3203
+
+Archi.LocationToID["(Shadows of Evil) Apothicon Servant Part Pickup - Margwa Heart"] = 3300
+Archi.LocationToID["(Shadows of Evil) Apothicon Servant Part Pickup - Margwa Tentacle"] = 3301
+Archi.LocationToID["(Shadows of Evil) Apothicon Servant Part Pickup - Xenomatter"] = 3302
+
+Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Waterfront Fuse"] = 3310
+Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Canals Fuse"] = 3311
+Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Footlight Fuse"] = 3312
+
+Archi.LocationToID["(Shadows of Evil) All Spare Change Collected"] = 3500
+Archi.LocationToID["(Shadows of Evil) Laundry Ticket"] = 3501
 
 saveData = nil
 seed = nil

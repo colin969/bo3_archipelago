@@ -13,6 +13,7 @@
 #using scripts\zm\_zm_perks;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_weapons;
+#using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_core;
 #using scripts\zm\archi_save;
@@ -422,4 +423,25 @@ function restore_landingpads()
            level flag::set(landing_pad.script_noteworthy);
         }
     }
+}
+
+function give_RagnarokPart_Body()
+{
+    give_piece("gravityspike", "part_body");
+}
+
+function give_RagnarokPart_Guards()
+{
+    give_piece("gravityspike", "part_guards");
+}
+
+function give_RagnarokPart_Handle()
+{
+    give_piece("gravityspike", "part_handle");
+}
+
+function give_piece(craftableName, pieceName)
+{
+    level.archi.craftable_parts[craftableName + "_" + pieceName] = true;
+    zm_craftables::player_get_craftable_piece(craftableName, pieceName);
 }

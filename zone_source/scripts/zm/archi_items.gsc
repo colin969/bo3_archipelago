@@ -188,6 +188,10 @@ function give_DeadShot()
 {
     give_Perk(PERK_DEAD_SHOT);
 }
+function give_WidowsWine()
+{
+    give_Perk(PERK_WIDOWS_WINE);
+}
 
 // Weapons
 // Assault Rifles

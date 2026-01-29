@@ -20,6 +20,7 @@
 #using scripts\zm\archi_items;
 #using scripts\zm\archi_commands;
 #using scripts\zm\archi_castle;
+#using scripts\zm\archi_zod;
 
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\shared\shared.gsh;
@@ -342,6 +343,71 @@ function game_start()
 
         archi_items::RegisterPap();
 
+        if (mapName == "zm_zod")
+        {
+            level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
+
+            replace_craftable_onPickup("craft_shield_zm");
+            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+            replace_craftable_onPickup("idgun");
+            level.archi.craftable_piece_to_location["idgun_part_heart"] = level.archi.mapString + " Apothicon Servant Part Pickup - Margwa Heart";
+            level.archi.craftable_piece_to_location["idgun_part_skeleton"] = level.archi.mapString + " Apothicon Servant Part Pickup - Margwa Tentacle";
+            level.archi.craftable_piece_to_location["idgun_part_xenomatter"] = level.archi.mapString + " Apothicon Servant Part Pickup - Xenomatter";
+
+            replace_craftable_onPickup("police_box");
+            level.archi.craftable_piece_to_location["police_box_fuse_01"] = level.archi.mapString + " Civil Protector Part Pickup - Fuse 1";
+            level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Fuse 2";
+            level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Fuse 3";
+
+            archi_items::RegisterItem("Victory",&archi_items::give_Victory,undefined,false);
+
+            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+            archi_items::RegisterItem("Apothicon Servant Part - Margwa Heart",&archi_zod::give_ApothiconServantPart_Heart,undefined,false);
+            archi_items::RegisterItem("Apothicon Servant Part - Margwa Tentacle",&archi_zod::give_ApothiconServantPart_Tentacle,undefined,false);
+            archi_items::RegisterItem("Apothicon Servant Part - Xenomatter",&archi_zod::give_ApothiconServantPart_Xenomatter,undefined,false);
+
+            archi_items::RegisterItem("Civil Protector Part - Waterfront Fuse",&archi_zod::give_CivilProtectorPart_Fuse01,undefined,false);
+            archi_items::RegisterItem("Civil Protector Part - Canals Fuse",&archi_zod::give_CivilProtectorPart_Fuse02,undefined,false);
+            archi_items::RegisterItem("Civil Protector Part - Footlight Fuse",&archi_zod::give_CivilProtectorPart_Fuse03,undefined,false);
+
+            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+
+            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - Bootlegger",&archi_items::give_Weapon_BRM,"smg_sten");
+            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+            level thread archi_zod::setup_main_quest();
+            level thread archi_zod::setup_side_ee();
+            level thread archi_zod::setup_main_ee();
+            level thread archi_zod::setup_sword_quest();
+
+            level thread setup_spare_change_trackers(7);
+
+            level thread archi_zod::save_state_manager();
+            level thread archi_zod::load_state();
+        }
+
         if (mapName == "zm_castle")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_CASTLE;
@@ -378,6 +444,10 @@ function game_start()
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
             archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
 
+            archi_items::RegisterItem("Ragnarok DG-4 Part - Body",&archi_castle::give_RagnarokPart_Body,undefined,false);
+            archi_items::RegisterItem("Ragnarok DG-4 Part - Guards",&archi_castle::give_RagnarokPart_Guards,undefined,false);
+            archi_items::RegisterItem("Ragnarok DG-4 Part - Handle",&archi_castle::give_RagnarokPart_Handle,undefined,false);
+
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
             archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
@@ -400,11 +470,6 @@ function game_start()
         
             level thread archi_castle::save_state_manager();
             level thread archi_castle::load_state();
-        }
-
-        if (mapName == "zm_zod")
-        {
-            level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
         }
 
         if (mapName == "zm_factory")
