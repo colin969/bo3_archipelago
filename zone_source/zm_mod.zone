@@ -48,6 +48,7 @@ rawfile,archipelago/JsonUtils/Sax.lua
 rawfile,archipelago/Json.lua
 rawfile,archipelago/Utils.lua
 rawfile,archipelago/Save.lua
+rawfile,archipelago/SettingsFile.lua
 
 
 //Item Images

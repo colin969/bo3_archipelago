@@ -173,7 +173,7 @@ function _patch_electrified_rail(n_rail)
     {
         // Wait until rail activated
         level flag::wait_till(rail_name);
-        // If you've got 4 players, do the actual thing normally
+        // If you've got 4 players, do the actual thing
         if (level.players.size < 4) {
             t_rail = getent(rail_name, "targetname");
             t_update = getent(t_rail.target, "targetname");

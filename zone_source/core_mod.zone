@@ -19,6 +19,7 @@ rawfile,ui/t6/lobby/lobbymenus.lua
 
 //Custom Settings Menu
 rawfile,ui/archipelago/frontend/ArchipelagoSettings.lua
+rawfile,archipelago/SettingsFile.lua
 
 //Customized T7 Overcharged helper scripts
 rawfile,ui/util/T7OverchargedUtil.lua

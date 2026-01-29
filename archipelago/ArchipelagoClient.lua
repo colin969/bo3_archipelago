@@ -6,6 +6,7 @@ require("Archipelago.Utils")
 local json = require("Archipelago.Json")
 
 local save_system = require("Archipelago.Save")
+local settings_file = require("Archipelago.SettingsFile")
 
 --
 ItemQueue = List.new()
@@ -273,24 +274,10 @@ Archi.LogMessageLoop = function()
 end
 
 Archi.KeepConnected = function ()
-  
+  local server, slot = settings_file.load_settings();
   if Archipelago then
-    local server = Engine.DvarString(nil,"ARCHIPELAGO_SERVER")
-    if server == "" then
-      server = "localhost"
-    end
-    local port = Engine.DvarString(nil,"ARCHIPELAGO_PORT")
-    if port == "" then
-      port = "38281"
-    end
-    local slot = Engine.DvarString(nil,"ARCHIPELAGO_SLOT")
-    if slot == "" then
-      slot = "Player"
-    end
-    --TODO: error out if any of these are null
-
     --TODO: change the \zone (base path) when its workshop
-    Archipelago.Connect(server..":"..port,slot,"zone\\")
+    Archipelago.Connect(server, slot, "zone\\")
     --TODO: only do this on an actual connect
     Engine.SetDvar( "ARCHIPELAGO_CONNECTED", "TRUE" )
   end
