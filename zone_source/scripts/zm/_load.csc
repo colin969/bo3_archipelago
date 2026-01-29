@@ -83,6 +83,7 @@ function warnMissileFired( localClientNum, set )
 function main()
 {
 	zm::init();
+	LuiLoad( "ui.archipelago.hudInject" );
 		
 	level thread server_time();
 	level thread util::init_utility();

@@ -24,6 +24,7 @@
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
+
 #using scripts\zm\_zm_bgb_machine;
 
 #insert scripts\zm\archi_core.gsh;
@@ -59,11 +60,12 @@ function __init__()
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
 
+    level flag::init("ap_settings_ready");
+    level thread get_ap_settings();
+
 	callback::on_start_gametype( &game_start );
 	callback::on_connect( &on_player_connect );
-	callback::on_spawned( &on_player_spawned );
 
-    level thread get_ap_settings();
 
     //Clientfields (Mostly Tracker stuff)
     //TODO Put this in a library?
@@ -400,6 +402,11 @@ function game_start()
             level thread archi_castle::load_state();
         }
 
+        if (mapName == "zm_zod")
+        {
+            level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
+        }
+
         if (mapName == "zm_factory")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_THE_GIANT;
@@ -498,11 +505,6 @@ function on_player_connect()
     {
         self thread location_check_to_lua();
     }
-}
-
-function on_player_spawned()
-{
-	level waittill( "initial_blackscreen_passed" );
 }
 
 function round_start_location()

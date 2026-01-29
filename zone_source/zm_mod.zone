@@ -27,14 +27,14 @@ scriptparsetree,scripts/zm/_zm_pack_a_punch.gsc
 scriptparsetree,scripts/zm/_zm_weapons.gsc
 
 //The point our UI injects its widget
-rawfile,ui/uieditor/widgets/bubblegumbuffs/BubbleGumPackInGame.Lua
+rawfile,ui/archipelago/hudInject.lua
 
 //The Display that Archipelago hooks its code into
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoDisplay.lua
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoDisplayClient.lua
 
 //Archipelago Tracker Lua Display
-rawfile,ui/archipelago/ingame/widgets/ArchipelagoTracker.lua
+//rawfile,ui/archipelago/ingame/widgets/ArchipelagoTracker.lua
 
 //Archipelago Messages Lua Display
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoMessageContainer.lua

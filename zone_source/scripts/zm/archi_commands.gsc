@@ -16,7 +16,6 @@
 #insert scripts\zm\archi_core.gsh;
 
 #using scripts\zm\archi_core;
-#using scripts\zm\archi_castle;
 
 #namespace archi_commands;
 
@@ -165,7 +164,10 @@ function private _force_save_response()
     {
       ModVar("ap_save", "");
 
-      archi_castle::save_state();
+      if (isdefined(level.archi.save_state))
+      {
+        [[level.archi.save_state]]();
+      }
     }
   }
 }
