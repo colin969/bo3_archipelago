@@ -285,45 +285,45 @@ end
 
 
 function InitializeArchipelago(options)
-    if Archipelago then 
-      return false 
+  if Archipelago then 
+    return false 
+  end
+
+  --Load DLL?
+  local dllPath = options.filespath .. [[zone\]] or [[..\..\workshop\content\311210\]] .. options.workshopid .. "\\"
+  local dll = "Archi-T7Overcharged.dll"
+
+  SafeCall(function()
+    EnableGlobals()
+    local dllInit = require("package").loadlib(dllPath..dll, "init")
+
+    --Check if the dll was properly loaded
+    if not dllInit then
+      Engine.ComError( Enum.errorCode.ERROR_UI, "Unable to initialize "..dll )
+      return
     end
+    -- Execute the dll
+    dllInit()
 
-    --Load DLL?
-    local dllPath = options.filespath .. [[zone\]] or [[..\..\workshop\content\311210\]] .. options.workshopid .. "\\"
-    local dll = "Archi-T7Overcharged.dll"
+  end)
 
-    SafeCall(function()
-        EnableGlobals()
-        local dllInit = require("package").loadlib(dllPath..dll, "init")
-  
-        --Check if the dll was properly loaded
-        if not dllInit then
-          Engine.ComError( Enum.errorCode.ERROR_UI, "Unable to initialize "..dll )
-          return
-        end
-        -- Execute the dll
-        dllInit()
-    
-      end)
+  --Make sure we are connected to Archipelago
+  --Turning off for now
+  Archi.KeepConnected()
 
-      --Make sure we are connected to Archipelago
-      --Turning off for now
-      Archi.KeepConnected()
+  --Start Polling
+  local UIRootFull = LUI.roots.UIRootFull;
+  UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(1000, false, function()
+    Archipelago.Poll();
+  end);
+  UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
+  --
 
-      --Start Polling
-      local UIRootFull = LUI.roots.UIRootFull;
-			UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(1000, false, function()
-        Archipelago.Poll();
-      end);
-      UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
-      --
+  --When we recieve an Item, give it to the GSC
+  Archi.GiveItemsLoop()
 
-      --When we recieve an Item, give it to the GSC
-      Archi.GiveItemsLoop()
-
-      --Send Log messages to GSC
-      Archi.LogMessageLoop()
+  --Send Log messages to GSC
+  Archi.LogMessageLoop()
 
 end
 
