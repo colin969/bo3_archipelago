@@ -47,6 +47,7 @@ function restore_round_number()
     round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_ROUND", 0);
     if (round_number > 1) {
         level thread archi_core::change_to_round(round_number);
+        SetDvar("ARCHIPELAGO_LOAD_DATA_ROUND", 0);
     }
 }
 
@@ -57,6 +58,7 @@ function restore_power_on()
     {
         trig = getent("use_power_switch", "targetname");
         trig notify("trigger");
+        SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0);
     }
 }
 
@@ -90,6 +92,7 @@ function restore_doors_and_debris()
                 zombie_doors[door_id] notify("trigger", level.players[0], true);
             }
         }
+        SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_DOORS", "");
     }
 
     // Open debris
@@ -110,6 +113,7 @@ function restore_doors_and_debris()
                 }
             }
         }
+        SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_DEBRIS", "");
     }
     level thread _unset_unlock_all();
 }
@@ -120,6 +124,7 @@ function can_restore_player(xuid)
     can_restore = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_READY_" + xuid, "");
     if (can_restore != "") {
         return true;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_READY_" + xuid, "");
     }
     return false;
 }
@@ -128,6 +133,7 @@ function can_restore_player(xuid)
 function restore_player_score(xuid)
 {
     score = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_SCORE_" + xuid, 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_SCORE_" + xuid, 0);
     score_diff = score - self.score;
     if (score_diff > 0)
     {
@@ -141,6 +147,7 @@ function restore_player_perks(xuid)
     while (true) {
         perk = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_PERK_" + xuid + "_" + i, "");
         if (perk != "") {
+            SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_PERK_" + xuid, "");
             self zm_perks::give_perk(perk);
         } else {
             break;
@@ -156,6 +163,7 @@ function restore_player_loadout(xuid)
     while (true)
     {
         weapon_name = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_WEAPON", "");
+        SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_WEAPON", "");
         if (weapon_name != "")
         {
             if (i == 0) {

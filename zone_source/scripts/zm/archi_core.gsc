@@ -130,6 +130,7 @@ function get_ap_settings()
         dvar_value = GetDvarString("ARCHIPELAGO_SETTINGS_READY", "");
         if (isdefined(dvar_value) && dvar_value != "")
         {
+            SetDvar("ARCHIPELAGO_SETTINGS_READY", "");
             break;
         }       
         WAIT_SERVER_FRAME
@@ -358,9 +359,9 @@ function game_start()
             level.archi.craftable_piece_to_location["idgun_part_xenomatter"] = level.archi.mapString + " Apothicon Servant Part Pickup - Xenomatter";
 
             replace_craftable_onPickup("police_box");
-            level.archi.craftable_piece_to_location["police_box_fuse_01"] = level.archi.mapString + " Civil Protector Part Pickup - Fuse 1";
-            level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Fuse 2";
-            level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Fuse 3";
+            level.archi.craftable_piece_to_location["police_box_fuse_01"] = level.archi.mapString + " Civil Protector Part Pickup - Waterfront Fuse";
+            level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
+            level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
 
             archi_items::RegisterItem("Victory",&archi_items::give_Victory,undefined,false);
 

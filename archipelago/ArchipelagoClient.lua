@@ -108,6 +108,10 @@ Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Waterfront F
 Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Canals Fuse"] = 3311
 Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Footlight Fuse"] = 3312
 
+Archi.LocationToID["(Shadows of Evil) Shield Part Pickup - Dolly"] = 3320
+Archi.LocationToID["(Shadows of Evil) Shield Part Pickup - Door"] = 3321
+Archi.LocationToID["(Shadows of Evil) Shield Part Pickup - Clamp"] = 3322
+
 Archi.LocationToID["(Shadows of Evil) All Spare Change Collected"] = 3500
 Archi.LocationToID["(Shadows of Evil) Laundry Ticket"] = 3501
 

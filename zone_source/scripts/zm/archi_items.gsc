@@ -6,13 +6,7 @@
 #using scripts\zm\_zm_audio;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_utility;
-#using scripts\zm\_zm_powerup_carpenter;
-#using scripts\zm\_zm_powerup_double_points;
-#using scripts\zm\_zm_powerup_insta_kill;
-#using scripts\zm\_zm_powerup_fire_sale;
-#using scripts\zm\_zm_powerup_free_perk;
-#using scripts\zm\_zm_powerup_full_ammo;
-#using scripts\zm\_zm_powerup_nuke;
+#using scripts\zm\_zm_powerups;
 #using scripts\zm\craftables\_zm_craftables;
 
 #insert scripts\shared\shared.gsh;
@@ -513,63 +507,45 @@ function _give_Trap_ThirdPerson()
 
 function give_Gift_CarpenterPowerup()
 {
-    players = GetPlayers();
-    if (players.size > 0) {
-        level thread zm_audio::sndAnnouncerPlayVox("carpenter");
-        zm_powerup_carpenter::grab_carpenter(players[0]);
-    }
+    _drop_powerup("carpenter");
 }
 
 function give_Gift_DoublePointsPowerup()
 {
-    players = GetPlayers();
-    if (players.size > 0) {
-        level thread zm_audio::sndAnnouncerPlayVox("double_points");
-        zm_powerup_double_points::grab_double_points(players[0]);
-    }
+    _drop_powerup("double_points");
 }
 
 function give_Gift_InstaKillPowerup()
 {
-    players = GetPlayers();
-    if (players.size > 0) {
-        level thread zm_audio::sndAnnouncerPlayVox("insta_kill");
-        zm_powerup_insta_kill::grab_insta_kill(players[0]);
-    }
+    _drop_powerup("insta_kill");
 }
 
 function give_Gift_FireSalePowerup()
 {
-    players = GetPlayers();
-    if (players.size > 0) {
-        level thread zm_audio::sndAnnouncerPlayVox("fire_sale");
-        zm_powerup_fire_sale::grab_fire_sale(players[0]);
-    }
+    _drop_powerup("fire_sale");
 }
 
 function give_Gift_FreePerkPowerup()
 {    
-    players = GetPlayers();
-    if (players.size > 0) {
-        level thread zm_audio::sndAnnouncerPlayVox("free_perk");
-        zm_powerup_free_perk::grab_free_perk(players[0]);
-    }
+    _drop_powerup("free_perk");
 }
 
 function give_Gift_MaxAmmoPowerup()
 {
-    players = GetPlayers();
-    if (players.size > 0) {
-        level thread zm_audio::sndAnnouncerPlayVox("full_ammo");
-        zm_powerup_full_ammo::grab_full_ammo(players[0]);
-    }
+    _drop_powerup("full_ammo");
 }
 
 function give_Gift_NukePowerup()
 {
+    _drop_powerup("nuke");
+}
+
+function _drop_powerup(powerup)
+{
     players = GetPlayers();
-    if (players.size > 0) {
-        zm_powerup_nuke::grab_nuke(players[0]);
+    if (players.size > 0) 
+    {
+        powerup_drop = level zm_powerups::specific_powerup_drop(powerup, players[0].origin);
     }
 }
 
