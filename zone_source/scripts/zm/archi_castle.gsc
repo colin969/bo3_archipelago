@@ -88,6 +88,7 @@ function load_state()
     archi_save::restore_doors_and_debris();
     level thread restore_dragonheads();
     restore_landingpads();
+    level thread restore_boss_ready();
 
     archi_save::restore_players(&restore_player_data);
 }
@@ -388,6 +389,14 @@ function save_landingpads()
     }
 }
 
+function save_boss_ready()
+{
+    if (IS_TRUE(level.archi.zm_castle_boss_ready))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_CASTLE_BOSS_READY", 1);
+    }
+}
+
 function save_flag_exists(dvar_name)
 {
     dvar_value = GetDvarInt(dvar_name, 0);
@@ -422,6 +431,24 @@ function restore_landingpads()
         {
            level flag::set(landing_pad.script_noteworthy);
         }
+    }
+}
+
+function restore_boss_ready()
+{
+    if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_BOSS_READY"))
+    {
+        level.archi.zm_castle_boss_ready = 1;
+        pyramids = getentarray("pyramid", "targetname");
+        foreach(pyramid in pyramids)
+        {
+            new_origin = (pyramid.origin[0], pyramid.origin[1], pyramid.origin[2] - 96);
+            pyramid notsolid();
+            pyramid connectpaths();
+            pyramid moveto(new_origin, 3);
+        }
+        level flag::set("boss_fight_ready");
+        level flag::set("mpd_canister_replacement");
     }
 }
 

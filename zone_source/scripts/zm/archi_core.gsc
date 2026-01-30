@@ -363,8 +363,6 @@ function game_start()
             level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
             level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
 
-            archi_items::RegisterItem("Victory",&archi_items::give_Victory,undefined,false);
-
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
             archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
@@ -439,8 +437,6 @@ function game_start()
             level thread setup_spare_change_trackers(6);
 
             // Register Map Unique Items - Item name, callback, clientfield
-            archi_items::RegisterItem("Victory",&archi_items::give_Victory,undefined,false);
-
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
             archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
@@ -481,7 +477,6 @@ function game_start()
             level thread setup_spare_change_trackers(6);
 
             // Register Map Unique Items - Item name, callback, clientfield
-            archi_items::RegisterItem("Victory",&archi_items::give_Victory,undefined,false);
             
             // Register Possible Global Items - Item name, callback, clientfield
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
@@ -505,6 +500,7 @@ function game_start()
 
         }
 
+        level thread setup_boarding_window();
         level thread setup_can_player_purchase_perk();
 
         //Server-wide thread to get items from the Lua/LUI
@@ -623,6 +619,28 @@ function round_end_noti()
             loc_str += round;
         }
         send_location(loc_str);
+    }
+}
+
+function setup_boarding_window()
+{
+    foreach ( player in GetPlayers() )
+    {
+        player thread watch_player_boarding_window();
+    }
+
+    callback::on_connect(&watch_player_boarding_window);
+}
+
+function watch_player_boarding_window()
+{
+    level endon("end_game");
+    self endon("disconnect");
+
+    while(true)
+    {
+        self waittill("boarding_window");
+        level notify("ap_boarding_window");
     }
 }
 
@@ -1002,7 +1020,7 @@ function custom_perk_validation(player)
 function func_override_wallbuy_prompt(player)
 {
     weapon = self.weapon;
-    if (IS_TRUE(level.archi.wallbuys[weapon.name])) 
+    if (isdefined(level.archi.wallbuys[weapon.name]) && IS_TRUE(level.archi.wallbuys[weapon.name])) 
     {
         return true;
     } 

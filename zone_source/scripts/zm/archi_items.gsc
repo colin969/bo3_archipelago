@@ -55,11 +55,13 @@ function RegisterWeapon(itemName, getFunc, consoleName) {
     item.name = itemName;
     item.getFunc = getFunc;
     item.clientfield = "ap_weapon_" + consoleName;
+    item.count = 0;
 
     globalItem = SpawnStruct();
     globalItem.name = level.archi.mapString + " " + itemName;
     globalItem.getFunc = getFunc;
     globalItem.clientfield = "ap_weapon_" + consoleName;
+    globalItem.count = 0;
 
     level.archi.weapons[consoleName] = false;
     level.archi.items[item.name] = item;
@@ -71,11 +73,13 @@ function RegisterPerk(itemName, getFunc, specialtyName) {
     item.name = itemName;
     item.getFunc = getFunc;
     item.clientfield = "ap_item_" + specialtyName;
+    item.count = 0;
 
     globalItem = SpawnStruct();
     globalItem.name = level.archi.mapString + " " + itemName;
     globalItem.getFunc = getFunc;
     globalItem.clientfield = "ap_item_" + specialtyName;
+    globalItem.count = 0;
 
     level.archi.items[item.name] = item;
     level.archi.items[globalItem.name] = globalItem;
@@ -87,6 +91,7 @@ function RegisterPap()
     item.name = "Pack-A-Punch Machine";
     item.getFunc = &give_Pap;
     item.clientfield = "ap_item_pap";
+    item.count = 0;
 
     level.archi.items[item.name] = item;
 }

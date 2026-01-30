@@ -4,6 +4,7 @@ function map_save_zm_castle(mapData)
   save_doors_and_debris(mapData)
   save_zm_castle_dragonheads(mapData)
   save_zm_castle_landingpads(mapData)
+  save_zm_castle_boss_ready(mapData)
 
   save_player_func = function (xuid, playerData)
     save_player_score(xuid, playerData)
@@ -21,6 +22,7 @@ function map_restore_zm_castle(mapData)
   restore_doors_and_debris(mapData)
   restore_zm_castle_dragonheads(mapData)
   restore_zm_castle_landingpads(mapData)
+  restore_zm_castle_boss_ready(mapData)
 
   Archi.LogMessage("Saving player data for Der Eisendrache");
   restore_player_func = function (xuid, playerData)
@@ -241,6 +243,15 @@ function save_zm_castle_landingpads(mapData)
   end
 end
 
+function save_zm_castle_boss_ready(mapData)
+  local boss_ready = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_CASTLE_BOSS_READY")
+  if boss_ready and boss_ready > 0 then
+    mapData.boss_ready = 1
+  else 
+    mapData.boss_ready = 0
+  end
+end
+
 function restore_zm_castle_dragonheads(mapData)
   if mapData["dragonheads"] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_DRAGONHEADS", mapData["dragonheads"])
@@ -250,6 +261,12 @@ end
 function restore_zm_castle_landingpads(mapData)
   if mapData["landingpads"] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_LANDINGPADS", mapData["landingpads"])
+  end
+end
+
+function restore_zm_castle_boss_ready(mapData)
+  if mapData["boss_ready"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_BOSS_READY", mapData["boss_ready"])
   end
 end
 
