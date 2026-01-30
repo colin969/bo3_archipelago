@@ -38,7 +38,7 @@ function save_state_manager()
         save_state();
     } else {
         IPrintLn("Host did not end game, clearing data...");
-        //clear_state();
+        clear_state();
     }
 }
 

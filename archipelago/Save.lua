@@ -22,6 +22,36 @@ function map_restore_zm_castle(mapData)
   restore_zm_castle_dragonheads(mapData)
   restore_zm_castle_landingpads(mapData)
 
+  Archi.LogMessage("Saving player data for Der Eisendrache");
+  restore_player_func = function (xuid, playerData)
+    restore_player_score(xuid, playerData)
+    restore_player_perks(xuid, playerData)
+    restore_player_loadout(xuid, playerData)
+  end
+
+  restore_players(mapData, restore_player_func)
+end
+
+function map_save_zm_zod(mapData)
+  save_round_number(mapData)
+  save_power_on(mapData)
+  save_doors_and_debris(mapData)
+
+  save_player_func = function (xuid, playerData)
+    save_player_score(xuid, playerData)
+    save_player_perks(xuid, playerData)
+    save_player_loadout(xuid, playerData)
+  end
+
+  save_players(mapData, save_player_func)
+end
+
+function map_restore_zm_zod(mapData)
+  Archi.LogMessage("Saving map data for Shadows of Evil");
+  restore_round_number(mapData)
+  restore_power_on(mapData)
+  restore_doors_and_debris(mapData)
+
   Archi.LogMessage("Saving player data for castle");
   restore_player_func = function (xuid, playerData)
     restore_player_score(xuid, playerData)
@@ -224,11 +254,13 @@ function restore_zm_castle_landingpads(mapData)
 end
 
 map_saves = {
-  zm_castle = map_save_zm_castle
+  zm_castle = map_save_zm_castle,
+  zm_zod = map_save_zm_zod,
 }
 
 map_restores = {
-  zm_castle = map_restore_zm_castle
+  zm_castle = map_restore_zm_castle,
+  zm_zod = map_restore_zm_zod,
 }
 
 return {

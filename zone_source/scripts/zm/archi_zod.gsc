@@ -32,7 +32,7 @@ function save_state_manager()
         save_state();
     } else {
         IPrintLn("Host did not end game, clearing data...");
-        //clear_state();
+        clear_state();
     }
 }
 
@@ -59,7 +59,7 @@ function save_state()
 
     archi_save::save_players(&save_player_data);
 
-    archi_save::send_save_data("zm_castle");
+    archi_save::send_save_data("zm_zod");
 }
 
 // self is player
@@ -72,9 +72,7 @@ function save_player_data(xuid)
 
 function load_state()
 {
-    archi_save::wait_restore_ready("zm_castle");
-    // Disable rocket pad death plane
-    level flag::set("castle_teleporter_used");
+    archi_save::wait_restore_ready("zm_zod");
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
@@ -97,7 +95,7 @@ function restore_player_data()
 
 function clear_state()
 {
-    SetDvar("ARCHIPELAGO_CLEAR_DATA", "zm_castle");
+    SetDvar("ARCHIPELAGO_CLEAR_DATA", "zm_zod");
     LUINotifyEvent(&"ap_clear_data", 0);
 }
 

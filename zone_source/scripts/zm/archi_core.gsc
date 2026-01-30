@@ -674,7 +674,6 @@ function item_get_from_lua()
         }
         wait .5;
     }
-    
 }
 
 function log_from_lua()
@@ -756,7 +755,14 @@ function wrapped_craftable_onPickup( player )
     {
         self [[self.piecestub.original_onPickup]](player);
     }
-    if (self.craftableName == "craft_shield_zm" && level.archi.randomized_shield_parts == 1)
+    if (self.craftableName == "craft_shield_zm")
+    {
+        if (level.archi.randomized_shield_parts == 1)
+        {
+            self thread _remove_piece();
+        }
+    } 
+    else 
     {
         self thread _remove_piece();
     }
