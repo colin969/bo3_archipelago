@@ -54,13 +54,13 @@ function RegisterWeapon(itemName, getFunc, consoleName) {
     item = SpawnStruct();
     item.name = itemName;
     item.getFunc = getFunc;
-    item.clientfield = "ap_weapon_" + consoleName;
+    //item.clientfield = "ap_weapon_" + consoleName;
     item.count = 0;
 
     globalItem = SpawnStruct();
     globalItem.name = level.archi.mapString + " " + itemName;
     globalItem.getFunc = getFunc;
-    globalItem.clientfield = "ap_weapon_" + consoleName;
+    //globalItem.clientfield = "ap_weapon_" + consoleName;
     globalItem.count = 0;
 
     level.archi.weapons[consoleName] = false;
@@ -153,9 +153,13 @@ function give_Pap()
 
 function give_Perk(perk)
 {
-    s_custom_perk = level._custom_perks[perk];
-    level.archi.active_perk_machines[perk] = true;
-    level notify(s_custom_perk.alias + "_on");
+    if (isdefined(level._custom_perks[perk]))
+    {
+        s_custom_perk = level._custom_perks[perk];
+        level.archi.active_perk_machines[perk] = true;
+        level notify(s_custom_perk.alias + "_on");
+    }
+
 }
 
 //Simple Give Functions notifies
@@ -522,7 +526,7 @@ function give_Gift_DoublePointsPowerup()
 
 function give_Gift_InstaKillPowerup()
 {
-    _drop_powerup("insta_kill");
+    //_drop_powerup("insta_kill");
 }
 
 function give_Gift_FireSalePowerup()

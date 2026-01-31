@@ -15,6 +15,20 @@ Archi = {}
 Archi.Debug = true
 --
 
+oneTimeItems = {
+  ["50 Points"] = true,
+  ["500 Points"] = true,
+  ["Gift - Carpenter Powerup"] = true,
+  ["Gift - Double Points Powerup"] = true,
+  ["Gift - InstaKill Powerup"] = true,
+  ["Gift - Fire Sale Powerup"] = true,
+  ["Gift - Max Ammo Powerup"] = true,
+  ["Gift - Nuke Powerup"] = true,
+  ["Gift - Free Perk Powerup"] = true,
+  ["Trap - Third Person Mode"] = true,
+}
+instanceItemState = {}
+connectionItemState = {}
 Archi.LocationToID = {}
 
 for i = 1, 99 do
@@ -115,14 +129,27 @@ Archi.LocationToID["(Shadows of Evil) Shield Part Pickup - Clamp"] = 3322
 Archi.LocationToID["(Shadows of Evil) All Spare Change Collected"] = 3500
 Archi.LocationToID["(Shadows of Evil) Laundry Ticket"] = 3501
 
+Archi.LocationToID["Repair Windows 5 Times"] = 9001
+
 saveData = nil
 seed = nil
 
-Archi.LocationToID["Repair Windows 5 Times"] = 9001
+Archi.SocketDisconnected = function ()
+  ItemQueue = List.new()
+  connectionItemState = {}
+end
 
 Archi.FromGSC = function (model)
   if IsParamModelEqualToString(model, "ap_debug_magicbox") then
     save_magicbox_list()
+  end
+  if IsParamModelEqualToString(model, "ap_init_state") then
+    seed = Engine.DvarString(nil,"ARCHIPELAGO_SEED")
+    Archi.LoadData()
+    --When we recieve an Item, give it to the GSC
+    Archi.GiveItemsLoop()
+
+    Engine.SetDvar( "ARCHIPELAGO_LOAD_READY", 1 )
   end
   if IsParamModelEqualToString(model, "ap_clear_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_CLEAR_DATA")
@@ -131,14 +158,13 @@ Archi.FromGSC = function (model)
         saveData[mapName] = {
           players = {}
         }
-        local saveDataStr = json.encode(saveData)
+        local saveDataStr = json.encode(saveData, { indent = true })
         Archipelago.StoreSaveData(saveDataStr)
     
         -- We're done saving, let gsc know
         Engine.SetDvar( "ARCHIPELAGO_CLEAR_DATA", "NONE" )
       end
     end
-
   end
   if IsParamModelEqualToString(model, "ap_save_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA")
@@ -159,7 +185,7 @@ Archi.FromGSC = function (model)
         mapSave(saveData[mapName])
       end
 
-      local saveDataStr = json.encode(saveData)
+      local saveDataStr = json.encode(saveData, { indent = true })
       Archipelago.StoreSaveData(saveDataStr)
 
       -- We're done saving, let gsc know
@@ -169,28 +195,6 @@ Archi.FromGSC = function (model)
   if IsParamModelEqualToString(model, "ap_load_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_LOAD_DATA")
     if mapName ~= "NONE" then
-      -- Get data from AP client
-      if saveData == nil then
-        seed = Archipelago.GetSeed()
-        local saveDataStr = Archipelago.LoadSaveData()
-        Archi.LogMessage("Data size: " .. string.len(saveDataStr))
-        if saveDataStr and saveDataStr ~= "" then
-          local obj, pos, err = json.decode(saveDataStr, 1, nil)
-          if err then
-            Archi.LogMessage("Failed to decode JSON")
-            saveData = {}
-          else
-            Archi.LogMessage("Loaded save data successfully")
-            saveData = obj
-          end
-        else
-          saveData = {}
-        end
-      end
-
-      -- Give the gsc the seed if they don't already have it
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_SEED", seed )
-
       local mapRestore = save_system.map_restores[mapName]
       if mapRestore and saveData[mapName] then
         mapRestore(saveData[mapName])
@@ -198,7 +202,7 @@ Archi.FromGSC = function (model)
         if not mapRestore then
           Archi.LogMessage("No restore func found for " .. mapName)
         else
-          Archi.LogMessage("No save data found for " .. mapName)
+          Archi.LogMessage("Restore function found for " .. mapName)
         end
       end
 
@@ -254,11 +258,39 @@ end
 
 Archi.GiveItemsLoop = function()
   local UIRootFull = LUI.roots.UIRootFull;
-	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(1000, false, function()
+	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(500, false, function()
     local item = Engine.DvarString(nil,"ARCHIPELAGO_ITEM_GET")
     if (not List.isEmpty(ItemQueue)) and (item == "NONE") then --if we are free to give an item, and there is one to give
       local toSend = List.popleft(ItemQueue)
-      Engine.SetDvar( "ARCHIPELAGO_ITEM_GET", toSend )
+
+      -- How many times awarded this map
+      instanceItemState[toSend] = instanceItemState[toSend] or 0
+      -- How many times given on this AP connection (resets if disconnected)
+      connectionItemState[toSend] = connectionItemState[toSend] or 0
+
+      -- Add item to connection counter
+      connectionItemState[toSend] = connectionItemState[toSend] + 1
+
+      if instanceItemState[toSend] < connectionItemState[toSend] then
+        -- Instance is lagging behind connection, catch up
+        instanceItemState[toSend] = connectionItemState[toSend]
+
+        -- One time use items need to check the saved data, not just the instance state
+        if oneTimeItems[toSend] then
+          local spentItems = saveData["universal"]["oneTimeItems"][toSend] or 0
+          if instanceItemState[toSend] > spentItems then
+            -- Save state is behind instance state, award powerup to catch up
+            saveData["universal"]["oneTimeItems"][toSend] = instanceItemState[toSend]
+            Engine.SetDvar( "ARCHIPELAGO_ITEM_GET", toSend )
+            -- Store updated save data
+            local saveDataStr = json.encode(saveData, { indent = true })
+            Archipelago.StoreSaveData(saveDataStr)
+          end
+        else
+          -- Regular item, award
+          Engine.SetDvar( "ARCHIPELAGO_ITEM_GET", toSend )
+        end
+      end
     end
 	end);
 	UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
@@ -285,6 +317,32 @@ Archi.KeepConnected = function ()
     --TODO: only do this on an actual connect
     Engine.SetDvar( "ARCHIPELAGO_CONNECTED", "TRUE" )
   end
+end
+
+Archi.LoadData = function ()
+  local saveDataStr = Archipelago.LoadSaveData()
+  Archi.LogMessage("Data size: " .. string.len(saveDataStr))
+  if saveDataStr and saveDataStr ~= "" then
+    local obj, pos, err = json.decode(saveDataStr, 1, nil)
+    if err then
+      Archi.LogMessage("Failed to decode JSON")
+      saveData = {}
+    else
+      Archi.LogMessage("Loaded save data successfully")
+      saveData = obj
+    end
+  else
+    saveData = {}
+  end
+
+  if not saveData["universal"] then
+    saveData["universal"] = {}
+  end
+  if not saveData["universal"]["oneTimeItems"] then
+    saveData["universal"]["oneTimeItems"] = {}
+  end
+
+  Engine.SetDvar( "ARCHIPELAGO_LOAD_READY", 1 )
 end
 
 
@@ -321,205 +379,9 @@ function InitializeArchipelago(options)
     Archipelago.Poll();
   end);
   UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
-  --
-
-  --When we recieve an Item, give it to the GSC
-  Archi.GiveItemsLoop()
 
   --Send Log messages to GSC
   Archi.LogMessageLoop()
-
-end
-
-function map_save_zm_castle(mapData)
-  save_round_number(mapData)
-  save_power_on(mapData)
-  save_doors_and_debris(mapData)
-
-  save_player_func = function (xuid, playerData)
-    save_player_score(xuid, playerData)
-    save_player_perks(xuid, playerData)
-    save_player_loadout(xuid, playerData)
-  end
-
-  save_players(mapData, save_player_func)
-end
-
-function map_restore_zm_castle(mapData)
-  Archi.LogMessage("Saving map data for castle");
-  restore_round_number(mapData)
-  restore_power_on(mapData)
-  restore_doors_and_debris(mapData)
-
-  Archi.LogMessage("Saving player data for castle");
-  restore_player_func = function (xuid, playerData)
-    restore_player_score(xuid, playerData)
-    restore_player_perks(xuid, playerData)
-    restore_player_loadout(xuid, playerData)
-  end
-
-  restore_players(mapData, restore_player_func)
-end
-
-function restore_round_number(mapData)
-  if mapData["round_number"] then
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_ROUND", mapData["round_number"])
-  end
-end
-
-function restore_doors_and_debris(mapData)
-  if mapData["doors_opened"] then
-    local doorsOpened = mapData["doors_opened"]
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_DOORS", table.concat(doorsOpened, ";"))
-  end
-
-  if mapData["debris_opened"] then
-    local debrisOpened = mapData["debris_opened"]
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_DEBRIS", table.concat(debrisOpened, ";"))
-  end
-end
-
-function restore_power_on(mapData)
-  if mapData["power_on"] and mapData["power_on"] == 1 then
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 1)
-  else
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0)
-  end
-end
-
-function restore_players(mapData, cb)
-  if mapData["players"] then
-    for xuid, playerData in pairs(mapData.players) do
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_READY_" .. xuid, "true" )
-      cb(xuid, playerData)
-    end
-  end
-end
-
-function restore_player_ready(xuid)
-  Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_READY_" .. xuid, "true" )
-end
-
-function save_players(mapData, cb)
-  if not mapData["players"] then
-    mapData["players"] = {}
-  end
-  local xuidList = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA_XUIDS")
-  for xuid in string.gmatch(xuidList, "[^;]+") do
-    playerData = {}
-    cb(xuid, playerData)
-    mapData["players"][xuid] = playerData
-  end
-end
-
-function restore_player_score(xuid, playerData)
-  if playerData["score"] then
-    Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_SCORE_" .. xuid, playerData["score"] )
-  end
-end
-
-function restore_player_perks(xuid, playerData)
-  if playerData["perks"] then
-    local i = 0
-    for _, perk in ipairs(playerData["perks"]) do
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_PERK_" .. xuid .. "_" .. i, perk )
-      i = i + 1
-    end
-  end
-end
-
-function restore_player_loadout(xuid, playerData)
-  if playerData["weapons"] then
-    local i = 0
-    for _, weapon in ipairs(playerData["weapons"]) do
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_WEAPON", weapon.weapon )
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_CLIP", weapon.clip )
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_LHCLIP", weapon.lh_clip or 0)
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_STOCK", weapon.stock )
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTCLIP", weapon.alt_clip or 0)
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTSTOCK", weapon.alt_stock or 0)
-      i = i + 1
-    end
-  end
-end
-
-function save_round_number(mapData)
-  local roundNumber = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_ROUND")
-  if roundNumber and roundNumber > 1 then
-    mapData.round_number = roundNumber
-  end
-end
-
-function save_doors_and_debris(mapData)
-  local doorStr = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_OPENED_DOORS");
-  local debrisStr = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_OPENED_DEBRIS");
-  local doorsOpened = {}
-  local debrisOpened = {}
-
-  for doorId in string.gmatch(doorStr, "[^;]+") do
-    table.insert(doorsOpened, doorId);
-  end
-  for debrisId in string.gmatch(debrisStr, "[^;]+") do
-    table.insert(debrisOpened, debrisId);
-  end
-
-  mapData.doors_opened = doorsOpened
-  mapData.debris_opened = debrisOpened
-end
-
-function save_power_on(mapData)
-  local powerOn = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_POWER_ON")
-  if powerOn and powerOn > 0 then
-    mapData.power_on = 1
-  else
-    mapData.power_on = 0
-  end
-end
-
-function save_player_score(xuid, playerData)
-  local score = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_SCORE_" .. xuid)
-  if score and score > 0 then
-    playerData.score = score
-  end
-end
-
-function save_player_perks(xuid, playerData)
-  playerData.perks = {}
-  local i = 0
-  while true do
-    local perk = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_XUID_PERK_" .. xuid .. "_" .. i)
-    if not perk or perk == "" then
-      break
-    end
-    table.insert(playerData.perks, perk)
-    i = i + 1
-  end
-end
-
-function save_player_loadout(xuid, playerData)
-  playerData.weapons = {}
-  i = 0
-  while true do
-    local weaponName = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_WEAPON")
-    local weaponClip = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_CLIP")
-    local weaponLhClip = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_LHCLIP")
-    local weaponStock = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_STOCK")
-    local weaponAltClip = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTCLIP")
-    local weaponAltStock = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTSTOCK")
-
-    if not weaponName or weaponName == "" then
-      break
-    end
-    table.insert(playerData.weapons, {
-      weapon = weaponName,
-      clip = weaponClip,
-      lh_clip = weaponLhClip,
-      stock = weaponStock,
-      alt_clip = weaponAltClip,
-      alt_stock = weaponAltStock,
-    })
-    i = i + 1
-  end
 end
 
 function save_magicbox_list()

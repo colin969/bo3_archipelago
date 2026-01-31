@@ -80,6 +80,9 @@ function save_player_data(xuid)
 
 function load_state()
 {
+    level.archi.zm_castle_dragonheads = 0;
+    level.archi.zm_castle_landingpads = 0;
+    level.archi.zm_castle_boss_ready = 0;
     archi_save::wait_restore_ready("zm_castle");
     // Disable rocket pad death plane
     level flag::set("castle_teleporter_used");
@@ -199,6 +202,22 @@ function _track_trigger_requiem()
     level notify("ap_castle_requiem");
 }
 
+function setup_locations()
+{
+    level waittill("start_zombie_round_logic");
+
+    setup_soul_catchers();
+    setup_landing_pads();
+
+    setup_music_ee_trackers();
+
+    setup_weapon_ee_rune_prison();
+    setup_weapon_ee_demon_gate();
+    setup_weapon_ee_wolf_howl();
+    setup_weapon_ee_storm_bow();
+
+    setup_main_ee();
+}
 
 // Notes:
 // Clientfields: quest_state_<bow>_<num> for ui progress

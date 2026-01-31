@@ -39,6 +39,7 @@
 #precache( "eventstring", "ap_notification" );
 #precache( "eventstring", "ap_ui_get" );
 #precache( "eventstring", "ap_ui_send" );
+#precache( "eventstring", "ap_init_state" );
 
 REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
@@ -61,57 +62,16 @@ function __init__()
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
 
-    level flag::init("ap_settings_ready");
-    level thread get_ap_settings();
+    level flag::init("ap_loaded");
 
-	callback::on_start_gametype( &game_start );
+	callback::on_start_gametype( &wait_for_start );
 	callback::on_connect( &on_player_connect );
 
 
     //Clientfields (Mostly Tracker stuff)
     //TODO Put this in a library?
     //TODO Figure out if I need to set these to 0 if maps are swapped down the line
-    clientfield::register("world", "ap_item_" + PERK_JUGGERNOG, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_QUICK_REVIVE, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_SLEIGHT_OF_HAND, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_DOUBLETAP2, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_STAMINUP, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_PHDFLOPPER, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_DEAD_SHOT, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_ADDITIONAL_PRIMARY_WEAPON, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_ELECTRIC_CHERRY, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_TOMBSTONE, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_WHOSWHO, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_VULTUREAID, VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_" + PERK_WIDOWS_WINE, VERSION_SHIP, 2, "int");
 
-    clientfield::register("world", "ap_item_wunderfizz", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_power_on", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_wallbuys", VERSION_SHIP, 2, "int");
-
-    clientfield::register("world", "ap_item_region_1", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_region_2", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_region_3", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_region_4", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_region_5", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_item_region_6", VERSION_SHIP, 2, "int");
-
-    clientfield::register("world", "ap_weapon_ar_icr", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_hvk", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_manowar", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_m8a7", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_sheiva", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_kn44", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_ffar", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_garand", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_peacekeeper", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_an94", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_galil", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_m14", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_m16", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_basilisk", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_xr2", VERSION_SHIP, 2, "int");
-    clientfield::register("world", "ap_weapon_ar_stg44", VERSION_SHIP, 2, "int");
 }
 
 function __main__()
@@ -135,7 +95,6 @@ function get_ap_settings()
         }       
         WAIT_SERVER_FRAME
     }   
-    level flag::set("ap_settings_ready");
 }
 
 function init_string_mappings()
@@ -210,7 +169,6 @@ function init_string_mappings()
 
 function on_archi_connect_settings()
 {
-    level flag::wait_till("ap_settings_ready");
     level.archi.perk_limit_default_modifier = GetDvarInt("ARCHIPELAGO_PERK_LIMIT_DEFAULT_MODIFIER", 0);
     level.archi.randomized_shield_parts = GetDvarInt("ARCHIPELAGO_RANDOMIZED_SHIELD_PARTS", 0);
     level.archi.map_specific_wallbuys = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_WALLBUYS", 0);
@@ -219,12 +177,31 @@ function on_archi_connect_settings()
     init_string_mappings();
 }
 
+function wait_for_start()
+{
+    level endon("end_game");
+    get_ap_settings();
+
+    LUINotifyEvent(&"ap_init_state", 0);
+
+    // Wait until the client has loaded the data
+    while(true)
+    {   
+        dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_READY", 0);
+        if (dvar_value > 0) {
+            break;
+        }
+        wait(0.2);
+    }
+    
+    level flag::set("ap_loaded");
+    level thread game_start();
+}
+
 function game_start()
 {
-    
+
     //TODO Error out here if there is no connection settings
-
-
     if (!isdefined(level.archi))
     {
         // Hold server-wide Archipelago Information
@@ -328,19 +305,19 @@ function game_start()
         archi_items::RegisterUniversalItem("50000 Points",&archi_items::give_50000Points);
 
         // Traps
-        archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson,"ap_trap_thirdperson");
+        archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson,undefined);
         
         // Gifts
-        archi_items::RegisterUniversalItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup,"ap_gift_carpenter");
-        archi_items::RegisterUniversalItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup,"ap_gift_double_points");
-        archi_items::RegisterUniversalItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup,"ap_gift_instakill");
-        archi_items::RegisterUniversalItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup,"ap_gift_fire_sale");
-        archi_items::RegisterUniversalItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup,"ap_gift_max_ammo");
-        archi_items::RegisterUniversalItem("Gift - Nuke Powerup",&archi_items::give_Gift_NukePowerup,"ap_gift_nuke");
-        archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup,"ap_gift_free_perk");
+        archi_items::RegisterUniversalItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup,undefined);
+        archi_items::RegisterUniversalItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup,undefined);
+        archi_items::RegisterUniversalItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup,undefined);
+        archi_items::RegisterUniversalItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup,undefined);
+        archi_items::RegisterUniversalItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup,undefined);
+        archi_items::RegisterUniversalItem("Gift - Nuke Powerup",&archi_items::give_Gift_NukePowerup,undefined);
+        archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup,undefined);
 
         // Progressives
-        archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit,"ap_progressive_perk_limit");
+        archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit,undefined);
 
         archi_items::RegisterPap();
 
@@ -422,17 +399,7 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
-            archi_castle::setup_soul_catchers();
-            archi_castle::setup_landing_pads();
-
-            archi_castle::setup_music_ee_trackers();
-
-            archi_castle::setup_weapon_ee_rune_prison();
-            archi_castle::setup_weapon_ee_demon_gate();
-            archi_castle::setup_weapon_ee_wolf_howl();
-            archi_castle::setup_weapon_ee_storm_bow();
-
-            archi_castle::setup_main_ee();
+            level thread archi_castle::setup_locations();
 
             level thread setup_spare_change_trackers(6);
 
@@ -565,6 +532,7 @@ function on_player_connect()
 {
     if (self IsHost())
     {
+        level flag::wait_till("ap_loaded");
         self thread location_check_to_lua();
     }
 }
@@ -677,11 +645,11 @@ function item_get_from_lua()
                 level.archi.items[item].count += 1;
                 self [[level.archi.items[item].getFunc]]();
 
-                if (isdefined(level.archi.items[item].clientField))
-                {
-                    //TODO: make this safe, so it checks if the clientfield exists first
-                    level clientfield::set(level.archi.items[item].clientField, 1);
-                }
+                // if (isdefined(level.archi.items[item].clientField))
+                // {
+                //     //TODO: make this safe, so it checks if the clientfield exists first
+                //     level clientfield::set(level.archi.items[item].clientField, 1);
+                // }
                 //Notif happens a bit too early compared to log messages
                 wait .5;
                 LUINotifyEvent(&"ap_ui_get", 0);
@@ -690,7 +658,7 @@ function item_get_from_lua()
             SetDvar("ARCHIPELAGO_ITEM_GET","NONE");
             
         }
-        wait .5;
+        wait .2;
     }
 }
 
@@ -955,10 +923,17 @@ function keep_perk_machine_locked(perk, ap_hint_string)
     }
 
     // Turn off perk if it's already on
+    machines = getentarray(s_custom_perk.radiant_machine_name, "targetname");
     machine_triggers = GetEntArray( s_custom_perk.radiant_machine_name, "target" );
-    if (machine_triggers[0].power_on)
+    if (machine_triggers.size > 0 && machine_triggers[0].power_on)
     {
         level notify(s_custom_perk.alias + "_off");
+        // Turn (later map) light and jingle back off
+        foreach(machine in machines)
+        {
+            machine notify("stop_loopsound");
+            machine zm_perks::perk_fx(undefined, 1);
+        }
     }
 
     while(true)
@@ -984,6 +959,13 @@ function keep_perk_machine_locked(perk, ap_hint_string)
         }
         wait(0.5);
         level notify(s_custom_perk.alias + "_off");
+        machines = getentarray(s_custom_perk.radiant_machine_name, "targetname");
+        // Turn (later map) light and jingle back off
+        foreach(machine in machines)
+        {
+            machine notify("stop_loopsound");
+            machine zm_perks::perk_fx(undefined, 1);
+        }
     }
 }
 
