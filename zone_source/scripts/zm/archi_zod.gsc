@@ -99,6 +99,16 @@ function clear_state()
     LUINotifyEvent(&"ap_clear_data", 0);
 }
 
+function setup_locations()
+{
+    level waittill("initial_blackscreen_passed");
+
+    setup_main_quest();
+    setup_side_ee();
+    setup_main_ee();
+    setup_sword_quest();
+}
+
 function setup_side_ee()
 {
     level thread _laundry_ticket();

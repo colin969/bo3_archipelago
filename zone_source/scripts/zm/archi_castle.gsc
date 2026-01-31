@@ -32,7 +32,7 @@ function save_state_manager()
     level waittill("end_game");
     level thread location_state_tracker();
 
-    if (level.host_ended_game == 1)
+    if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
     {
         IPrintLn("Host ended game, saving data...");
         save_state();
@@ -204,10 +204,11 @@ function _track_trigger_requiem()
 
 function setup_locations()
 {
-    level waittill("start_zombie_round_logic");
+    setup_landing_pads();
+
+    level waittill("initial_blackscreen_passed");
 
     setup_soul_catchers();
-    setup_landing_pads();
 
     setup_music_ee_trackers();
 

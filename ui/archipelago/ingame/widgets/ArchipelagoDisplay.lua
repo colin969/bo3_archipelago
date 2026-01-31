@@ -2,14 +2,6 @@
 require("Archipelago.ArchipelagoClient")
 --
 
-if (Engine.IsZombiesGame()) then
-	InitializeArchipelago({
-	  modname  = "bo3_archipelago",
-	  filespath = [[.\mods\bo3_archipelago\]],
-	  workshopid = nil
-	})
-  end
-
 CoD.ArchipelagoDisplay = InheritFrom( LUI.UIElement )
 CoD.ArchipelagoDisplay.new = function (menu, controller)
 

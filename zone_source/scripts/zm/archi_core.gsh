@@ -27,6 +27,7 @@
 #define ARCHIPELAGO_MAP_THE_GIANT "(The Giant)"
 #define ARCHIPELAGO_MAP_CASTLE "(Castle)"
 #define ARCHIPELAGO_MAP_SHADOWS_OF_EVIL "(Shadows of Evil)"
+#define ARCHIPELAGO_MAP_GOROD_KROVI "(Gorod Krovi)"
 
 #define ARCHIPELAGO_ITEM_PERK_JUGGERNOG "Juggernog"
 #define ARCHIPELAGO_ITEM_PERK_QUICK_REVIVE "Quick Revive"

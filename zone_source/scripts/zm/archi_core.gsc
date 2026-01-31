@@ -20,6 +20,7 @@
 #using scripts\zm\archi_items;
 #using scripts\zm\archi_commands;
 #using scripts\zm\archi_castle;
+#using scripts\zm\archi_stalingrad;
 #using scripts\zm\archi_zod;
 
 #insert scripts\zm\_zm_perks.gsh;
@@ -39,6 +40,7 @@
 #precache( "eventstring", "ap_notification" );
 #precache( "eventstring", "ap_ui_get" );
 #precache( "eventstring", "ap_ui_send" );
+#precache( "eventstring", "ap_init_dll" );
 #precache( "eventstring", "ap_init_state" );
 
 REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
@@ -61,12 +63,20 @@ function __init__()
     SetDvar("ARCHIPELAGO_SAVE_PROGRESS", "NONE");
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
+    SetDvar("ARCHIPELAGO_LOAD_READY", 0);
+    SetDvar("ARCHIPELAGO_SEED", "");
+    SetDvar("ARCHIPELAGO_SETTINGS_READY", "");
 
+    //Server-wide thread to print Log messages from Lua/LUI
+    level thread log_from_lua();
+
+    level flag::init("ap_dll_started");
     level flag::init("ap_loaded");
+
+    level thread lua_init();
 
 	callback::on_start_gametype( &wait_for_start );
 	callback::on_connect( &on_player_connect );
-
 
     //Clientfields (Mostly Tracker stuff)
     //TODO Put this in a library?
@@ -76,10 +86,16 @@ function __init__()
 
 function __main__()
 {
-    archi_commands::init_commands();
-    level thread round_start_location();
-    level thread round_end_noti();
-    level thread repaired_board_noti();
+
+}
+
+function lua_init()
+{
+    level waittill("start_zombie_round_logic");
+
+    LUINotifyEvent(&"ap_init_dll", 0);
+    WAIT_SERVER_FRAME
+    level flag::set("ap_dll_started");
 }
 
 function get_ap_settings()
@@ -88,12 +104,13 @@ function get_ap_settings()
     while (true)
     {
         dvar_value = GetDvarString("ARCHIPELAGO_SETTINGS_READY", "");
-        if (isdefined(dvar_value) && dvar_value != "")
+        if (dvar_value != "")
         {
             SetDvar("ARCHIPELAGO_SETTINGS_READY", "");
+            wait(0.1);
             break;
         }       
-        WAIT_SERVER_FRAME
+        wait(0.1);
     }   
 }
 
@@ -180,6 +197,7 @@ function on_archi_connect_settings()
 function wait_for_start()
 {
     level endon("end_game");
+    level flag::wait_till("ap_dll_started");
     get_ap_settings();
 
     LUINotifyEvent(&"ap_init_state", 0);
@@ -200,15 +218,18 @@ function wait_for_start()
 
 function game_start()
 {
-
     //TODO Error out here if there is no connection settings
     if (!isdefined(level.archi))
     {
         // Hold server-wide Archipelago Information
         level.archi = SpawnStruct();
 
+        //Collection of Locations that are checked, 
+        level.archi.locationQueue = array();
+
         level.archi.opened_doors = [];
         level.archi.opened_debris = [];
+        level.archi.excluded_craftable_items = [];
 
         zombie_doors = GetEntArray("zombie_door", "targetname");
         for (i = 0; i < zombie_doors.size; i++)
@@ -321,6 +342,11 @@ function game_start()
 
         archi_items::RegisterPap();
 
+        archi_commands::init_commands();
+        level thread round_start_location();
+        level thread round_end_noti();
+        level thread repaired_board_noti();
+
         if (mapName == "zm_zod")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
@@ -373,10 +399,7 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - Bootlegger",&archi_items::give_Weapon_BRM,"smg_sten");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
-            level thread archi_zod::setup_main_quest();
-            level thread archi_zod::setup_side_ee();
-            level thread archi_zod::setup_main_ee();
-            level thread archi_zod::setup_sword_quest();
+            level thread archi_zod::setup_locations();
 
             level thread setup_spare_change_trackers(7);
 
@@ -436,6 +459,55 @@ function game_start()
             level thread archi_castle::load_state();
         }
 
+        if (mapName == "zm_stalingrad")
+        {
+            level.archi.mapString = ARCHIPELAGO_MAP_GOROD_KROVI;
+
+            level thread setup_spare_change_trackers(6);
+
+            level thread archi_stalingrad::setup_locations();
+
+            replace_craftable_onPickup("craft_shield_zm");
+            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+            replace_craftable_onPickup("dragonride");
+            level.archi.craftable_piece_to_location["dragonride_part_transmitter"] = level.archi.mapString + " Dragonride Network Circuit - Transmitter";
+            level.archi.craftable_piece_to_location["dragonride_part_codes"] = level.archi.mapString + " Dragonride Network Circuit - Codes";
+            level.archi.craftable_piece_to_location["dragonride_part_map"] = level.archi.mapString + " Dragonride Network Circuit - Map";
+
+            level.archi.excluded_craftable_items["dragonride_part_transmitter"] = 1;
+            level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
+            level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
+
+            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+
+            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+            archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
+            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+        }
+
         if (mapName == "zm_factory")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_THE_GIANT;
@@ -472,12 +544,6 @@ function game_start()
 
         //Server-wide thread to get items from the Lua/LUI
         level thread item_get_from_lua();
-
-        //Server-wide thread to print Log messages from Lua/LUI
-        level thread log_from_lua();
-
-        //Collection of Locations that are checked, 
-        level.archi.locationQueue = array();
 
         //Apply settings with Existing DVARS, should be set in menu during initial Room Connection
         level thread on_archi_connect_settings();
@@ -533,6 +599,7 @@ function on_player_connect()
     if (self IsHost())
     {
         level flag::wait_till("ap_loaded");
+        IPrintLn("Location checker started");
         self thread location_check_to_lua();
     }
 }
@@ -750,7 +817,10 @@ function wrapped_craftable_onPickup( player )
     } 
     else 
     {
-        self thread _remove_piece();
+        if (!(isdefined(level.archi.excluded_craftable_items) && isdefined(level.archi.excluded_craftable_items[fullName])))
+        {
+            self thread _remove_piece();
+        }
     }
 }
 
@@ -925,7 +995,7 @@ function keep_perk_machine_locked(perk, ap_hint_string)
     // Turn off perk if it's already on
     machines = getentarray(s_custom_perk.radiant_machine_name, "targetname");
     machine_triggers = GetEntArray( s_custom_perk.radiant_machine_name, "target" );
-    if (machine_triggers.size > 0 && machine_triggers[0].power_on)
+    if (machine_triggers.size > 0 && isdefined(machine_triggers[0].power_on) && machine_triggers[0].power_on)
     {
         level notify(s_custom_perk.alias + "_off");
         // Turn (later map) light and jingle back off
@@ -935,6 +1005,7 @@ function keep_perk_machine_locked(perk, ap_hint_string)
             machine zm_perks::perk_fx(undefined, 1);
         }
     }
+    t_perk = undefined;
 
     while(true)
     {
@@ -942,10 +1013,14 @@ function keep_perk_machine_locked(perk, ap_hint_string)
         while(true)
         {
             wait (0.1);
-            t_perk = GetEnt(perk, "script_noteworthy");
-            if (isdefined(t_perk)) {
-                t_perk SetHintString(ap_hint_string);
-                break;
+            t_perk = GetEntArray(perk, "script_noteworthy");
+            if (isdefined(t_perk))
+            {
+                foreach(t_perky in t_perk)
+                {
+                    t_perky SetHintString(ap_hint_string);
+                    break;
+                }
             }
         }
 
@@ -954,7 +1029,14 @@ function keep_perk_machine_locked(perk, ap_hint_string)
         if (IS_TRUE(level.archi.active_perk_machines[perk]))
         {
             // We've got the AP item, we can stop turning it off
-            t_perk zm_perks::reset_vending_hint_string();
+            if (isdefined(t_perk)) 
+            {
+                foreach(t_perky in t_perk)
+                {
+                    t_perky zm_perks::reset_vending_hint_string();
+                    break;
+                }
+            }
             break;
         }
         wait(0.5);

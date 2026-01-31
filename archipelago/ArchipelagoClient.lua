@@ -140,14 +140,31 @@ Archi.SocketDisconnected = function ()
 end
 
 Archi.FromGSC = function (model)
+  if IsParamModelEqualToString(model, "ap_init_dll") then
+    --Send Log messages to GSC
+    Archi.LogMessageLoop()
+
+    Archi.LogMessage("Initializing DLL...")
+
+    InitializeArchipelago({
+      modname  = "bo3_archipelago",
+      filespath = [[.\mods\bo3_archipelago\]],
+      workshopid = nil
+    })
+  end
   if IsParamModelEqualToString(model, "ap_debug_magicbox") then
     save_magicbox_list()
   end
   if IsParamModelEqualToString(model, "ap_init_state") then
-    seed = Engine.DvarString(nil,"ARCHIPELAGO_SEED")
+    seed = Engine.DvarString("","ARCHIPELAGO_SEED")
+    Archi.LogMessage("Seed: " .. seed)
+
     Archi.LoadData()
+
     --When we recieve an Item, give it to the GSC
     Archi.GiveItemsLoop()
+
+    Archi.LogMessage("LUA side ready")
 
     Engine.SetDvar( "ARCHIPELAGO_LOAD_READY", 1 )
   end
@@ -341,8 +358,6 @@ Archi.LoadData = function ()
   if not saveData["universal"]["oneTimeItems"] then
     saveData["universal"]["oneTimeItems"] = {}
   end
-
-  Engine.SetDvar( "ARCHIPELAGO_LOAD_READY", 1 )
 end
 
 
@@ -379,9 +394,6 @@ function InitializeArchipelago(options)
     Archipelago.Poll();
   end);
   UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
-
-  --Send Log messages to GSC
-  Archi.LogMessageLoop()
 end
 
 function save_magicbox_list()
