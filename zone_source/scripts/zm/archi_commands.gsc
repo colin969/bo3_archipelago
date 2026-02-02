@@ -91,7 +91,7 @@ function private _trigger_item_response(command_args)
 
   ModVar("ap_trigger_item", "");
 
-  level waittill("initial_blackscreen_passed");
+  level flag::wait_till("initial_blackscreen_passed");
 
   while(true)
   {
@@ -104,17 +104,7 @@ function private _trigger_item_response(command_args)
       ModVar("ap_trigger_item", "");
       if (isdefined(level.archi.items[dvar_value]))
       {
-          level.archi.items[dvar_value].count += 1;
-          self [[level.archi.items[dvar_value].getFunc]]();
-
-          if (isdefined(level.archi.items[dvar_value].clientField))
-          {
-              //TODO: make this safe, so it checks if the clientfield exists first
-              level clientfield::set(level.archi.items[dvar_value].clientField, 1);
-          }
-          //Notif happens a bit too early compared to log messages
-          wait .5;
-          LUINotifyEvent(&"ap_ui_get", 0);
+          archi_core::award_item(dvar_value);
           IPrintLn("Given Item " + dvar_value);
       }
       else
@@ -144,6 +134,7 @@ function private _print_debug_settings()
       IPrintLn("Perk Limit Modifier: " + level.archi.perk_limit_default_modifier);
       IPrintLn("Perk Limit Increase: " + level.archi.progressive_perk_limit);
       IPrintLn("Randomized Shield Parts: " + level.archi.randomized_shield_parts);
+      IPrintLn("Randomized Box WW: " + level.archi.randomized_box_wonder_weapons);
     }
   }
 }

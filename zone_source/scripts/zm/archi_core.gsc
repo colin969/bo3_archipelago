@@ -91,7 +91,7 @@ function __main__()
 
 function lua_init()
 {
-    level waittill("start_zombie_round_logic");
+	level flag::wait_till("initial_players_connected");
 
     LUINotifyEvent(&"ap_init_dll", 0);
     WAIT_SERVER_FRAME
@@ -158,30 +158,13 @@ function init_string_mappings()
 
     level.archi.func_override_wallbuy_prompt = &func_override_wallbuy_prompt;
 
-    // TODO: Settings check for disabled map specific machine strings
-    // level.archi.perk_strings_to_names[PERK_JUGGERNOG] = ARCHIPELAGO_ITEM_PERK_JUGGERNOG;
-    // level.archi.perk_strings_to_names[PERK_QUICK_REVIVE] = ARCHIPELAGO_ITEM_PERK_QUICK_REVIVE;
-    // level.archi.perk_strings_to_names[PERK_SLEIGHT_OF_HAND] = ARCHIPELAGO_ITEM_PERK_SLEIGHT_OF_HAND;
-    // level.archi.perk_strings_to_names[PERK_DOUBLETAP2] = ARCHIPELAGO_ITEM_PERK_DOUBLETAP2;
-    // level.archi.perk_strings_to_names[PERK_STAMINUP] = ARCHIPELAGO_ITEM_PERK_STAMINUP;
-    // level.archi.perk_strings_to_names[PERK_PHDFLOPPER] = ARCHIPELAGO_ITEM_PERK_PHDFLOPPER;
-    // level.archi.perk_strings_to_names[PERK_DEAD_SHOT] = ARCHIPELAGO_ITEM_PERK_DEAD_SHOT;
-    // level.archi.perk_strings_to_names[PERK_ADDITIONAL_PRIMARY_WEAPON] = ARCHIPELAGO_ITEM_PERK_ADDITIONAL_PRIMARY_WEAPON;
-    // level.archi.perk_strings_to_names[PERK_ELECTRIC_CHERRY] = ARCHIPELAGO_ITEM_PERK_ELECTRIC_CHERRY;
-    // level.archi.perk_strings_to_names[PERK_TOMBSTONE] = ARCHIPELAGO_ITEM_PERK_TOMBSTONE;
-    // level.archi.perk_strings_to_names[PERK_WHOSWHO] = ARCHIPELAGO_ITEM_PERK_WHOSWHO;
-    // level.archi.perk_strings_to_names[PERK_VULTUREAID] = ARCHIPELAGO_ITEM_PERK_VULTUREAID;
-    // level.archi.perk_strings_to_names[PERK_WIDOWS_WINE] = ARCHIPELAGO_ITEM_PERK_WIDOWS_WINE;
+    // Mystery Box AP item lock
+    if(isdefined(level.custom_magic_box_selection_logic))
+    {
+        level.archi.locked_box_original_custom_magic_box_selection_logic = level.custom_magic_box_selection_logic;
+    }
 
-    // if ( isdefined(level._custom_perks[PERK_JUGGERNOG] ))
-    // {
-    //     if ( isdefined(level._custom_perks[PERK_JUGGERNOG].hint_string) )
-    //     {
-    //         // Save original so we can restore it once we unlock the machine
-    //         level._custom_perks[PERK_JUGGERNOG].original_hint_string = level._custom_perks[PERK_JUGGERNOG].hint_string;
-    //     }
-    //     level._cuistom_perks[PERK_JUGGERNOG].hint_string = ARCHIPELAGO_ITEM_PERK_VULTUREAID + " is required";
-    // }
+    level.custom_magic_box_selection_logic = &_apply_box_weapon_lock;
 }
 
 function on_archi_connect_settings()
@@ -190,6 +173,9 @@ function on_archi_connect_settings()
     level.archi.randomized_shield_parts = GetDvarInt("ARCHIPELAGO_RANDOMIZED_SHIELD_PARTS", 0);
     level.archi.map_specific_wallbuys = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_WALLBUYS", 0);
     level.archi.map_specific_machines = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_MACHINES", 0);
+    level.archi.randomized_box_wonder_weapons = GetDvarInt("ARCHIPELAGO_BOX_WONDER_WEAPON_ITEM_LOCK", 0);
+    level.archi.difficulty_gorod_egg_cooldown = GetDvarInt("ARCHIPELAGO_DIFFICULTY_GOROD_EGG_COOLDOWN", 0);
+    level.archi.difficulty_gorod_dragon_wings = GetDvarInt("ARCHIPELAGO_DIFFICULTY_GOROD_DRAGON_WINGS", 0);
 
     init_string_mappings();
 }
@@ -223,6 +209,8 @@ function game_start()
     {
         // Hold server-wide Archipelago Information
         level.archi = SpawnStruct();
+
+        level.archi.locked_box_weapons = [];
 
         //Collection of Locations that are checked, 
         level.archi.locationQueue = array();
@@ -263,63 +251,6 @@ function game_start()
         level.archi.randomized_shield_parts = 0;
         level.archi.map_specific_wallbuys = 0;
         level.archi.map_specific_machines = 0;
-
-        // // Lock Weapons
-        // level.archi.weapons["ar_accurate"] = false;
-        // level.archi.weapons["ar_cqb"] = false;
-        // level.archi.weapons["ar_damage"] = false;
-        // level.archi.weapons["ar_longburst"] = false;
-        // level.archi.weapons["ar_marksman"] = false;
-        // level.archi.weapons["ar_standard"] = false;
-        // level.archi.weapons["ar_famas"] = false;
-        // level.archi.weapons["ar_garand"] = false;
-        // level.archi.weapons["ar_peacekeeper"] = false;
-        // level.archi.weapons["ar_an94"] = false;
-        // level.archi.weapons["ar_galil"] = false;
-        // level.archi.weapons["ar_m14"] = false;
-        // level.archi.weapons["ar_m16"] = false;
-        // level.archi.weapons["ar_pulse"] = false;
-        // level.archi.weapons["ar_fastburst"] = false;
-        // level.archi.weapons["ar_stg44"] = false;
-
-        // // Sub Machine Guns
-        // level.archi.weapons["smg_burst"] = false;
-        // level.archi.weapons["smg_capacity"] = false;
-        // level.archi.weapons["smg_fastfire"] = false;
-        // level.archi.weapons["smg_standard"] = false;
-        // level.archi.weapons["smg_versatile"] = false;
-        // level.archi.weapons["smg_sten"] = false;
-        // level.archi.weapons["smg_mp40"] = false;
-        // level.archi.weapons["smg_ppsh"] = false;
-        // level.archi.weapons["smg_thompson"] = false;
-        // level.archi.weapons["smg_longrange"] = false;
-        // level.archi.weapons["smg_ak74u"] = false;
-        // level.archi.weapons["smg_msmc"] = false;
-        // level.archi.weapons["smg_nailgun"] = false;
-        // level.archi.weapons["smg_rechamber"] = false;
-        // level.archi.weapons["smg_sten2"] = false;
-        // level.archi.weapons["smg_mp40_1940"] = false;
-
-        // // Shotguns
-        // level.archi.weapons["shotgun_fullauto"] = false;
-        // level.archi.weapons["shotgun_precision"] = false;
-        // level.archi.weapons["shotgun_pump"] = false;
-        // level.archi.weapons["shotgun_semiauto"] = false;
-        // level.archi.weapons["shotgun_energy"] = false;
-        // level.archi.weapons["shotgun_olympia"] = false;
-
-        // // Pistols
-        // level.archi.weapons["pistol_revolver38"] = false;
-        // level.archi.weapons["pistol_standard"] = false;
-        // level.archi.weapons["pistol_burst"] = false;
-        // level.archi.weapons["pistol_fullauto"] = false;
-        // level.archi.weapons["pistol_energy"] = false;
-        // level.archi.weapons["pistol_m1911"] = false;
-        // level.archi.weapons["pistol_shotgun_dw"] = false;
-        // level.archi.weapons["pistol_c96"] = false;
-
-        // // Melee
-        // level.archi.weapons["melee_bowie"] = false;
 
         archi_items::RegisterUniversalItem("50 Points",&archi_items::give_50Points);
         archi_items::RegisterUniversalItem("500 Points",&archi_items::give_500Points);
@@ -365,6 +296,10 @@ function game_start()
             level.archi.craftable_piece_to_location["police_box_fuse_01"] = level.archi.mapString + " Civil Protector Part Pickup - Waterfront Fuse";
             level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
             level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
+
+            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun",true);
+            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
 
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -422,6 +357,9 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
+
             level thread archi_castle::setup_locations();
 
             level thread setup_spare_change_trackers(6);
@@ -463,9 +401,11 @@ function game_start()
         {
             level.archi.mapString = ARCHIPELAGO_MAP_GOROD_KROVI;
 
-            level thread setup_spare_change_trackers(6);
+            // Mule Kick is underwater
+            level thread setup_spare_change_trackers(5);
 
             level thread archi_stalingrad::setup_locations();
+            level thread archi_stalingrad::setup_patches();
 
             replace_craftable_onPickup("craft_shield_zm");
             level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
@@ -473,17 +413,25 @@ function game_start()
             level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
 
             replace_craftable_onPickup("dragonride");
-            level.archi.craftable_piece_to_location["dragonride_part_transmitter"] = level.archi.mapString + " Dragonride Network Circuit - Transmitter";
-            level.archi.craftable_piece_to_location["dragonride_part_codes"] = level.archi.mapString + " Dragonride Network Circuit - Codes";
-            level.archi.craftable_piece_to_location["dragonride_part_map"] = level.archi.mapString + " Dragonride Network Circuit - Map";
+            level.archi.craftable_piece_to_location["dragonride_part_transmitter"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Transmitter";
+            level.archi.craftable_piece_to_location["dragonride_part_codes"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Codes";
+            level.archi.craftable_piece_to_location["dragonride_part_map"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Map";
 
             level.archi.excluded_craftable_items["dragonride_part_transmitter"] = 1;
             level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
             level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
 
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3",false);
+
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
             archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+            archi_items::RegisterItem("Dragonride Network Circuit - Transmitter",&archi_stalingrad::give_DragonridePart_Transmitter,undefined,false);
+            archi_items::RegisterItem("Dragonride Network Circuit - Codes",&archi_stalingrad::give_DragonridePart_Codes,undefined,false);
+            archi_items::RegisterItem("Dragonride Network Circuit - Map",&archi_stalingrad::give_DragonridePart_Map,undefined,false);
 
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -500,12 +448,15 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
             archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
             archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
             archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
             archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
             archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+            level thread archi_stalingrad::save_state_manager();
+            level thread archi_stalingrad::load_state();
         }
 
         if (mapName == "zm_factory")
@@ -514,8 +465,10 @@ function game_start()
 
             // 7 possible machines, 6 will spawn
             level thread setup_spare_change_trackers(6);
-
-            // Register Map Unique Items - Item name, callback, clientfield
+            
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+            archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun");
             
             // Register Possible Global Items - Item name, callback, clientfield
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
@@ -555,7 +508,7 @@ function game_start()
 
 function setup_can_player_purchase_perk()
 {
-    level waittill("initial_blackscreen_passed");
+    level flag::wait_till("initial_blackscreen_passed");
 
 	if(isdefined(level.get_player_perk_purchase_limit))
     {
@@ -698,7 +651,7 @@ function repaired_board_noti()
 //Recieved commands from the Archipelago Lua Coponent
 function item_get_from_lua()
 {
-    level waittill( "initial_blackscreen_passed" );
+    level flag::wait_till( "initial_blackscreen_passed" );
     wait 5; // Wait for log to clear on game startup
     level endon("end_game");
 	level endon("end_round_think");
@@ -707,21 +660,7 @@ function item_get_from_lua()
         item = GetDvarString("ARCHIPELAGO_ITEM_GET");
         if ( item != "NONE" )
         {
-            if (isdefined(level.archi.items[item]))
-            {
-                level.archi.items[item].count += 1;
-                self [[level.archi.items[item].getFunc]]();
-
-                // if (isdefined(level.archi.items[item].clientField))
-                // {
-                //     //TODO: make this safe, so it checks if the clientfield exists first
-                //     level clientfield::set(level.archi.items[item].clientField, 1);
-                // }
-                //Notif happens a bit too early compared to log messages
-                wait .5;
-                LUINotifyEvent(&"ap_ui_get", 0);
-            }
-
+            award_item(item);
             SetDvar("ARCHIPELAGO_ITEM_GET","NONE");
             
         }
@@ -729,9 +668,56 @@ function item_get_from_lua()
     }
 }
 
+function award_item(item)
+{
+     if (isdefined(level.archi.items[item]))
+    {
+        ap_item = level.archi.items[item];
+        ap_item.count += 1;
+        if (isdefined(ap_item.type))
+        {
+            if (ap_item.type == "box_weapon" && isdefined(ap_item.weapon_name))
+            {
+                weapon_name = ap_item.weapon_name;
+                if(isdefined(level.archi.locked_box_weapons[weapon_name]))
+                {
+                    level.archi.locked_box_weapons[weapon_name] = 0;
+                    if( ap_item.force_in_box == true )
+                    {
+                        foreach( weapon in level.zombie_weapons )
+                        {
+                            if( weapon.name == weapon_name )
+                            {
+                                weapon.is_in_box = 1;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    IPrintLn("No box weapon found: " + weapon_name);
+                }
+            }
+        }
+        else
+        {
+            self [[ap_item.getFunc]]();
+        }
+
+        // if (isdefined(level.archi.items[item].clientField))
+        // {
+        //     //TODO: make this safe, so it checks if the clientfield exists first
+        //     level clientfield::set(level.archi.items[item].clientField, 1);
+        // }
+        //Notif happens a bit too early compared to log messages
+        wait .5;
+        LUINotifyEvent(&"ap_ui_get", 0);
+    }
+}
+
 function log_from_lua()
 {
-    level waittill( "initial_blackscreen_passed" );
+    level flag::wait_till( "initial_blackscreen_passed" );
 
     level endon("end_game");
 	level endon("end_round_think");
@@ -752,7 +738,7 @@ function log_from_lua()
 //When we trip a Location, give to Lua
 function location_check_to_lua()
 {
-    level waittill( "initial_blackscreen_passed" );
+    level flag::wait_till( "initial_blackscreen_passed" );
     //TODO tune this wait till it feels good vs archipelago log messages
     wait 3;
     self endon( "disconnect" );
@@ -840,7 +826,7 @@ function _remove_piece()
 function setup_spare_change_trackers(total_machines)
 {
     // Wait until we're certain the triggers were spawned?
-    level waittill("initial_blackscreen_passed");
+    level flag::wait_till("initial_blackscreen_passed");
 
     level thread track_all_change_collected_thread(total_machines);
     a_triggers = getentarray("audio_bump_trigger", "targetname");
@@ -1116,4 +1102,25 @@ function check_override_wallbuy_purchase(weapon, weapon_spawn)
     }
     IPrintLn("Nope");
     return true;
+}
+
+// Return 1 if allowed weapon, return 0 if not
+function _apply_box_weapon_lock(weapon, player, pap_triggers)
+{
+    // Apply original function
+    if (isdefined(level.archi.locked_box_original_custom_magic_box_selection_logic))
+    {
+        if(![[level.archi.locked_box_original_custom_magic_box_selection_logic]](weapon, player, pap_triggers))
+        {
+            return 0;
+        }
+    }
+
+    // Reroll if it's a locked weapon and the box lock setting is on
+    if (level.archi.randomized_box_wonder_weapons == 1 && isdefined(level.archi.locked_box_weapons[weapon.name]) && level.archi.locked_box_weapons[weapon.name] == 1)
+    {
+        return 0;
+    }
+
+    return 1;
 }

@@ -64,6 +64,36 @@ function map_restore_zm_zod(mapData)
   restore_players(mapData, restore_player_func)
 end
 
+function map_save_zm_stalingrad(mapData)
+  save_round_number(mapData)
+  save_power_on(mapData)
+  save_doors_and_debris(mapData)
+
+  save_player_func = function (xuid, playerData)
+    save_player_score(xuid, playerData)
+    save_player_perks(xuid, playerData)
+    save_player_loadout(xuid, playerData)
+  end
+
+  save_players(mapData, save_player_func)
+end
+
+function map_restore_zm_stalingrad(mapData)
+  Archi.LogMessage("Saving map data for Shadows of Evil");
+  restore_round_number(mapData)
+  restore_power_on(mapData)
+  restore_doors_and_debris(mapData)
+
+  Archi.LogMessage("Saving player data for castle");
+  restore_player_func = function (xuid, playerData)
+    restore_player_score(xuid, playerData)
+    restore_player_perks(xuid, playerData)
+    restore_player_loadout(xuid, playerData)
+  end
+
+  restore_players(mapData, restore_player_func)
+end
+
 function restore_round_number(mapData)
   if mapData["round_number"] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_ROUND", mapData["round_number"])
@@ -273,11 +303,13 @@ end
 map_saves = {
   zm_castle = map_save_zm_castle,
   zm_zod = map_save_zm_zod,
+  zm_stalingrad = map_save_zm_stalingrad,
 }
 
 map_restores = {
   zm_castle = map_restore_zm_castle,
   zm_zod = map_restore_zm_zod,
+  zm_stalingrad = map_restore_zm_stalingrad,
 }
 
 return {

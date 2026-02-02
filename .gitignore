@@ -1,8 +1,8 @@
 zone/*
 !zone/Archi-T7Overcharged.dll
-zone_source/all/*
-zone_source/english/*
-zone_source/loc/*
+zone_source/*
+!zone_source/scripts
+!zone_source/*.zone
 
 *.pdn
 

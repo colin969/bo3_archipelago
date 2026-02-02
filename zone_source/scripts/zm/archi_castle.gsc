@@ -140,8 +140,6 @@ function _track_music_dead_again()
 {
     level endon("end_game");
 
-    level waittill("initial_blackscreen_passed");
-
     bears_activated = 0;
     bears = struct::get_array("hs_bear", "targetname");
     array::thread_all(bears, &_track_trigger_dead_again);
@@ -174,8 +172,6 @@ function _track_music_requiem()
 {
     level endon("end_game");
 
-    level waittill("initial_blackscreen_passed");
-
     gramophones_activated = 0;
     gramophones = getentarray("hs_gramophone", "targetname");
     array::thread_all(gramophones, &_track_trigger_requiem);
@@ -206,7 +202,7 @@ function setup_locations()
 {
     setup_landing_pads();
 
-    level waittill("initial_blackscreen_passed");
+    level flag::wait_till("initial_blackscreen_passed");
 
     setup_soul_catchers();
 

@@ -16,6 +16,20 @@
 
 #namespace archi_items;
 
+function RegisterBoxWeapon(itemName, weapon_name, force_in_box)
+{
+    item = SpawnStruct();
+    item.type = "box_weapon";
+    item.name = level.archi.mapString + " " + itemName;
+    item.weapon_name = weapon_name;
+    item.force_in_box = force_in_box;
+    item.count = 0;
+
+    level.archi.locked_box_weapons[weapon_name] = 1;
+
+    level.archi.items[item.name] = item;
+}
+
 function RegisterItem(itemName, getFunc, clientField, universal) {
     globalItem = SpawnStruct();
     globalItem.name = level.archi.mapString + " " + itemName;

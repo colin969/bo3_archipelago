@@ -26,7 +26,7 @@ function save_state_manager()
     level.archi.save_state = &save_state;
     level waittill("end_game");
 
-    if (level.host_ended_game == 1)
+    if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
     {
         IPrintLn("Host ended game, saving data...");
         save_state();
@@ -101,7 +101,7 @@ function clear_state()
 
 function setup_locations()
 {
-    level waittill("initial_blackscreen_passed");
+    level flag::wait_till("initial_blackscreen_passed");
 
     setup_main_quest();
     setup_side_ee();

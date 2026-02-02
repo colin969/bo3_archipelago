@@ -26,7 +26,7 @@
 // Wait for the restore to be ready
 function wait_restore_ready(mapName)
 {
-    level waittill("initial_blackscreen_passed");
+    level flag::wait_till("initial_blackscreen_passed");
 
     SetDvar("ARCHIPELAGO_LOAD_DATA", mapName);
     LUINotifyEvent(&"ap_load_data", 0);
