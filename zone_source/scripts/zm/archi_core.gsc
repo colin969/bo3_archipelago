@@ -91,7 +91,7 @@ function __main__()
 
 function lua_init()
 {
-	level flag::wait_till("initial_players_connected");
+	level waittill("initial_players_connected");
 
     LUINotifyEvent(&"ap_init_dll", 0);
     WAIT_SERVER_FRAME
@@ -395,6 +395,59 @@ function game_start()
         
             level thread archi_castle::save_state_manager();
             level thread archi_castle::load_state();
+        }
+
+        if (mapName == "zm_island")
+        {
+            level.archi.mapString = ARCHIPELAGO_MAP_ZETSUBOU;
+
+            level thread setup_spare_change_trackers(7);
+
+            replace_craftable_onPickup("craft_shield_zm");
+            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+            replace_craftable_onPickup("gasmask");
+            level.archi.craftable_piece_to_location["gasmask_part_visor"] = level.archi.mapString + " Gasmask Part Pickup - Visor";
+            level.archi.craftable_piece_to_location["gasmask_part_filter"] = level.archi.mapString + " Gasmask Part Pickup - Filter";
+            level.archi.craftable_piece_to_location["gasmask_part_strap"] = level.archi.mapString + " Gasmask Part Pickup - Strap";
+
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000",false);
+
+            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+            // TODO
+            archi_items::RegisterItem("Gasmask Part - Visor",&archi_items::give_ShieldPart_Door,undefined,true);
+            archi_items::RegisterItem("Gasmask Part - Filter",&archi_items::give_ShieldPart_Dolly,undefined,true);
+            archi_items::RegisterItem("Gasmask Part - Strap",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+
+            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+            archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
+            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
+            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
+            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
         }
 
         if (mapName == "zm_stalingrad")
@@ -717,7 +770,7 @@ function award_item(item)
 
 function log_from_lua()
 {
-    level flag::wait_till( "initial_blackscreen_passed" );
+    level waittill( "initial_blackscreen_passed" );
 
     level endon("end_game");
 	level endon("end_round_think");

@@ -135,6 +135,10 @@ function private _print_debug_settings()
       IPrintLn("Perk Limit Increase: " + level.archi.progressive_perk_limit);
       IPrintLn("Randomized Shield Parts: " + level.archi.randomized_shield_parts);
       IPrintLn("Randomized Box WW: " + level.archi.randomized_box_wonder_weapons);
+      wait(3);
+      IPrintLn("Gorod - Instant Egg Cooldown: " + level.archi.difficulty_gorod_egg_cooldown);
+      IPrintLn("Gorod - Starting Dragon Wings: " + level.archi.difficulty_gorod_dragon_wings);
+
     }
   }
 }

@@ -35,11 +35,15 @@ rawfile,ui/archipelago/hudInject.lua
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoDisplay.lua
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoDisplayClient.lua
 
-//Archipelago Tracker Lua Display
-//rawfile,ui/archipelago/ingame/widgets/ArchipelagoTracker.lua
-
 //Archipelago Messages Lua Display
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoMessageContainer.lua
+
+rawfile,ui/uieditor/menus/StartMenu/StartMenu_ApModSettings_Locations.lua
+rawfile,ui/uieditor/widgets/StartMenu/ApLocationsTab/StartMenu_ApLocations_ListItem.lua
+rawfile,ui/uieditor/widgets/StartMenu/ApLocationsTab/StartMenu_ApLocations.lua
+rawfile,ui/uieditor/widgets/StartMenu/TabWidgets/StartMenu_TabList.lua
+rawfile,ui/uieditor/widgets/StartMenu/TabWidgets/StartMenu_TabWidget.lua
+rawfile,ui/uieditor/widgets/StartMenu/StartMenu_GameOptions_ZM.lua
 
 //Archipelago Client
 rawfile,archipelago/ArchipelagoClient.lua
@@ -50,7 +54,7 @@ rawfile,archipelago/Json.lua
 rawfile,archipelago/Utils.lua
 rawfile,archipelago/Save.lua
 rawfile,archipelago/SettingsFile.lua
-
+rawfile,archipelago/Locations.lua
 
 //Item Images
 image,archipelago_logo_up

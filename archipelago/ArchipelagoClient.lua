@@ -7,6 +7,7 @@ local json = require("Archipelago.Json")
 
 local save_system = require("Archipelago.Save")
 local settings_file = require("Archipelago.SettingsFile")
+local locations = require("Archipelago.Locations")
 
 --
 ItemQueue = List.new()
@@ -29,156 +30,6 @@ oneTimeItems = {
 }
 instanceItemState = {}
 connectionItemState = {}
-Archi.LocationToID = {}
-
-for i = 1, 99 do
-  local roundName = string.format("(Shadows of Evil) Round %02d", i)
-  Archi.LocationToID[roundName] = i + 3000
-end
-
-for i = 1, 99 do
-  local roundName = string.format("(Castle) Round %02d", i)
-  Archi.LocationToID[roundName] = i + 2000
-end
-
-for i = 1, 99 do
-  local roundName = string.format("(Gorod Krovi) Round %02d", i)
-  Archi.LocationToID[roundName] = i + 4000
-end
-
-for i = 1, 99 do
-  local roundName = string.format("(The Giant) Round %02d", i)
-  Archi.LocationToID[roundName] = i + 1000
-end
-
-Archi.LocationToID["(Castle) Shield Part Pickup - Dolly"] = 2200
-Archi.LocationToID["(Castle) Shield Part Pickup - Door"] = 2201
-Archi.LocationToID["(Castle) Shield Part Pickup - Clamp"] = 2202
-
-Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Body"] = 2210
-Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Guards"] = 2211
-Archi.LocationToID["(Castle) Ragnarok DG-4 Part Pickup - Handle"] = 2212
-
-Archi.LocationToID["(Castle) All Spare Change Collected"] = 2300
-Archi.LocationToID["(Castle) Feed the Dragonheads"] = 2301
-Archi.LocationToID["(Castle) Turn on all Landing Pads"] = 2302
-
-Archi.LocationToID["(Castle) Music EE - Dead Again"] = 2400
-Archi.LocationToID["(Castle) Music EE - Requiem"] = 2400
-
-Archi.LocationToID["(Castle) Storm Bow - Take Broken Arrow"] = 2500
-Archi.LocationToID["(Castle) Storm Bow - Light the Beacons"] = 2501
-Archi.LocationToID["(Castle) Storm Bow - Wallrun Switches"] = 2502
-Archi.LocationToID["(Castle) Storm Bow - Charge the Batteries"] = 2503
-Archi.LocationToID["(Castle) Storm Bow - Charge the Beacons"] = 2504
-Archi.LocationToID["(Castle) Storm Bow - Repair the Arrow"] = 2505
-Archi.LocationToID["(Castle) Storm Bow - Forge the Bow"] = 2506
-
-Archi.LocationToID["(Castle) Wolf Howl - Painting Puzzle"] = 2510
-Archi.LocationToID["(Castle) Wolf Howl - Take Broken Arrow"] = 2511
-Archi.LocationToID["(Castle) Wolf Howl - Collect the Skull"] = 2512
-Archi.LocationToID["(Castle) Wolf Howl - Follow the Wolf"] = 2513
-Archi.LocationToID["(Castle) Wolf Howl - Repair the Arrow"] = 2514
-Archi.LocationToID["(Castle) Wolf Howl - Forge the Bow"] = 2515
-
-Archi.LocationToID["(Castle) Rune Prison - Take the Arrow"] = 2520
-Archi.LocationToID["(Castle) Rune Prison - Shoot the Orb"] = 2521
-Archi.LocationToID["(Castle) Rune Prison - Charge the Runic Circles"] = 2522
-Archi.LocationToID["(Castle) Rune Prison - Magma Ball Golf"] = 2523
-Archi.LocationToID["(Castle) Rune Prison - Repair the Arrow"] = 2524
-Archi.LocationToID["(Castle) Rune Prison - Forge the Bow"] = 2525
-
-Archi.LocationToID["(Castle) Demon Gate - Take the Arrow"] = 2530
-Archi.LocationToID["(Castle) Demon Gate - Ritual Sacrifice on the Seal"] = 2531
-Archi.LocationToID["(Castle) Demon Gate - Collect the Skulls"] = 2532
-Archi.LocationToID["(Castle) Demon Gate - Sacrifice Crawlers"] = 2533
-Archi.LocationToID["(Castle) Demon Gate - Solve the Rune Puzzle"] = 2534
-Archi.LocationToID["(Castle) Demon Gate - Repair the Arrow"] = 2535
-Archi.LocationToID["(Castle) Demon Gate - Forge the Bow"] = 2536
-
-Archi.LocationToID["(Castle) Main Easter Egg - Activate Time Travel Teleporter"] = 2600
-Archi.LocationToID["(Castle) Main Easter Egg - Unlock the Safe"] = 2601
-Archi.LocationToID["(Castle) Main Easter Egg - Recover the Rocket"] = 2602
-Archi.LocationToID["(Castle) Main Easter Egg - Open the MPD"] = 2603
-Archi.LocationToID["(Castle) Main Easter Egg - Win the Boss Fight"] = 2604
-Archi.LocationToID["(Castle) Main Easter Egg - Blow up the Moon"] = 2605
-Archi.LocationToID["(Castle) Main Easter Egg - Victory"] = 2606
-
-Archi.LocationToID["(Shadows of Evil) Main Quest - Magician's Ritual"] = 3100
-Archi.LocationToID["(Shadows of Evil) Main Quest - Boxer's Ritual"] = 3101
-Archi.LocationToID["(Shadows of Evil) Main Quest - Detectives's Ritual"] = 3102
-Archi.LocationToID["(Shadows of Evil) Main Quest - Femme Fatale's Ritual"] = 3103
-Archi.LocationToID["(Shadows of Evil) Main Quest - Open the Portal"] = 3104
-
-Archi.LocationToID["(Shadows of Evil) Apothicon Sword - Enter the Code"] = 3110
-Archi.LocationToID["(Shadows of Evil) Apothicon Sword - Collect your Sword"] = 3111
-Archi.LocationToID["(Shadows of Evil) Apothicon Sword - Collect your upgraded Sword"] = 3112
-
-Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Find Nero's Book"] = 3200
-Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Defeat the Shadowman"] = 3201
-Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Defeat the Giant Space Squid"] = 3202
-Archi.LocationToID["(Shadows of Evil) Main Easter Egg - Victory"] = 3203
-
-Archi.LocationToID["(Shadows of Evil) Apothicon Servant Part Pickup - Margwa Heart"] = 3300
-Archi.LocationToID["(Shadows of Evil) Apothicon Servant Part Pickup - Margwa Tentacle"] = 3301
-Archi.LocationToID["(Shadows of Evil) Apothicon Servant Part Pickup - Xenomatter"] = 3302
-
-Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Waterfront Fuse"] = 3310
-Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Canals Fuse"] = 3311
-Archi.LocationToID["(Shadows of Evil) Civil Protector Part Pickup - Footlight Fuse"] = 3312
-
-Archi.LocationToID["(Shadows of Evil) Shield Part Pickup - Dolly"] = 3320
-Archi.LocationToID["(Shadows of Evil) Shield Part Pickup - Door"] = 3321
-Archi.LocationToID["(Shadows of Evil) Shield Part Pickup - Clamp"] = 3322
-
-Archi.LocationToID["(Shadows of Evil) All Spare Change Collected"] = 3500
-Archi.LocationToID["(Shadows of Evil) Laundry Ticket"] = 3501
-
-Archi.LocationToID["(Gorod Krovi) Main Quest - Dragonride Part Pickup - Transmitter"] = 4100
-Archi.LocationToID["(Gorod Krovi) Main Quest - Dragonride Part Pickup - Codes"] = 4101
-Archi.LocationToID["(Gorod Krovi) Main Quest - Dragonride Part Pickup - Map"] = 4102
-Archi.LocationToID["(Gorod Krovi) Main Quest - Repair the Dragonride"] = 4103
-
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Place the Trophies"] = 4110
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Charge the Generator"] = 4111
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Pneumatic Tubes Puzzle"] = 4112
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Enter S.O.P.H.I.A's Password"] = 4113
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Complete All 6 Scenarios"] = 4114
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Deliver the Power Core to Nikolai"] = 4115
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Slay the Dragon"] = 4116
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Defeat Nikolai"] = 4117
-Archi.LocationToID["(Gorod Krovi) Main Easter Egg - Victory"] = 4118
-
-Archi.LocationToID["(Gorod Krovi) Acquire the Dragonstrike"] = 4120
-Archi.LocationToID["(Gorod Krovi) Upgrade the Dragonstrike"] = 4121
-
-Archi.LocationToID["(Gorod Krovi) Dragon Gauntlets - Acquire the Dragon Egg"] = 4130
-Archi.LocationToID["(Gorod Krovi) Dragon Gauntlets - Warm up the Dragon Egg"] = 4131
-Archi.LocationToID["(Gorod Krovi) Dragon Gauntlets - Challenge 1 - Napalm Zombies"] = 4132
-Archi.LocationToID["(Gorod Krovi) Dragon Gauntlets - Challenge 2 - Collateral Kills Challenge"] = 4133
-Archi.LocationToID["(Gorod Krovi) Dragon Gauntlets - Challenge 3 - Knife Kills Challenge"] = 4134
-Archi.LocationToID["(Gorod Krovi) Dragon Gauntlets - Incubate the Dragon Egg"] = 4135
-Archi.LocationToID["(Gorod Krovi) Dragon Gauntlets - Hatch the Baby Dragon"] = 4136
-
-Archi.LocationToID["(Gorod Krovi) Tiamat's Maw - 50 Dragon Shield Kills"] = 4140
-Archi.LocationToID["(Gorod Krovi) Tiamat's Maw - Bathe in the Dragon's Flame"] = 4141
-Archi.LocationToID["(Gorod Krovi) Tiamat's Maw - Fire Blast the Purple Runes"] = 4142
-Archi.LocationToID["(Gorod Krovi) Tiamat's Maw - Upgrade the Dragon Shield"] = 4143
-
-Archi.LocationToID["(Gorod Krovi) Unlock the Dragon Wings"] = 4150
-Archi.LocationToID["(Gorod Krovi) Unlock the Mangler Helmet"] = 4151
-Archi.LocationToID["(Gorod Krovi) Unlock the Valkyrie Helmet"] = 4152
-
-Archi.LocationToID["(Gorod Krovi) Complete Challenge 1"] = 4160
-Archi.LocationToID["(Gorod Krovi) Complete Challenge 2"] = 4161
-Archi.LocationToID["(Gorod Krovi) Complete Challenge 3"] = 4162
-Archi.LocationToID["(Gorod Krovi) Upgrade the Monkey Bombs"] = 4163
-
-Archi.LocationToID["(Gorod Krovi) Shield Part Pickup - Dolly"] = 4200
-Archi.LocationToID["(Gorod Krovi) Shield Part Pickup - Door"] = 4201
-Archi.LocationToID["(Gorod Krovi) Shield Part Pickup - Clamp"] = 4202
-
-Archi.LocationToID["Repair Windows 5 Times"] = 9001
 
 saveData = nil
 seed = nil
@@ -287,7 +138,7 @@ Archi.FromGSC = function (model)
     --TODO add a type to this notification, for now its all loc checks
     local location = Engine.DvarString(nil,"ARCHIPELAGO_LOCATION_SEND")
     if location ~= "NONE" then
-      locationID = Archi.LocationToID[location]
+      locationID = locations.LocationToID[location]
       if locationID then
         Archi.LogMessage("Sending Location ID " .. locationID)
         Archipelago.CheckLocation(locationID)

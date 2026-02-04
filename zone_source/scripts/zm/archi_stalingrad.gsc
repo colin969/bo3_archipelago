@@ -167,9 +167,9 @@ function setup_weapon_quests()
     callback::on_connect(&track_player_challenges);
 }
 
-function _waittill_to_location_thread(hash, location)
+function _waittill_to_location_thread(listener, hash, location)
 {
-    level waittill(hash);
+    listener waittill(hash);
 
     archi_core::send_location(location);
 }
