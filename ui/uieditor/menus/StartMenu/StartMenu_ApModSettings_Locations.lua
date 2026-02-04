@@ -26,17 +26,20 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
         } )
 
 		table.insert( tabList, {
-            models = { tabName = "Shadows of Evil", tabWidget = "CoD.StartMenu_ApLocations", tabIcon = "" },
+            models = { tabName = "Shadows of Evil", tabWidget = "CoD.StartMenu_ApLocations_Zod", 
+				tabIcon = "" },
             properties = { tabId = "gameOptions" }
         } )
 
 		table.insert( tabList, {
-            models = { tabName = "Der Eisendrache", tabWidget = "CoD.StartMenu_ApLocations", tabIcon = "" },
+            models = { tabName = "Der Eisendrache", tabWidget = "CoD.StartMenu_ApLocations_Castle",
+				tabIcon = "" },
             properties = { tabId = "gameOptions" }
         } )
     
         table.insert( tabList, {
-            models = { tabName = "Gorod Krovi", tabWidget = "CoD.StartMenu_ApLocations", tabIcon = "" },
+            models = { tabName = "Gorod Krovi", tabWidget = "CoD.StartMenu_ApLocations_Stalingrad",
+			 	tabIcon = "" },
             properties = { tabId = "gameOptions" }
         } )
         

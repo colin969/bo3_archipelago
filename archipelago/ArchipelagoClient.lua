@@ -160,6 +160,10 @@ Archi.ItemGetEvent = function (name)
   List.pushright(ItemQueue,name)
 end
 
+Archi.LocationCheckedEvent = function (code)
+  
+end
+
 Archi.LogMessage = function (message)
   if message then
     List.pushright(LogQueue,message)

@@ -39,6 +39,7 @@ rawfile,ui/archipelago/ingame/widgets/ArchipelagoDisplayClient.lua
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoMessageContainer.lua
 
 rawfile,ui/uieditor/menus/StartMenu/StartMenu_ApModSettings_Locations.lua
+rawfile,ui/uieditor/widgets/StartMenu/ApLocationsTab/StartMenu_ApLocations_DataSources.lua
 rawfile,ui/uieditor/widgets/StartMenu/ApLocationsTab/StartMenu_ApLocations_ListItem.lua
 rawfile,ui/uieditor/widgets/StartMenu/ApLocationsTab/StartMenu_ApLocations.lua
 rawfile,ui/uieditor/widgets/StartMenu/TabWidgets/StartMenu_TabList.lua

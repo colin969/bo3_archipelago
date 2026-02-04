@@ -1,21 +1,5 @@
 require( "ui.uieditor.widgets.StartMenu.ApLocationsTab.StartMenu_ApLocations_ListItem" )
-local LocationToID =  require( "Archipelago.Locations" )
-
--- local mapName = Engine.GetCurrentMap()
-
-DataSources.StartMenu_ApLocations = ListHelper_SetupDataSource( "StartMenu_ApLocations", function( controller )
-    local ApLocations = {}
-
-	for location, code in pairs(LocationToID) do
-		if code >= 2100 and code < 3000 then
-			table.insert( ApLocations, {
-				models = { name = location }
-			})
-		end
-	end
-
-    return ApLocations
-end, true )
+require( "ui.uieditor.widgets.StartMenu.ApLocationsTab.StartMenu_ApLocations_DataSources" )
 
 CoD.StartMenu_ApLocations = InheritFrom( LUI.UIElement )
 CoD.StartMenu_ApLocations.new = function( menu, controller )
@@ -40,7 +24,6 @@ CoD.StartMenu_ApLocations.new = function( menu, controller )
 	self.itemList:setWidgetType( CoD.StartMenu_ApLocations_ListItem )
 	self.itemList:setHorizontalCount( 3 )
 	self.itemList:setVerticalCount( 28 )
-	self.itemList:setDataSource( "StartMenu_ApLocations" )
 	self:addElement( self.itemList )
 
 	self.itemList.id = "ItemList"
@@ -53,5 +36,26 @@ CoD.StartMenu_ApLocations.new = function( menu, controller )
 		PostLoadFunc( self, controller, menu )
 	end
 	
+	return self
+end
+
+CoD.StartMenu_ApLocations_Zod = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Zod.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Zod" )
+	return self
+end
+
+CoD.StartMenu_ApLocations_Castle = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Castle.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Castle" )
+	return self
+end
+
+CoD.StartMenu_ApLocations_Stalingrad = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Stalingrad.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Stalingrad" )
 	return self
 end
