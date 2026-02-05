@@ -102,8 +102,10 @@ function clear_state()
 function setup_main_quest()
 {
     level thread _flag_to_location_thread("any_player_has_bucket", level.archi.mapString + " Main Quest - Find a Bucket");
-    level thread _waittill_to_location_thread(level, "spawn_bunker_thresher", level.archi.mapString + " Main Quest - Enter the Bunker");
-    level thread _waittill_to_location_thread(level, "power_on", level.archi.mapString + " Main Quest - Turn on the Power");
+    level thread _flag_to_location_thread("power_on3", level.archi.mapString + " Main Quest - Enter the Bunker"); // Doesn't work?
+    level thread _flag_to_location_thread("power_on", level.archi.mapString + " Main Quest - Turn on the Power");
+    level thread _flag_to_location_thread("pap_open", level.archi.mapString + " Main Quest - Drain the Pack-A-Punch");
+    // Add one for draining the water fully
 }
 
 function setup_main_ee_quest()
@@ -111,7 +113,7 @@ function setup_main_ee_quest()
     level thread _flag_to_location_thread("player_has_aa_gun_ammo", level.archi.mapString + " Main Easter Egg - Grow an Anti-Aircraft Shell");
     level thread _flag_to_location_thread("aa_gun_ee_complete", level.archi.mapString + " Main Easter Egg - Shoot down the Plane");
     level thread _flag_to_location_thread("elevator_part_gear2_found", level.archi.mapString + " Main Easter Egg - Collect the Cog from the Zipline drop");
-    level thread _flag_to_location_thread("elevator_part_gear2_found", level.archi.mapString + " Main Easter Egg - Collect the Cog from the Gobblegum teleport");
+    level thread _flag_to_location_thread("elevator_part_gear1_found", level.archi.mapString + " Main Easter Egg - Collect the Cog from the Gobblegum teleport");
     level thread _flag_to_location_thread("takeo_freed", level.archi.mapString + " Main Easter Egg - Free Takeo");
     level thread _flag_to_location_thread("flag_play_outro_cutscene", level.archi.mapString + " Main Easter Egg - Victory");
 }
@@ -126,21 +128,34 @@ function setup_weapon_quests()
     level thread _flag_to_location_thread("wwup3_found", level.archi.mapString + " Masamune - Grow the Rainbow Plant");
     
     level thread _first_skull_cleanse(level.archi.mapString + " Skull of Nan'Sapwe - Cleanse a Ritual Skull");
-    level thread _flag_to_location_thread("skullquest_completed", level.archi.mapString + " Skull of Nan'Sapwe - Cleanse all 4 Ritual Skulls");
-    level thread _flag_to_location_thread("skull_quest_complete", level.archi.mapString + " Skull of Nan'Sapwe - Survive the Skull Room Assault");
+    level thread _all_skull_cleanse(level.archi.mapString + " Skull of Nan'Sapwe - Cleanse all 4 Ritual Skulls");
+    level thread _skull_room_defense(level.archi.mapString + " Skull of Nan'Sapwe - Survive the Skull Room Assault");
 }
 
 function setup_challenges()
 {
-    level thread _flag_to_location_thread("flag_player_completed_challenge_1", level.archi.mapString + " Complete Trial 1");
-    level thread _flag_to_location_thread("flag_player_completed_challenge_2", level.archi.mapString + " Complete Trial 2");
-    level thread _flag_to_location_thread("flag_player_completed_challenge_3", level.archi.mapString + " Complete Trial 3");
-    level thread _flag_to_location_thread("all_challenges_completed", level.archi.mapString + " Complete all Trials");
+    level thread _flag_to_location_thread("flag_player_completed_challenge_1", level.archi.mapString + " Complete Challenge 1");
+    level thread _flag_to_location_thread("flag_player_completed_challenge_2", level.archi.mapString + " Complete Challenge 2");
+    level thread _flag_to_location_thread("flag_player_completed_challenge_3", level.archi.mapString + " Complete Challenge 3");
+    level thread _flag_to_location_thread("all_challenges_completed", level.archi.mapString + " Complete all Challenge");
 }
 
 function _first_skull_cleanse(location)
 {
     level flag::wait_till_any(array("skullquest_ritual_complete1", "skullquest_ritual_complete2", "skullquest_ritual_complete3", "skullquest_ritual_complete4"));
+    archi_core::send_location(location);
+}
+
+function _all_skull_cleanse(location)
+{
+    level flag::wait_till_all(array("skullquest_ritual_complete1", "skullquest_ritual_complete2", "skullquest_ritual_complete3", "skullquest_ritual_complete4"));
+    archi_core::send_location(location);
+}
+
+function _skull_room_defense(locations)
+{
+    level flag::wait_till("skullroom_defend_inprogress");
+    level flag::wait_till_clear("skullroom_defend_inprogress");
     archi_core::send_location(location);
 }
 
@@ -157,4 +172,19 @@ function _flag_to_location_thread(flag, location)
 
     level flag::wait_till(flag);
     archi_core::send_location(location);
+}
+
+function give_GasmaskPart_Visor()
+{
+    give_piece("gasmask", "part_visor");
+}
+
+function give_GasmaskPart_Filter()
+{
+    give_piece("gasmask", "part_filter");
+}
+
+function give_GasmaskPart_Strap()
+{
+    give_piece("gasmask", "part_strap");
 }

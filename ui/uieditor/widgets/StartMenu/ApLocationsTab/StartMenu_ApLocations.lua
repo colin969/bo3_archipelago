@@ -24,6 +24,10 @@ CoD.StartMenu_ApLocations.new = function( menu, controller )
 	self.itemList:setWidgetType( CoD.StartMenu_ApLocations_ListItem )
 	self.itemList:setHorizontalCount( 3 )
 	self.itemList:setVerticalCount( 28 )
+	menu:registerEventHandler( "menu_opened", function()
+		self.itemList:updateDataSource()
+        return true
+    end )
 	self:addElement( self.itemList )
 
 	self.itemList.id = "ItemList"
@@ -50,6 +54,13 @@ CoD.StartMenu_ApLocations_Castle = InheritFrom( CoD.StartMenu_ApLocations )
 CoD.StartMenu_ApLocations_Castle.new = function( menu, controller )
 	self = CoD.StartMenu_ApLocations.new( menu, controller )
 	self.itemList:setDataSource( "StartMenu_ApLocations_Castle" )
+	return self
+end
+
+CoD.StartMenu_ApLocations_Island = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Island.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Island" )
 	return self
 end
 

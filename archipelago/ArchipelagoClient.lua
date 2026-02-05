@@ -14,6 +14,7 @@ ItemQueue = List.new()
 LogQueue = List.new()
 Archi = {}
 Archi.Debug = true
+Archi.CheckedLocations = {}
 --
 
 oneTimeItems = {
@@ -161,7 +162,9 @@ Archi.ItemGetEvent = function (name)
 end
 
 Archi.LocationCheckedEvent = function (code)
-  
+  if code then
+    Archi.CheckedLocations[code] = true
+  end
 end
 
 Archi.LogMessage = function (message)
@@ -220,7 +223,7 @@ end
 
 Archi.LogMessageLoop = function()
   local UIRootFull = LUI.roots.UIRootFull;
-	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(1000, false, function()
+	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(800, false, function()
     local item = Engine.DvarString(nil,"ARCHIPELAGO_LOG_MESSAGE")
     if (not List.isEmpty(LogQueue)) and (item == "NONE") then --if we are free to give an item, and there is one to give
       local toSend = List.popleft(LogQueue)

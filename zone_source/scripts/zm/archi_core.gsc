@@ -418,9 +418,9 @@ function game_start()
             archi_island::setup_challenges();
 
             // TODO
-            archi_items::RegisterItem("Gasmask Part - Visor",&archi_items::give_ShieldPart_Door,undefined,true);
-            archi_items::RegisterItem("Gasmask Part - Filter",&archi_items::give_ShieldPart_Dolly,undefined,true);
-            archi_items::RegisterItem("Gasmask Part - Strap",&archi_items::give_ShieldPart_Clamp,undefined,true);
+            archi_items::RegisterItem("Gasmask Part - Visor",&archi_island::give_GasmaskPart_Visor,undefined,true);
+            archi_items::RegisterItem("Gasmask Part - Filter",&archi_island::give_GasmaskPart_Filter,undefined,true);
+            archi_items::RegisterItem("Gasmask Part - Strap",&arch_island::give_GasmaskPart_Strap,undefined,true);
 
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -589,14 +589,14 @@ function default_map_changes()
 
     wait 1;
     //Turn off/Hide Gobblebum Machines by Yeeting them into the Sun
-    if (isdefined(level.bgb_machines))
-    {
-        for(i = 0; i < level.bgb_machines.size; i++)
-        {
-            level.bgb_machines[i].origin = (10000, 10000, 10000);
-            level.bgb_machines[i].unitrigger_stub.origin = (10000, 10000, 10000);
-        }
-    }
+    // if (isdefined(level.bgb_machines))
+    // {
+    //     for(i = 0; i < level.bgb_machines.size; i++)
+    //     {
+    //         level.bgb_machines[i].origin = (10000, 10000, 10000);
+    //         level.bgb_machines[i].unitrigger_stub.origin = (10000, 10000, 10000);
+    //     }
+    // }
 }
 
 function on_player_connect()

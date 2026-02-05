@@ -36,6 +36,12 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
 				tabIcon = "" },
             properties = { tabId = "gameOptions" }
         } )
+
+		table.insert( tabList, {
+            models = { tabName = "Zetsubou No Shima", tabWidget = "CoD.StartMenu_ApLocations_Island",
+			 	tabIcon = "" },
+            properties = { tabId = "gameOptions" }
+        } )
     
         table.insert( tabList, {
             models = { tabName = "Gorod Krovi", tabWidget = "CoD.StartMenu_ApLocations_Stalingrad",
