@@ -271,6 +271,16 @@ function _debug_magicbox_response()
         {
           SetDvar("ARCHIPELAGO_DEBUG_MAGICBOX_" + i + "_INSIDE", "false");
         }
+        if (isdefined(level.limited_weapons[keys[i]]))
+        {
+          limit = level.limited_weapons[keys[i]];
+          SetDvar("ARCHIPELAGO_DEBUG_MAGICBOX_" + i + "_LIMITED", "true");
+          SetDvar("ARCHIPELAGO_DEBUG_MAGICBOX_" + i + "_QUOTA", limit);
+        }
+        else
+        {
+          SetDvar("ARCHIPELAGO_DEBUG_MAGICBOX_" + i + "_LIMITED", "false");
+        }
       }
       LUINotifyEvent(&"ap_debug_magicbox", 0);
       IPrintLn("Saved to magicbox.csv");

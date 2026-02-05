@@ -16,16 +16,34 @@
 
 #namespace archi_items;
 
-function RegisterBoxWeapon(itemName, weapon_name, force_in_box)
+function RegisterBoxWeapon(itemName, weapon_name)
 {
     item = SpawnStruct();
     item.type = "box_weapon";
     item.name = level.archi.mapString + " " + itemName;
     item.weapon_name = weapon_name;
-    item.force_in_box = force_in_box;
     item.count = 0;
 
-    level.archi.locked_box_weapons[weapon_name] = 1;
+    level.archi.removed_box_weapons[weapon_name] = true;
+
+    weapon = GetWeapon(weapon_name);
+    if (isdefined(weapon))
+    {
+        z_weapon = level.zombie_weapons[weapon];
+        if (isdefined(z_weapon))
+        {
+            z_weapon.is_in_box = 0;
+            IPrintLn("Removed from box");
+        }
+        else
+        {
+            IPrintLn("Weapon found but not in zombie_weapons: " + weapon_name);
+        }
+    }
+    else
+    {
+        IPrintLn("Weapon not found: " + weapon_name);
+    }
 
     level.archi.items[item.name] = item;
 }

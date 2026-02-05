@@ -20,6 +20,7 @@
 #using scripts\zm\archi_items;
 #using scripts\zm\archi_commands;
 #using scripts\zm\archi_castle;
+#using scripts\zm\archi_island;
 #using scripts\zm\archi_stalingrad;
 #using scripts\zm\archi_zod;
 
@@ -157,14 +158,6 @@ function init_string_mappings()
     level.custom_perk_validation = &custom_perk_validation;
 
     level.archi.func_override_wallbuy_prompt = &func_override_wallbuy_prompt;
-
-    // Mystery Box AP item lock
-    if(isdefined(level.custom_magic_box_selection_logic))
-    {
-        level.archi.locked_box_original_custom_magic_box_selection_logic = level.custom_magic_box_selection_logic;
-    }
-
-    level.custom_magic_box_selection_logic = &_apply_box_weapon_lock;
 }
 
 function on_archi_connect_settings()
@@ -209,8 +202,6 @@ function game_start()
     {
         // Hold server-wide Archipelago Information
         level.archi = SpawnStruct();
-
-        level.archi.locked_box_weapons = [];
 
         //Collection of Locations that are checked, 
         level.archi.locationQueue = array();
@@ -297,9 +288,9 @@ function game_start()
             level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
             level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun",true);
-            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",false);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_0");
+            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb");
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
 
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -357,8 +348,8 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",false);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
 
             level thread archi_castle::setup_locations();
 
@@ -413,13 +404,18 @@ function game_start()
             level.archi.craftable_piece_to_location["gasmask_part_filter"] = level.archi.mapString + " Gasmask Part Pickup - Filter";
             level.archi.craftable_piece_to_location["gasmask_part_strap"] = level.archi.mapString + " Gasmask Part Pickup - Strap";
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",false);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
-            archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+            archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000");
 
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
             archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+            archi_island::setup_main_quest();
+            archi_island::setup_main_ee_quest();
+            archi_island::setup_weapon_quests();
+            archi_island::setup_challenges();
 
             // TODO
             archi_items::RegisterItem("Gasmask Part - Visor",&archi_items::give_ShieldPart_Door,undefined,true);
@@ -448,6 +444,9 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
             archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+            level thread archi_island::save_state_manager();
+            level thread archi_island::load_state();
         }
 
         if (mapName == "zm_stalingrad")
@@ -474,9 +473,9 @@ function game_start()
             level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
             level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",false);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",false);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3",false);
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3");
 
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -732,24 +731,9 @@ function award_item(item)
             if (ap_item.type == "box_weapon" && isdefined(ap_item.weapon_name))
             {
                 weapon_name = ap_item.weapon_name;
-                if(isdefined(level.archi.locked_box_weapons[weapon_name]))
-                {
-                    level.archi.locked_box_weapons[weapon_name] = 0;
-                    if( ap_item.force_in_box == true )
-                    {
-                        foreach( weapon in level.zombie_weapons )
-                        {
-                            if( weapon.name == weapon_name )
-                            {
-                                weapon.is_in_box = 1;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    IPrintLn("No box weapon found: " + weapon_name);
-                }
+                weapon = GetWeapon(weapon_name);
+                z_weapon = level.zombie_weapons[weapon];
+                z_weapon.is_in_box = 1;
             }
         }
         else
@@ -1155,25 +1139,4 @@ function check_override_wallbuy_purchase(weapon, weapon_spawn)
     }
     IPrintLn("Nope");
     return true;
-}
-
-// Return 1 if allowed weapon, return 0 if not
-function _apply_box_weapon_lock(weapon, player, pap_triggers)
-{
-    // Apply original function
-    if (isdefined(level.archi.locked_box_original_custom_magic_box_selection_logic))
-    {
-        if(![[level.archi.locked_box_original_custom_magic_box_selection_logic]](weapon, player, pap_triggers))
-        {
-            return 0;
-        }
-    }
-
-    // Reroll if it's a locked weapon and the box lock setting is on
-    if (level.archi.randomized_box_wonder_weapons == 1 && isdefined(level.archi.locked_box_weapons[weapon.name]) && level.archi.locked_box_weapons[weapon.name] == 1)
-    {
-        return 0;
-    }
-
-    return 1;
 }

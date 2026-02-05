@@ -302,14 +302,16 @@ end
 
 function save_magicbox_list()
   local i = 0
-  local content = "weapon,is_in_box\n"
+  local content = "weapon,is_in_box,limited,quota\n"
   while true do
     local key = Engine.DvarString(nil, "ARCHIPELAGO_DEBUG_MAGICBOX_" .. i)
     local key_in_box = Engine.DvarString(nil, "ARCHIPELAGO_DEBUG_MAGICBOX_" .. i .. "_INSIDE")
+    local key_limited = Engine.DvarString(nil, "ARCHIPELAGO_DEBUG_MAGICBOX_" .. i .. "_LIMITED")
+    local key_quota = Engine.DvarString(nil, "ARCHIPELAGO_DEBUG_MAGICBOX_" .. i .. "_QUOTA") or "0"
     if not key or key == "" then
       break
     end
-    content = content .. key .. "," .. key_in_box .. "\n"
+    content = content .. key .. "," .. key_in_box .. "," .. key_limited .. "," .. key_quota .. "\n"
     i = i + 1
   end
   local f = require("io").open("mods/bo3_archipelago/magicbox.csv", "w+")

@@ -21,6 +21,84 @@
 
 #insert scripts\zm\archi_core.gsh;
 
+function save_state_manager()
+{
+    level.archi.save_state = &save_state;
+    level waittill("end_game");
+
+    if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
+    {
+        IPrintLn("Host ended game, saving data...");
+        save_state();
+    } else {
+        IPrintLn("Host did not end game, clearing data...");
+        clear_state();
+    }
+}
+
+function save_data_round_end()
+{
+    level endon("end_game");
+
+    while (true)
+    {
+        level waittill("start_of_round");
+        if (level.round_number != 1)
+        {
+            wait(1);
+            save_state();
+        }
+    }
+}
+
+function save_state()
+{
+    archi_save::save_round_number();
+    archi_save::save_power_on();
+    archi_save::save_doors_and_debris();
+
+    archi_save::save_players(&save_player_data);
+
+    archi_save::send_save_data("zm_island");
+}
+
+// self is player
+function save_player_data(xuid)
+{  
+    self archi_save::save_player_score(xuid);
+    self archi_save::save_player_perks(xuid);
+    self archi_save::save_player_loadout(xuid);
+}
+
+function load_state()
+{
+    archi_save::wait_restore_ready("zm_island");
+    archi_save::restore_round_number();
+    archi_save::restore_power_on();
+    archi_save::restore_doors_and_debris();
+
+    archi_save::restore_players(&restore_player_data);
+}
+
+// self is player
+function restore_player_data()
+{
+    xuid = self GetXuid();
+
+    if (archi_save::can_restore_player(xuid))
+    {
+        self archi_save::restore_player_score(xuid);
+        self archi_save::restore_player_perks(xuid);
+        self archi_save::restore_player_loadout(xuid);
+    }
+}
+
+function clear_state()
+{
+    SetDvar("ARCHIPELAGO_CLEAR_DATA", "zm_island");
+    LUINotifyEvent(&"ap_clear_data", 0);
+}
+
 function setup_main_quest()
 {
     level thread _flag_to_location_thread("any_player_has_bucket", level.archi.mapString + " Main Quest - Find a Bucket");
@@ -43,13 +121,13 @@ function setup_weapon_quests()
     level thread _flag_to_location_thread("ww1_found", level.archi.mapString + " KT-4 - Collect the Green Vial");
     level thread _flag_to_location_thread("ww2_found", level.archi.mapString + " KT-4 - Collect the Underwater Flower");
     level thread _flag_to_location_thread("ww3_venom_extractor_used", level.archi.mapString + " KT-4 - Extract the Spider Venom");
-    level thread _flag_to_location_thread("wwup1_found", level.archi.mapString + " Masamune - Collect the Vial of Element 115")
+    level thread _flag_to_location_thread("wwup1_found", level.archi.mapString + " Masamune - Collect the Vial of Element 115");
     level thread _flag_to_location_thread("wwup2_found", level.archi.mapString + " Masamune - Take the Spider Queen's Tooth");
     level thread _flag_to_location_thread("wwup3_found", level.archi.mapString + " Masamune - Grow the Rainbow Plant");
     
     level thread _first_skull_cleanse(level.archi.mapString + " Skull of Nan'Sapwe - Cleanse a Ritual Skull");
-    level thread _flag_to_location("skullquest_completed", level.archi.mapString + " Skull of Nan'Sapwe - Cleanse all 4 Ritual Skulls");
-    level thread _flag_to_location("skull_quest_complete", level.archi.mapString + " Skull of Nan'Sapwe - Survive the Skull Room Assault");
+    level thread _flag_to_location_thread("skullquest_completed", level.archi.mapString + " Skull of Nan'Sapwe - Cleanse all 4 Ritual Skulls");
+    level thread _flag_to_location_thread("skull_quest_complete", level.archi.mapString + " Skull of Nan'Sapwe - Survive the Skull Room Assault");
 }
 
 function setup_challenges()
@@ -63,7 +141,7 @@ function setup_challenges()
 function _first_skull_cleanse(location)
 {
     level flag::wait_till_any(array("skullquest_ritual_complete1", "skullquest_ritual_complete2", "skullquest_ritual_complete3", "skullquest_ritual_complete4"));
-    archi_core::send(location);
+    archi_core::send_location(location);
 }
 
 function _waittill_to_location_thread(listener, hash, location)

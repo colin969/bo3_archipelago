@@ -16,6 +16,7 @@ scriptparsetree,scripts/zm/archi_core.gsc
 scriptparsetree,scripts/zm/archi_core.csc
 scriptparsetree,scripts/zm/archi_castle.gsc
 scriptparsetree,scripts/zm/archi_zod.gsc
+scriptparsetree,scripts/zm/archi_island.gsc
 scriptparsetree,scripts/zm/archi_stalingrad.gsc
 scriptparsetree,scripts/zm/archi_items.gsc
 scriptparsetree,scripts/zm/archi_save.gsc
