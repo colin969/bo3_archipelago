@@ -527,6 +527,7 @@ function game_start()
             level thread archi_genesis::setup_main_ee_quest();
             level thread archi_genesis::setup_weapon_quest();
             level thread archi_genesis::setup_wearables();
+            level thread archi_genesis::setup_challenges();
 
             level thread archi_genesis::patch_sword_quest();
 
