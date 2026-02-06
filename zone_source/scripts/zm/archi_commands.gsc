@@ -34,6 +34,8 @@ function init_commands()
     level thread _force_save_response();
     level thread _godmode_response();
     level thread _debug_magicbox_response();
+    level thread _basic_trigger("ap_grand_tour", &_start_grand_tour);
+    level thread _basic_trigger("ap_sv_cheats", &_enable_cheats);
   }
 }
 
@@ -286,4 +288,44 @@ function _debug_magicbox_response()
       IPrintLn("Saved to magicbox.csv");
     }
   }
+}
+
+function _basic_trigger(name, cb)
+{
+  level endon("end_game");
+
+  ModVar(name, "");
+
+  while(true)
+  {
+    WAIT_SERVER_FRAME
+
+    dvar_value = GetDvarString(name, "");
+
+    if(isdefined(dvar_value) && dvar_value != "")
+    {
+      ModVar(name, "");
+      [[cb]](dvar_value);
+    }
+  }
+}
+
+function _start_grand_tour(val)
+{
+  level.var_62552381 = 1;
+  level flag::set("character_stones_done");
+  IPrintLn("Stones");
+  wait(1);
+  level flag::set("phased_sophia_start");
+  IPrintLn("Sophia");
+  wait(1);
+  level flag::set("grand_tour");
+  IPrintLn("Grand Tour");
+  wait(1);
+  level.var_62552381 = 0;
+}
+
+function _enable_cheats(val)
+{
+  SetDvar("sv_cheats", 1);
 }

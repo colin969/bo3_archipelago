@@ -70,3 +70,10 @@ CoD.StartMenu_ApLocations_Stalingrad.new = function( menu, controller )
 	self.itemList:setDataSource( "StartMenu_ApLocations_Stalingrad" )
 	return self
 end
+
+CoD.StartMenu_ApLocations_Genesis = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Genesis.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Genesis" )
+	return self
+end

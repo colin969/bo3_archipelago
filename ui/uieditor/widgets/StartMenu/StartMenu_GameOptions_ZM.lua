@@ -138,6 +138,18 @@ DataSources.ModStartMenuGameOptions = ListHelper_SetupDataSource( "ModStartMenuG
 			}
 		} )
 
+		if Engine.DvarString(nil,"mapname") == "zm_genesis" then
+			table.insert( menuOptions, {
+				models = {
+					displayText = "RESET SUMMONING KEY",
+					action = function(...)
+						Engine.SetDvar("ARCHIPELAGO_GENESIS_RESET_SUMMONING_KEY", "1")
+						StartMenuGoBack_ListElement(...);
+					end
+				}
+			})
+		end
+
 		if Engine.IsLobbyHost( Enum.LobbyType.LOBBY_TYPE_GAME ) == true then
 			table.insert( menuOptions, {
 				models = { displayText = "MENU_END_GAME_CAPS", action = QuitGame_MP }

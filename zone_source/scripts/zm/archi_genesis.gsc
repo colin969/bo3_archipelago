@@ -5,6 +5,7 @@
 #using scripts\shared\util_shared;
 #using scripts\shared\player_shared;
 #using scripts\shared\callbacks_shared;
+#using scripts\shared\gameobjects_shared;
 #using scripts\shared\hud_shared;
 #using scripts\shared\hud_message_shared;
 #using scripts\shared\hud_util_shared;
@@ -36,11 +37,14 @@ function setup_main_ee_quest()
     level thread _flag_to_location_thread("got_audio3", level.archi.mapString + " Main Easter Egg - Get the third Audio Reel (Bones)");
     level thread _flag_to_location_thread("sophia_activated", level.archi.mapString + " Main Easter Egg - Help S.O.P.H.I.A Materialize");
     level thread _flag_to_location_thread("book_picked_up", level.archi.mapString + " Main Easter Egg - Pick up the Kronorium");
-    level thread _flag_to_location_thread("rune_circle_on", level.archi.mapString + " Main Easter Egg - Hatch the 4 Gateworm Eggs");
+    level thread _flag_to_location_thread("book_runes_in_progress", level.archi.mapString + " Main Easter Egg - Collect the Runes of Creation"); // Needs re-tested
     level thread _flag_to_location_thread("book_runes_success", level.archi.mapString + " Main Easter Egg - Activate the Book Runes in order");
+    level thread _flag_to_location_thread("grand_tour", level.archi.mapString + " Main Easter Egg - Survive the Margwa Gauntlet");
     level thread _flag_to_location_thread("toys_collected", level.archi.mapString + " Main Easter Egg - Collect all 7 objects with the Summoning Key");
     level thread _flag_to_location_thread("final_boss_defeated", level.archi.mapString + " Main Easter Egg - Feed the Shadowman to the Apothicon God");
     level thread _flag_to_location_thread("ending_room", level.archi.mapString + " Main Easter Egg - Victory");
+
+    level thread reset_summoning_key_listener();
 }
 
 function setup_keeper_friend()
@@ -208,4 +212,45 @@ function _wearable_apothigod(location)
 {
 	level flag::wait_till_all(array("apothicon_mask_all_zombies_killed", "apothicon_mask_all_wasps_killed", "apothicon_mask_all_spiders_killed", "apothicon_mask_all_margwas_killed", "apothicon_mask_all_fury_killed", "apothicon_mask_all_keepers_killed"));
     archi_core::send_location(location);
+}
+
+function reset_summoning_key_listener()
+{
+    level endon("end_game");
+
+    ModVar("ARCHIPELAGO_GENESIS_RESET_SUMMONING_KEY", "");
+
+    while(true)
+    {  
+        dvar_value = GetDvarString("ARCHIPELAGO_GENESIS_RESET_SUMMONING_KEY", "");
+        if(isdefined(dvar_value) && dvar_value != "")
+        {
+            ModVar("ARCHIPELAGO_GENESIS_RESET_SUMMONING_KEY", "");
+            if (level flag::get("grand_tour"))
+            {
+                e_player = level.players[0];
+                ball = level.ball;
+                ball.visuals[0] clientfield::set("ball_on_ground_fx", 0);
+                ball.trigger.baseorigin = e_player.origin;
+                foreach (visual in ball.visuals)
+                {
+                visual.baseorigin = e_player.origin;
+                }
+                ball.isresetting = 1;
+                prev_origin = self.trigger.origin;
+                ball notify("reset");
+                ball gameobjects::move_visuals_to_base();
+                ball.trigger.origin = ball.trigger.baseorigin;
+                ball.curorigin = self.trigger.origin;
+                ball [[ball.onreset]](prev_origin, 1, 1);
+                ball gameobjects::clear_carrier();
+                ball.isresetting = 0;
+            }
+            else
+            {
+                IPrintLn("Cannot reset the summoning key if you haven't unlocked it yet");
+            }
+        }
+        wait(1);
+    }
 }

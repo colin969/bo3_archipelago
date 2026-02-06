@@ -520,7 +520,7 @@ function game_start()
         {
             level.archi.mapString = ARCHIPELAGO_MAP_REVELATIONS;
 
-            level thread setup_spare_change_trackers(6);
+            level thread setup_spare_change_trackers(7);
 
             level thread archi_genesis::setup_main_quest();
             level thread archi_genesis::setup_keeper_friend();

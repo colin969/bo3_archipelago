@@ -48,6 +48,12 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
 			 	tabIcon = "" },
             properties = { tabId = "gameOptions" }
         } )
+
+		table.insert( tabList, {
+            models = { tabName = "Revelations", tabWidget = "CoD.StartMenu_ApLocations_Genesis",
+			 	tabIcon = "" },
+            properties = { tabId = "gameOptions" }
+        } )
         
         table.insert( tabList, {
             models = { tabIcon = CoD.buttonStrings.shoulderr },
