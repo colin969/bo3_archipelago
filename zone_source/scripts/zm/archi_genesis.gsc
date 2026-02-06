@@ -1,0 +1,211 @@
+#using scripts\codescripts\struct;
+#using scripts\shared\flag_shared;
+#using scripts\shared\system_shared;
+#using scripts\shared\array_shared;
+#using scripts\shared\util_shared;
+#using scripts\shared\player_shared;
+#using scripts\shared\callbacks_shared;
+#using scripts\shared\hud_shared;
+#using scripts\shared\hud_message_shared;
+#using scripts\shared\hud_util_shared;
+#using scripts\shared\lui_shared;
+#using scripts\shared\clientfield_shared;
+#using scripts\shared\scene_shared;
+
+#using scripts\zm\archi_core;
+#using scripts\zm\archi_items;
+#using scripts\zm\archi_save;
+
+#insert scripts\shared\shared.gsh;
+#insert scripts\shared\version.gsh;
+
+#insert scripts\zm\archi_core.gsh;
+
+function setup_main_quest()
+{
+    level thread _any_power_station(level.archi.mapString + " Main Quest - Override a Corruption Engine");
+    level thread _all_power_stations(level.archi.mapString + " Main Quest - Override all 4 Corruption Engines");
+    level thread _flag_to_location_thread("apotho_pack_freed", level.archi.mapString + " Main Quest - Free the Pack-A-Punch");
+}
+
+function setup_main_ee_quest()
+{
+    level thread _flag_to_location_thread("character_stones_done", level.archi.mapString + " Main Easter Egg - Shoot the Graves");
+    level thread _flag_to_location_thread("got_audio1", level.archi.mapString + " Main Easter Egg - Get the first Audio Reel (Keeper Protector)");
+    level thread _flag_to_location_thread("got_audio2", level.archi.mapString + " Main Easter Egg - Get the second Audio Reel (Apothicon Stomach)");
+    level thread _flag_to_location_thread("got_audio3", level.archi.mapString + " Main Easter Egg - Get the third Audio Reel (Bones)");
+    level thread _flag_to_location_thread("sophia_activated", level.archi.mapString + " Main Easter Egg - Help S.O.P.H.I.A Materialize");
+    level thread _flag_to_location_thread("book_picked_up", level.archi.mapString + " Main Easter Egg - Pick up the Kronorium");
+    level thread _flag_to_location_thread("rune_circle_on", level.archi.mapString + " Main Easter Egg - Hatch the 4 Gateworm Eggs");
+    level thread _flag_to_location_thread("book_runes_success", level.archi.mapString + " Main Easter Egg - Activate the Book Runes in order");
+    level thread _flag_to_location_thread("toys_collected", level.archi.mapString + " Main Easter Egg - Collect all 7 objects with the Summoning Key");
+    level thread _flag_to_location_thread("final_boss_defeated", level.archi.mapString + " Main Easter Egg - Feed the Shadowman to the Apothicon God");
+    level thread _flag_to_location_thread("ending_room", level.archi.mapString + " Main Easter Egg - Victory");
+}
+
+function setup_keeper_friend()
+{
+    level thread _flag_to_location_thread("keeper_callbox_totem_found", level.archi.mapString + " Keeper Protector Part Pickup - Totem");
+    level thread _flag_to_location_thread("keeper_callbox_head_found", level.archi.mapString + " Keeper Protector Part Pickup - Skull");
+    level thread _flag_to_location_thread("keeper_callbox_gem_found", level.archi.mapString + " Keeper Protector Part Pickup - Gem");
+}
+
+function setup_weapon_quest()
+{
+    level thread _flag_to_location_thread("shards_done", level.archi.mapString + " Eat the shards with the Apothicon Servant");
+    level thread _flag_to_location_thread("lil_arnie_done", level.archi.mapString + " Upgrade the Li'l Arnies");
+}
+
+function setup_wearables()
+{
+    level thread _wearable_wolf(level.archi.mapString + " Unlock the Wolf Mask");
+    // level thread _wearable_siegfried(level.archi.mapString + " Unlock the Helmet of Siegfried");
+    level thread _wearable_king(level.archi.mapString + " Unlock the Helmet of the King");
+    level thread _wearable_keeper_skull(level.archi.mapString + " Unlock the Keeper Skull Mask");
+    level thread _wearable_margwa(level.archi.mapString + " Unlock the Margwa Mask");
+    level thread _wearable_apothigod(level.archi.mapString + " Unlock the Apothigod Mask");
+}
+
+function setup_challenges()
+{
+    level thread _flag_to_location_thread("all_challenges_completed", level.archi.mapString + " Complete all Challenges");
+    foreach(player in level.players)
+    {
+        player thread player_challenges();
+    }
+    callback::on_connect(&player_challenges);
+}
+
+function player_challenges()
+{
+    self thread _player_flag_to_location_thread("flag_player_completed_challenge_1", level.archi.mapString + " Complete Challenge 1");
+    self thread _player_flag_to_location_thread("flag_player_completed_challenge_2", level.archi.mapString + " Complete Challenge 2");
+    self thread _player_flag_to_location_thread("flag_player_completed_challenge_3", level.archi.mapString + " Complete Challenge 3");
+}
+
+function patch_sword_quest()
+{
+    level flag::wait_till("book_picked_up");
+    
+    // Flag step done
+    level flag::set("hope_done");
+
+    // Add Takeo's Sword Wallbuy
+    weapon = getweapon("melee_katana");
+	level.var_b9f3bf28.zombie_weapon_upgrade = "melee_katana";
+	level.var_b9f3bf28.weapon = weapon;
+	level.var_b9f3bf28.trigger_stub.weapon = weapon;
+	level.var_b9f3bf28.trigger_stub.cursor_hint_weapon = weapon;
+
+    clientfield::set(level.var_b9f3bf28.trigger_stub.clientfieldname, 0);
+    level clientfield::set("time_attack_reward", 5);
+    util::wait_network_frame();
+	clientfield::set(level.var_b9f3bf28.trigger_stub.clientfieldname, 2);
+	util::wait_network_frame();
+    clientfield::set(level.var_b9f3bf28.trigger_stub.clientfieldname, 1);
+    level flag::set("time_attack_weapon_awarded");
+
+    // Add pack-a-punch overrides
+    level.wallbuy_should_upgrade_weapon_override = &hope_wallbuy_override;
+    level.magicbox_should_upgrade_weapon_override = &hope_magicbox_override;
+}
+
+function hope_wallbuy_override()
+{
+    return true;
+}
+
+function hope_magicbox_override(e_player, weapon)
+{
+    return true;
+}
+
+function _patch_genesis_player()
+{
+
+}
+
+function _apothicon_stomach_arnies()
+{
+    while(true)
+    {
+        level waittill("hash_ee91de1d");
+        arnies_done = level.var_db16318c;
+        if (arnies_done == 3)
+        {
+            archi_core::send_location(level.archi.mapString + " Main Easter Egg - Fi7ll 3 holes with Li'l Arnies");
+        }
+        if (arnies_done == 6)
+        {
+            archi_core::send_location(level.archi.mapString + " Main Easter Egg - Fill 6 holes with Li'l Arnies");
+        }
+        if (arnies_done >= 9)
+        {
+            break;
+        }
+    }
+}
+
+function _any_power_station(location)
+{
+    level flag::wait_till_any(array("power_on1", "power_on2", "power_on3", "power_on4"));
+    archi_core::send_location(location);
+}
+
+function _all_power_stations(location)
+{
+    level flag::wait_till_all(array("power_on1", "power_on2", "power_on3", "power_on4"));
+    archi_core::send_location(location);
+}
+
+function _flag_to_location_thread(flag, location)
+{
+    level endon("end_game");
+
+    level flag::wait_till(flag);
+    archi_core::send_location(location);
+}
+
+function _player_flag_to_location_thread(flag, location)
+{
+    self endon("disconnect");
+
+    self flag::wait_till(flag);
+    archi_core::send_location(location);
+}
+
+function _wearable_wolf(location)
+{
+	level flag::wait_till_all(array("keeper_skull_dg4_flag", "keeper_skull_turret_flag"));
+    archi_core::send_location(location);
+}
+
+function _wearable_siegfried(location)
+{
+    // batteries = struct::get_array("ancient_battery", "targetname");
+    // archi_core::send_location(location);
+}
+
+function _wearable_king(location)
+{
+	level flag::wait_till_all(array("mechz_gun_flag", "mechz_mask_flag", "mechz_trap_flag"));
+    archi_core::send_location(location);
+}
+
+function _wearable_keeper_skull(location)
+{
+	level flag::wait_till_all(array("keeper_skull_turret_flag", "keeper_skull_zombie_flag"));
+    archi_core::send_location(location);
+}
+
+function _wearable_margwa(location)
+{
+    level flag::wait_till_all(array("margwa_head_wasps_flag", "margwa_head_fire_flag", "margwa_head_shadow_flag"));
+    archi_core::send_location(location);
+}
+
+function _wearable_apothigod(location)
+{
+	level flag::wait_till_all(array("apothicon_mask_all_zombies_killed", "apothicon_mask_all_wasps_killed", "apothicon_mask_all_spiders_killed", "apothicon_mask_all_margwas_killed", "apothicon_mask_all_fury_killed", "apothicon_mask_all_keepers_killed"));
+    archi_core::send_location(location);
+}

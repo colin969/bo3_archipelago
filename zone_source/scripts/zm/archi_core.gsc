@@ -22,6 +22,7 @@
 #using scripts\zm\archi_castle;
 #using scripts\zm\archi_island;
 #using scripts\zm\archi_stalingrad;
+#using scripts\zm\archi_genesis;
 #using scripts\zm\archi_zod;
 
 #insert scripts\zm\_zm_perks.gsh;
@@ -273,6 +274,8 @@ function game_start()
         {
             level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
 
+            level.b_allow_idgun_pap = 1; // Allow apothicon servant to be Pap'd
+
             replace_craftable_onPickup("craft_shield_zm");
             level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
             level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
@@ -392,7 +395,8 @@ function game_start()
         {
             level.archi.mapString = ARCHIPELAGO_MAP_ZETSUBOU;
 
-            level thread setup_spare_change_trackers(7);
+            // 2 underwater
+            level thread setup_spare_change_trackers(5);
 
             replace_craftable_onPickup("craft_shield_zm");
             level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
@@ -416,11 +420,12 @@ function game_start()
             archi_island::setup_main_ee_quest();
             archi_island::setup_weapon_quests();
             archi_island::setup_challenges();
+            archi_island::adjust_host_bgb_pack();
 
             // TODO
             archi_items::RegisterItem("Gasmask Part - Visor",&archi_island::give_GasmaskPart_Visor,undefined,true);
             archi_items::RegisterItem("Gasmask Part - Filter",&archi_island::give_GasmaskPart_Filter,undefined,true);
-            archi_items::RegisterItem("Gasmask Part - Strap",&arch_island::give_GasmaskPart_Strap,undefined,true);
+            archi_items::RegisterItem("Gasmask Part - Strap",&archi_island::give_GasmaskPart_Strap,undefined,true);
 
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -509,6 +514,59 @@ function game_start()
 
             level thread archi_stalingrad::save_state_manager();
             level thread archi_stalingrad::load_state();
+        }
+
+        if (mapName == "zm_genesis")
+        {
+            level.archi.mapString = ARCHIPELAGO_MAP_REVELATIONS;
+
+            level thread setup_spare_change_trackers(6);
+
+            level thread archi_genesis::setup_main_quest();
+            level thread archi_genesis::setup_keeper_friend();
+            level thread archi_genesis::setup_main_ee_quest();
+            level thread archi_genesis::setup_weapon_quest();
+            level thread archi_genesis::setup_wearables();
+
+            level thread archi_genesis::patch_sword_quest();
+
+            replace_craftable_onPickup("craft_shield_zm");
+            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_genesis_0");
+            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb");
+            archi_items::RegisterBoxWeapon("Mystery Box - Ragnarok DG-4s","hero_gravityspikes_melee");
+            archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun");
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+
+            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+
+            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+            archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
+            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
+            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
+            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
         }
 
         if (mapName == "zm_factory")

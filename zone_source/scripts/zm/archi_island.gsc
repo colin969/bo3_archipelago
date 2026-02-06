@@ -134,10 +134,33 @@ function setup_weapon_quests()
 
 function setup_challenges()
 {
-    level thread _flag_to_location_thread("flag_player_completed_challenge_1", level.archi.mapString + " Complete Challenge 1");
-    level thread _flag_to_location_thread("flag_player_completed_challenge_2", level.archi.mapString + " Complete Challenge 2");
-    level thread _flag_to_location_thread("flag_player_completed_challenge_3", level.archi.mapString + " Complete Challenge 3");
-    level thread _flag_to_location_thread("all_challenges_completed", level.archi.mapString + " Complete all Challenge");
+    level thread _flag_to_location_thread("all_challenges_completed", level.archi.mapString + " Complete all Challenges");
+    foreach(player in level.players)
+    {
+        player thread player_challenges();
+    }
+    callback::on_connect(&player_challenges);
+}
+
+function player_challenges()
+{
+    self thread _player_flag_to_location_thread("flag_player_completed_challenge_1", level.archi.mapString + " Complete Challenge 1");
+    self thread _player_flag_to_location_thread("flag_player_completed_challenge_2", level.archi.mapString + " Complete Challenge 2");
+    self thread _player_flag_to_location_thread("flag_player_completed_challenge_3", level.archi.mapString + " Complete Challenge 3");
+}
+
+function adjust_host_bgb_pack()
+{
+    e_player = level.players[0];
+    foreach(gum in e_player.bgb_pack)
+    {
+        if (gum == "zm_bgb_anywhere_but_here")
+        {
+            return;
+        }
+    }
+
+    e_player.bgb_pack[4] = "zm_bgb_anywhere_but_here";
 }
 
 function _first_skull_cleanse(location)
@@ -152,7 +175,7 @@ function _all_skull_cleanse(location)
     archi_core::send_location(location);
 }
 
-function _skull_room_defense(locations)
+function _skull_room_defense(location)
 {
     level flag::wait_till("skullroom_defend_inprogress");
     level flag::wait_till_clear("skullroom_defend_inprogress");
@@ -174,17 +197,25 @@ function _flag_to_location_thread(flag, location)
     archi_core::send_location(location);
 }
 
+function _player_flag_to_location_thread(flag, location)
+{
+    self endon("disconnect");
+
+    self flag::wait_till(flag);
+    archi_core::send_location(location);
+}
+
 function give_GasmaskPart_Visor()
 {
-    give_piece("gasmask", "part_visor");
+    archi_items::give_piece("gasmask", "part_visor");
 }
 
 function give_GasmaskPart_Filter()
 {
-    give_piece("gasmask", "part_filter");
+    archi_items::give_piece("gasmask", "part_filter");
 }
 
 function give_GasmaskPart_Strap()
 {
-    give_piece("gasmask", "part_strap");
+    archi_items::give_piece("gasmask", "part_strap");
 }
