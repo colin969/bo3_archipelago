@@ -1,9 +1,12 @@
 #using scripts\codescripts\struct;
+#using scripts\shared\ai\zombie_utility;
 #using scripts\shared\flag_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\array_shared;
+#using scripts\shared\laststand_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\player_shared;
+#using scripts\shared\exploder_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\hud_shared;
 #using scripts\shared\hud_message_shared;
@@ -11,6 +14,9 @@
 #using scripts\shared\lui_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\scene_shared;
+#using scripts\zm\_zm_unitrigger;
+#using scripts\zm\_zm_weapons;
+#using scripts\zm\_zm_utility;
 
 #using scripts\zm\archi_core;
 #using scripts\zm\archi_items;
@@ -59,6 +65,8 @@ function save_state()
 
     archi_save::save_players(&save_player_data);
 
+    save_map_state();
+
     archi_save::send_save_data("zm_island");
 }
 
@@ -72,12 +80,116 @@ function save_player_data(xuid)
 
 function load_state()
 {
+    level flag::init("ap_skullroom_finished");
     archi_save::wait_restore_ready("zm_island");
     archi_save::restore_round_number();
-    archi_save::restore_power_on();
+    restore_power_on();
     archi_save::restore_doors_and_debris();
 
     archi_save::restore_players(&restore_player_data);
+
+    restore_map_state();
+
+    if (level flag::get("ap_skullroom_finished"))
+    {
+        foreach (skull in level.var_a576e0b9)
+        {
+            skull.mdl_skull_p.origin = skull.mdl_skull_s.origin;
+            skull.mdl_skull_p.angles = skull.mdl_skull_s.angles;
+            skull.mdl_skull_p show();
+            skull.mdl_skull_s ghost();
+            skull.str_state = "completed";
+        }
+        level thread exploder::exploder("fxexp_503");
+        wait(0.25);
+        foreach (skull in level.var_a576e0b9)
+        {
+            skull.mdl_skull_p clientfield::set("skullquest_finish_done_glow_fx", 1);
+        }
+        level.var_d19220ee = 1; // Skull room unlocked
+        skullroom = struct::get("s_ut_skullroom", "targetname");
+        level thread play_skull_room();
+    }
+
+    // Prevent checkpointing during initial load, just in case
+    wait(10);
+    level flag::clear("ap_prevent_checkpoints");
+}
+
+function play_skull_room()
+{
+    level thread exploder::exploder("fxexp_500");
+	level thread scene::play("p7_fxanim_zm_island_alter_stairs_bundle");
+    entities = getentarray("dais_center", "targetname");
+	if(isdefined(entities))
+	{
+		foreach(e_piece in entities)
+		{
+			e_piece delete();
+		}
+	}
+	mdl_skullroom_seal = getent("mdl_skullroom_seal", "targetname");
+    mdl_skullroom_seal ghost();
+    mdl_skullroom_seal notsolid();
+    exploder::stop_exploder("fxexp_501");
+    mdl_skullroom_seal connectpaths();
+    level.var_a5db31a9 = 0; // Something to do with zones?
+	level flag::set("connect_ruins_to_ruins_underground");
+    if(!level flag::exists("skullroom_defend_inprogress"))
+	{
+		level flag::init("skullroom_defend_inprogress");
+	}
+    if(isdefined(level.var_55c48492))
+	{
+		level.var_55c48492 show(); // Show skull gun model
+	}
+    level.var_b10ab148 = 1; // Keeper kill count reached?
+    level clientfield::set("keeper_spawn_portals", 0); // Hide keeper portal fx
+    level flag::set("skull_quest_complete");
+    skull_gun_trigger = level.var_b2152df5;
+    skull_gun_trigger.script_unitrigger_type = "unitrigger_radius_use";
+    skull_gun_trigger.cursor_hint = "HINT_NOICON";
+    skull_gun_trigger.prompt_and_visibility_func = &skull_gun_prompt;
+    zm_unitrigger::register_static_unitrigger(skull_gun_trigger, &skull_gun_think);
+}
+
+function skull_gun_prompt(player)
+{
+    if (player HasWeapon(level.var_c003f5b, 1))
+    {
+        self SetHintString("");
+        return false;
+    }
+    self SetHintString(&"ZM_ISLAND_SKULLQUEST_GET_SKULLGUN");
+    return true;
+}
+
+function skull_gun_think()
+{
+    while(true)
+    {
+        self waittill("trigger", ent);
+        if (zombie_utility::is_player_valid(ent) && IsAlive(ent) && !ent laststand::player_is_in_laststand())
+        {
+            if (!ent HasWeapon(level.var_c003f5b, 1))
+            {
+                // ent DisableWeaponCycling(); // Force the animation to work
+               // cur_weapon = ent GetCurrentWeapon();
+                ent zm_weapons::weapon_give(level.var_c003f5b, 0, 0, 1); // Mute audio?
+                ent GadgetPowerSet(0, 100);
+                ent SwitchToWeapon(level.var_c003f5b);
+                level flag::set("a_player_got_skullgun");
+                //wait(1);
+                //ent SwitchToWeapon(cur_weapon);
+                //wait(1);
+                //ent GadgetPowerSet(0, 100); // Stops the drain from anim?
+                //ent SetWeaponAmmoClip(level.var_c003f5b, 0);
+                //ent EnableWeaponCycling();
+                ent flag::set("has_skull");
+                ent clientfield::set_to_player("skull_skull_state", 3);
+            }
+        }
+    }
 }
 
 // self is player
@@ -90,6 +202,12 @@ function restore_player_data()
         self archi_save::restore_player_score(xuid);
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
+        hero_weapon = self zm_utility::get_player_hero_weapon();
+        if (hero_weapon != level.weaponnone)
+        {
+            self flag::set("has_skull");
+            self clientfield::set_to_player("skull_skull_state", 3);
+        }
     }
 }
 
@@ -105,7 +223,6 @@ function setup_main_quest()
     level thread _flag_to_location_thread("power_on3", level.archi.mapString + " Main Quest - Enter the Bunker"); // Doesn't work?
     level thread _flag_to_location_thread("power_on", level.archi.mapString + " Main Quest - Turn on the Power");
     level thread _flag_to_location_thread("pap_open", level.archi.mapString + " Main Quest - Drain the Pack-A-Punch");
-    // Add one for draining the water fully
 }
 
 function setup_main_ee_quest()
@@ -179,6 +296,7 @@ function _skull_room_defense(location)
 {
     level flag::wait_till("skullroom_defend_inprogress");
     level flag::wait_till_clear("skullroom_defend_inprogress");
+    level flag::set("ap_skullroom_finished");
     archi_core::send_location(location);
 }
 
@@ -218,4 +336,165 @@ function give_GasmaskPart_Filter()
 function give_GasmaskPart_Strap()
 {
     archi_items::give_piece("gasmask", "part_strap");
+}
+
+function save_map_state()
+{
+    // KT-4
+    archi_save::save_flag("ww1_found");
+    archi_save::save_flag("ww2_found");
+    archi_save::save_flag("ww3_found");
+    archi_save::save_flag("ww_obtained");
+    // Masamune
+    archi_save::save_flag("wwup1_found");
+    archi_save::save_flag("wwup2_found");
+    archi_save::save_flag("wwup3_found");
+    // EE
+    archi_save::save_flag("aa_gun_ee_complete"); // Too finnicky to store gun loaded
+    archi_save::save_flag("elevator_part_gear1_found");
+    archi_save::save_flag("elevator_part_gear2_found");
+    archi_save::save_flag("elevator_part_gear3_found");
+    // Challenges
+    archi_save::save_flag("all_challenges_completed");
+    archi_save::save_flag("trilogy_released");
+    archi_save::save_flag("a_player_got_skullgun");
+    // PaP Drain
+    archi_save::save_flag("valve1_found");
+    archi_save::save_flag("valve2_found");
+    archi_save::save_flag("valve3_found");
+    foreach (player in level.players)
+    {
+        player _save_map_state_player();
+    }
+}
+
+// Self is player
+function _save_map_state_player()
+{
+    xuid = self GetXuid();
+    self archi_save::save_player_flag("flag_player_completed_challenge_1", xuid);
+    self archi_save::save_player_flag("flag_player_completed_challenge_2", xuid);
+    self archi_save::save_player_flag("flag_player_completed_challenge_3", xuid);
+    self archi_save::save_player_flag("flag_player_collected_reward_1", xuid);
+    self archi_save::save_player_flag("flag_player_collected_reward_2", xuid);
+    self archi_save::save_player_flag("flag_player_collected_reward_3", xuid); 
+}
+
+function restore_map_state()
+{
+    // KT-4
+    archi_save::restore_flag("ww1_found");
+    archi_save::restore_flag("ww2_found");
+    archi_save::restore_flag("ww3_found");
+    archi_save::restore_flag("ww_obtained");
+    archi_save::restore_flag("all_challenges_completed");
+    wait(0.5); // Probably not needed
+    // Masamune
+    archi_save::restore_flag("wwup1_found");
+    archi_save::restore_flag("wwup2_found");
+    archi_save::restore_flag("wwup3_found");
+    if (level flag::get("ww1_found")) 
+    {
+        foreach (player in level.players)
+        {
+            player clientfield::set_to_player("wonderweapon_part_wwi", 1);
+        }
+    }
+    if (level flag::get("ww2_found")) 
+    {
+        foreach (player in level.players)
+        {
+            player clientfield::set_to_player("wonderweapon_part_wwii", 1);
+        }
+    }
+    if (level flag::get("ww3_found")) 
+    {
+        foreach (player in level.players)
+        {
+            player clientfield::set_to_player("wonderweapon_part_wwiii", 1);
+        }
+    }
+
+    // PaP Drain
+    archi_save::restore_flag("valve1_found");
+    archi_save::restore_flag("valve2_found");
+    archi_save::restore_flag("valve3_found");
+    if (level flag::get("valve1_found")) 
+    {
+        foreach (player in level.players)
+        {
+            player clientfield::set_to_player("valvethree_part_lever", 1); // I know they don't match, deliberate
+        }
+        level flag::set("pap_gauge");
+    }
+    if (level flag::get("valve2_found")) 
+    {
+        foreach (player in level.players)
+        {
+            player clientfield::set_to_player("valveone_part_lever", 1);
+        }
+        level flag::set("pap_wheel");
+    }
+    if (level flag::get("valve3_found")) 
+    {
+        foreach (player in level.players)
+        {
+            player clientfield::set_to_player("valvetwo_part_lever", 1);
+        }
+        level flag::set("pap_whistle");
+    }
+
+    archi_save::restore_flag("a_player_got_skullgun");
+
+    archi_save::restore_flag("trilogy_released");
+    if (level flag::get("trilogy_released"))
+    {
+        // Manually reveal the hidden map
+        map = getent("mdl_main_ee_map", "targetname");
+        map clientfield::set("do_fade_material", 1);
+        exploder::exploder("lgt_elevator");
+    }
+    wait(0.5); // Wait for EE logic to start proper
+    archi_save::restore_flag("elevator_part_gear1_found");
+    archi_save::restore_flag("elevator_part_gear2_found");
+    archi_save::restore_flag("elevator_part_gear3_found");
+    if (level flag::get("elevator_part_gear3_found"))
+    {
+        // Gear gotten, try and disable plane?
+        level flag::set("aa_gun_ee_complete");
+    }
+
+    // It should be set by now anyway, just to be safe we can wait
+    level flag::wait_till("flag_init_player_challenges");
+    foreach (player in level.players)
+    {
+        player thread _restore_map_state_player();
+    }
+    callback::on_spawned(player, &_restore_map_state_player);
+}
+
+// Self is player
+function _restore_map_state_player()
+{
+    xuid = self GetXuid();
+    wait(0.1);
+    self archi_save::restore_player_flag("flag_player_completed_challenge_1", xuid);
+    self archi_save::restore_player_flag("flag_player_completed_challenge_2", xuid);
+    self archi_save::restore_player_flag("flag_player_completed_challenge_3", xuid); 
+    wait(0.1);
+    self archi_save::restore_player_flag("flag_player_collected_reward_1", xuid);
+    self archi_save::restore_player_flag("flag_player_collected_reward_2", xuid);
+    self archi_save::restore_player_flag("flag_player_collected_reward_3", xuid);
+}
+
+function restore_power_on()
+{
+    level flag::set("power_on1");
+    level flag::set("power_on2");
+    WAIT_SERVER_FRAME
+    level flag::set("power_on3");
+    WAIT_SERVER_FRAME
+    level flag::set("power_on4");
+    WAIT_SERVER_FRAME
+    level flag::set("power_on");
 }

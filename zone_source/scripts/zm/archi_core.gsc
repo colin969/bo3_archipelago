@@ -35,6 +35,7 @@
 
 #namespace archi_core;
 
+#precache( "eventstring", "ap_save_checkpoint_data");
 #precache( "eventstring", "ap_save_data" );
 #precache( "eventstring", "ap_load_data" );
 #precache( "eventstring", "ap_clear_data" );
@@ -49,6 +50,8 @@ REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
 function __init__()
 {
+    level flag::init("ap_prevent_checkpoints", 1);
+
     // Some maps make requirements harder if not in a ranked match
     level.rankedmatch = 1;
     SetDvar("zm_private_rankedmatch", 1);
@@ -273,8 +276,6 @@ function game_start()
         if (mapName == "zm_zod")
         {
             level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
-
-            level.b_allow_idgun_pap = 1; // Allow apothicon servant to be Pap'd
 
             replace_craftable_onPickup("craft_shield_zm");
             level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
@@ -568,6 +569,9 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
             archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+            level thread archi_genesis::save_state_manager();
+            level thread archi_genesis::load_state();
         }
 
         if (mapName == "zm_factory")

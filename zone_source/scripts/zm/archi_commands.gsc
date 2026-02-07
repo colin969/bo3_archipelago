@@ -36,6 +36,8 @@ function init_commands()
     level thread _debug_magicbox_response();
     level thread _basic_trigger("ap_grand_tour", &_start_grand_tour);
     level thread _basic_trigger("ap_sv_cheats", &_enable_cheats);
+    level thread _basic_trigger("ap_set_flag", &_set_flag);
+    level thread _basic_trigger("ap_set_player_flag", &_set_player_flag);
   }
 }
 
@@ -328,4 +330,23 @@ function _start_grand_tour(val)
 function _enable_cheats(val)
 {
   SetDvar("sv_cheats", 1);
+}
+
+function _set_player_flag(val)
+{
+  if (val != "")
+  {
+    foreach(player in level.players)
+    {
+      player flag::set(val);
+    }
+  }
+}
+
+function _set_flag(val)
+{
+  if (val != "")
+  {
+    level flag::set(val);
+  }
 }

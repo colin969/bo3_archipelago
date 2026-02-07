@@ -9,10 +9,12 @@
 #using scripts\shared\hud_message_shared;
 #using scripts\shared\hud_util_shared;
 #using scripts\shared\lui_shared;
+#using scripts\shared\math_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\zm\_zm_perks;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_weapons;
+#using scripts\zm\_zm_utility;
 
 #using scripts\zm\archi_core;
 
@@ -57,8 +59,23 @@ function restore_power_on()
     if (power_on > 0)
     {
         trig = getent("use_power_switch", "targetname");
-        trig notify("trigger");
-        SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0);
+        if (isdefined(trig))
+        {
+            trig notify("trigger");
+            SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0);
+        }
+        trig = getent("use_master_switch", "targetname");
+        if (isdefined(trig))
+        {
+            trig notify("trigger");
+            SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0);
+        }
+        trig = getent("use_elec_switch", "targetname");
+        if (isdefined(trig))
+        {
+            trig notify("trigger");
+            SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0);
+        }
     }
 }
 
@@ -158,6 +175,21 @@ function restore_player_perks(xuid)
 
 function restore_player_loadout(xuid)
 {
+    // Restore Hero Weapon
+    hero_weapon_name = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON", "");
+    if (hero_weapon_name != "")
+    {  
+        weapon = GetWeapon(hero_weapon_name);
+        self zm_weapons::weapon_give(weapon, 0, 0, 1, 0);
+        hero_power = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON_POWER" , -1);
+        if (hero_power >= 0)
+        {
+            WAIT_SERVER_FRAME
+            IPrintLn("Setting power to " + hero_power);
+            self GadgetPowerSet(0, hero_power);
+        }
+    }
+
     // Restore Weapons
     i = 0;
     while (true)
@@ -171,7 +203,7 @@ function restore_player_loadout(xuid)
                 self zm_weapons::weapon_take(level.start_weapon);
             }
             weapon = GetWeapon(weapon_name);
-            self zm_weapons::weapon_give(weapon);
+            self zm_weapons::weapon_give(weapon, 0, 0, 1);
             weapon_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_CLIP", 0);
             weapon_lh_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", 0);
             weapon_stock = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_STOCK", 0);
@@ -265,15 +297,27 @@ function save_player_perks(xuid)
 
 function save_player_loadout(xuid)
 {
+    hero_weapon = self zm_utility::get_player_hero_weapon();
+    if (hero_weapon != level.weaponnone) 
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON", hero_weapon.name);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON_POWER", math::clamp(self.hero_power, 0, 100));
+    }
+
     loadout = self zm_weapons::player_get_loadout();
     i = 0;
     foreach ( weapon in loadout.weapons ) 
     {
+        // Don't save the hero weapon
+        if (weapon["weapon"].name == hero_weapon.name)
+        {
+            continue;
+        }
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_WEAPON", weapon["weapon"].name);
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_CLIP", weapon["clip"]);
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_STOCK", weapon["stock"]);
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", weapon["lh_clip"]);
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTCLIP", weapon["alt_clip"]);                SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTCLIP", weapon["alt_clip"]);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTCLIP", weapon["alt_clip"]);
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTSTOCK", weapon["alt_stock"]);
         i++;
     }
@@ -283,4 +327,48 @@ function _unset_unlock_all()
 {
     wait(0.5);
     SetDvar("zombie_unlock_all", 0);
+}
+
+function save_flag(flag)
+{
+    if (level flag::get(flag))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_" + ToUpper(flag), 1);
+    }
+    else
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_" + ToUpper(flag), 0);
+    }
+}
+
+function restore_flag(flag)
+{
+    dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_MAP_" + ToUpper(flag), 0);
+    if (dvar_value > 0)
+    {
+        level flag::set(flag);
+    }
+}
+
+// Self is player
+function save_player_flag(flag, xuid)
+{
+    if (self flag::get(flag))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" + xuid + "_MAP_" + ToUpper(flag), 1);
+    }
+    else
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" + xuid + "_MAP_" + ToUpper(flag), 0);
+    }
+}
+
+// Self is player
+function restore_player_flag(flag, xuid)
+{
+    dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_" + xuid + "_" + ToUpper(flag), 0);
+    if (dvar_value > 0)
+    {
+        self flag::set(flag);
+    }
 }

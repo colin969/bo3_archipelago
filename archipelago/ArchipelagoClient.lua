@@ -74,7 +74,8 @@ Archi.FromGSC = function (model)
     if mapName ~= "NONE" then
       if saveData[mapName] then
         saveData[mapName] = {
-          players = {}
+          players = {},
+          flags = {},
         }
         local saveDataStr = json.encode(saveData, { indent = true })
         Archipelago.StoreSaveData(saveDataStr)
@@ -82,6 +83,32 @@ Archi.FromGSC = function (model)
         -- We're done saving, let gsc know
         Engine.SetDvar( "ARCHIPELAGO_CLEAR_DATA", "NONE" )
       end
+    end
+  end
+  if IsParamModelEqualToString(model, "ap_save_checkpoint_data") then
+    local mapName = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA")
+    if mapName ~= "NONE" then
+      Archi.LogMessage("Saving checkpoint map data " .. mapName);
+      local checkpointName = "_checkpoint_" .. mapName
+
+      if saveData == nil then
+        saveData = {}
+      end
+
+      local mapSave = save_system.map_saves[mapName]
+      if mapSave then
+        saveData[checkpointName] = {
+          players = {},
+          flags = {},
+        }
+        mapSave(saveData[checkpointName])
+      end
+
+      local saveDataStr = json.encode(saveData, { indent = true })
+      Archipelago.StoreSaveData(saveDataStr)
+
+      -- We're done saving, let gsc know
+      Engine.SetDvar( "ARCHIPELAGO_SAVE_DATA", "NONE" )
     end
   end
   if IsParamModelEqualToString(model, "ap_save_data") then
@@ -95,11 +122,10 @@ Archi.FromGSC = function (model)
 
       local mapSave = save_system.map_saves[mapName]
       if mapSave then
-        if not saveData[mapName] then
-          saveData[mapName] = {
-            players = {}
-          }
-        end
+        saveData[mapName] = {
+          players = {},
+          flags = {},
+        }
         mapSave(saveData[mapName])
       end
 
@@ -113,9 +139,14 @@ Archi.FromGSC = function (model)
   if IsParamModelEqualToString(model, "ap_load_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_LOAD_DATA")
     if mapName ~= "NONE" then
+      local checkpointName = "_checkpoint_" .. mapName
       local mapRestore = save_system.map_restores[mapName]
-      if mapRestore and saveData[mapName] then
-        mapRestore(saveData[mapName])
+      if mapRestore then
+        if saveData[mapName] then
+          mapRestore(saveData[mapName])
+        elseif saveData[checkpointName] then
+          mapRestore(saveData[checkpointName])
+        end
       else
         if not mapRestore then
           Archi.LogMessage("No restore func found for " .. mapName)

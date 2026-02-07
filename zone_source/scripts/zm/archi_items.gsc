@@ -33,7 +33,6 @@ function RegisterBoxWeapon(itemName, weapon_name)
         if (isdefined(z_weapon))
         {
             z_weapon.is_in_box = 0;
-            IPrintLn("Removed from box");
         }
         else
         {

@@ -129,14 +129,16 @@ DataSources.ModStartMenuGameOptions = ListHelper_SetupDataSource( "ModStartMenuG
 			} )
 		end
 
-		table.insert( menuOptions, {
-			models = {
-				displayText = "AP LOCATIONS",
-				action = function( self, element, controller, actionParam, menu )
-					NavigateToMenu( menu, "StartMenu_ApModSettings_Locations", true, controller )
-				end
-			}
-		} )
+		if CoD.isHost() then
+			table.insert( menuOptions, {
+				models = {
+					displayText = "AP LOCATIONS",
+					action = function( self, element, controller, actionParam, menu )
+						NavigateToMenu( menu, "StartMenu_ApModSettings_Locations", true, controller )
+					end
+				}
+			} )
+		end
 
 		if Engine.DvarString(nil,"mapname") == "zm_genesis" then
 			table.insert( menuOptions, {
