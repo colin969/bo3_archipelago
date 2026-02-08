@@ -24,8 +24,6 @@ function RegisterBoxWeapon(itemName, weapon_name)
     item.weapon_name = weapon_name;
     item.count = 0;
 
-    level.archi.removed_box_weapons[weapon_name] = true;
-
     weapon = GetWeapon(weapon_name);
     if (isdefined(weapon))
     {

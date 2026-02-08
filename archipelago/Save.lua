@@ -1,5 +1,6 @@
 function map_save_zm_castle(mapData)
   Archi.LogMessage("Saving map data for Der Eisendrache");
+  save_zombie_count(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
@@ -18,6 +19,7 @@ end
 
 function map_restore_zm_castle(mapData)
   Archi.LogMessage("Restoring map data for Der Eisendrache");
+  restore_zombie_count(mapData);
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
@@ -36,6 +38,7 @@ end
 
 function map_save_zm_zod(mapData)
   Archi.LogMessage("Saving map data for Shadows of Evil");
+  save_zombie_count(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
@@ -51,6 +54,7 @@ end
 
 function map_restore_zm_zod(mapData)
   Archi.LogMessage("Restoring map data for Shadows of Evil");
+  restore_zombie_count(mapData);
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
@@ -66,6 +70,7 @@ end
 
 function map_save_zm_island(mapData)
   Archi.LogMessage("Saving map data for Zetsubou No Shima");
+  save_zombie_count(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
@@ -104,6 +109,7 @@ end
 
 function map_restore_zm_island(mapData)
   Archi.LogMessage("Restoring map data for Zetsubou No Shima");
+  restore_zombie_count(mapData);
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
@@ -140,7 +146,8 @@ function map_restore_zm_island(mapData)
 end
 
 function map_save_zm_stalingrad(mapData)
-  Archi.LogMessage("Saving map data for Gorod Krovi");
+  Archi.LogMessage("Saving map data for Gorod Krovi")
+  save_zombie_count(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
@@ -155,7 +162,8 @@ function map_save_zm_stalingrad(mapData)
 end
 
 function map_restore_zm_stalingrad(mapData)
-  Archi.LogMessage("Restoring map data for Gorod Krovi");
+  Archi.LogMessage("Restoring map data for Gorod Krovi")
+  restore_zombie_count(mapData)
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
@@ -170,7 +178,8 @@ function map_restore_zm_stalingrad(mapData)
 end
 
 function map_save_zm_genesis(mapData)
-  Archi.LogMessage("Saving map data for Revelations");
+  Archi.LogMessage("Saving map data for Revelations")
+  save_zombie_count(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
@@ -185,7 +194,8 @@ function map_save_zm_genesis(mapData)
 end
 
 function map_restore_zm_genesis(mapData)
-  Archi.LogMessage("Restoring map data for Revelations");
+  Archi.LogMessage("Restoring map data for Revelations")
+  restore_zombie_count(mapData);
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
@@ -234,6 +244,12 @@ function restore_power_on(mapData)
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 1)
   else
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0)
+  end
+end
+
+function restore_zombie_count(mapData)
+  if mapData["zombie_count"] and mapData["zombie_count"] > 0 then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_ZOMBIE_COUNT", mapData["zombie_count"])
   end
 end
 
@@ -346,6 +362,11 @@ function save_power_on(mapData)
   else
     mapData.power_on = 0
   end
+end
+
+function save_zombie_count(mapData)
+  local zombieCount = Engine.DvarInt(-1, "ARCHIPELAGO_SAVE_DATA_ZOMBIE_COUNT")
+  mapData.zombie_count = zombieCount
 end
 
 function save_player_score(xuid, playerData)

@@ -60,6 +60,7 @@ function save_data_round_end()
 function save_state()
 {
     archi_save::save_round_number();
+    archi_save::save_zombie_count();
     archi_save::save_power_on();
     archi_save::save_doors_and_debris();
 
@@ -82,6 +83,7 @@ function load_state()
 {
     level flag::init("ap_skullroom_finished");
     archi_save::wait_restore_ready("zm_island");
+    archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     restore_power_on();
     archi_save::restore_doors_and_debris();

@@ -210,6 +210,7 @@ function game_start()
         //Collection of Locations that are checked, 
         level.archi.locationQueue = array();
 
+        level.archi.save_zombie_count = true;
         level.archi.opened_doors = [];
         level.archi.opened_debris = [];
         level.archi.excluded_craftable_items = [];
@@ -972,7 +973,8 @@ function track_change_collected_thread()
 
 function change_to_round(round_number)
 {
-    // Kill remaining zombies
+    WAIT_SERVER_FRAME
+    // Prevent more spawns
     level.zombie_total = 0;
 
     level notify("end_of_round");
@@ -1202,4 +1204,21 @@ function check_override_wallbuy_purchase(weapon, weapon_spawn)
     }
     IPrintLn("Nope");
     return true;
+}
+
+
+function universal_box_registration()
+{
+    // 2 best of each, ideally
+    archi_items::RegisterBoxWeapon("Mystery Box - Drakon","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - Locus","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - Man-o-War","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - HVK-30","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - ICR-1","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - Haymaker 12","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - 205 Brecci","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - Dingo","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - 48 Dredge","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - VMP","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - Vesper","drakon");
 }

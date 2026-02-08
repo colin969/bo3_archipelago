@@ -9,6 +9,8 @@
 #using scripts\shared\hud_util_shared;
 #using scripts\shared\lui_shared;
 #using scripts\shared\clientfield_shared;
+#using scripts\zm\_zm_score;
+#using scripts\zm\_zm_utility;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
@@ -38,6 +40,7 @@ function init_commands()
     level thread _basic_trigger("ap_sv_cheats", &_enable_cheats);
     level thread _basic_trigger("ap_set_flag", &_set_flag);
     level thread _basic_trigger("ap_set_player_flag", &_set_player_flag);
+    level thread _basic_trigger("ap_testkit", &_give_testkit);
   }
 }
 
@@ -348,5 +351,16 @@ function _set_flag(val)
   if (val != "")
   {
     level flag::set(val);
+  }
+}
+
+function _give_testkit(val)
+{
+  if (val != "")
+  { 
+    player = level.players[0];
+    player zm_utility::give_player_all_perks();
+    player zm_score::add_to_player_score(100000);
+    SetDvar("player_SprintUnlimited", 1);
   }
 }

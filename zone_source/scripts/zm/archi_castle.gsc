@@ -29,6 +29,7 @@
 function save_state_manager()
 {
     level.archi.save_state = &save_state;
+    level thread save_data_round_end();
     level waittill("end_game");
     level thread location_state_tracker();
 
@@ -52,7 +53,9 @@ function save_data_round_end()
         if (level.round_number != 1)
         {
             wait(1);
+            level.archi.save_zombie_count = false;
             save_state();
+            level.archi.save_zombie_count = true;
         }
     }
 }
@@ -60,6 +63,7 @@ function save_data_round_end()
 function save_state()
 {
     archi_save::save_round_number();
+    archi_save::save_zombie_count();
     archi_save::save_power_on();
     archi_save::save_doors_and_debris();
     save_dragonheads();
@@ -86,6 +90,7 @@ function load_state()
     archi_save::wait_restore_ready("zm_castle");
     // Disable rocket pad death plane
     level flag::set("castle_teleporter_used");
+    archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
@@ -283,7 +288,7 @@ function _demon_gate_take_broken_arrow()
 {
     level endon("end__game");
     
-    level waittill(#"hash_c8347a07");
+    level waittill("hash_c8347a07");
     archi_core::send_location(level.archi.mapString + " Demon Gate - Take Broken Arrow");
 }
 

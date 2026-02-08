@@ -1,4 +1,5 @@
 #using scripts\codescripts\struct;
+#using scripts\shared\ai\zombie_utility;
 #using scripts\shared\flag_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\array_shared;
@@ -48,8 +49,80 @@ function restore_round_number()
 {
     round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_ROUND", 0);
     if (round_number > 1) {
-        level thread archi_core::change_to_round(round_number);
-        SetDvar("ARCHIPELAGO_LOAD_DATA_ROUND", 0);
+        if (isdefined(level.archi.restore_zombie_count) && level.archi.restore_zombie_count > 0)
+        {
+            level.archi.orig_max_fn = level.max_zombie_func;
+            level.max_zombie_func = &_restore_zombie_max;
+            level archi_core::change_to_round(round_number);
+        }
+        else
+        {
+            level archi_core::change_to_round(round_number);
+        }
+        SetDvar("ARCHIPELAGO_LOAD_DATA_ROUND", 0);        
+    }
+}
+
+function _restore_zombie_max()
+{
+    level thread _fix_max_func();
+    return level.archi.restore_zombie_count;
+}
+
+function _fix_max_func()
+{
+    wait(0.1);
+    level.max_zombie_func = level.archi.orig_max_fn;
+}
+
+function _do_zombie_count_restore()
+{
+    if (isdefined(level.archi.restore_zombie_count) && level.archi.restore_zombie_count > 0)
+    {
+        //level flag::clear("spawn_zombies");
+        level waittill("zombie_total_set");
+        // Restore saved zombie count
+        restore_count = level.archi.restore_zombie_count;
+        IPrintLn("Restoring zombie count: " + restore_count);
+        level.zombie_count = restore_count;
+        if (level.zombie_count < 0)
+        {
+            level.zombie_count = 0;
+        }
+        // Whack-a-mole to keep the count accurate until next round
+        level thread _zombie_restore_watcher(restore_count);
+        IPrintLn("New level.zombie_count: " + level.zombie_count);
+        //level flag::set("spawn_zombies");
+    }
+}
+
+function _zombie_restore_watcher(restore_count)
+{
+    level endon("end_of_round");
+
+    made_safe = 0;
+    while(true)
+    {
+        if (level.zombie_count < 0)
+        {
+            // Something is manually spawning, exit to avoid breaking it
+            break;
+        }
+        // Try and keep the same zombies alive
+        zombies = array::get_all_closest(level.players[0].origin, GetAITeamArray(level.zombie_team));
+        foreach (zombie in zombies)
+        {
+            if (made_safe < restore_count && !isdefined(zombie.ap_keep_alive))
+            {
+                zombie.ap_keep_alive = 1;
+                made_safe++;
+            }
+            if (!isdefined(zombie.ap_keep_alive))
+            {
+                zombie kill();
+            }
+        }
+        wait(0.5);
     }
 }
 
@@ -265,6 +338,30 @@ function save_doors_and_debris()
 
     SetDvar("ARCHIPELAGO_SAVE_DATA_OPENED_DOORS", door_str);
     SetDvar("ARCHIPELAGO_SAVE_DATA_OPENED_DEBRIS", debris_str);
+}
+
+function save_zombie_count()
+{
+    if (level.archi.save_zombie_count)
+    {
+        zombies_left = level.zombie_total + zombie_utility::get_current_zombie_count();
+        if (zombies_left < 0)
+        {
+            zombies_left = 1;
+        }
+        SetDvar("ARCHIPELAGO_SAVE_DATA_ZOMBIE_COUNT", zombies_left + ai_zombies);
+    }
+    else
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_ZOMBIE_COUNT", -1);
+    }
+
+}
+
+function restore_zombie_count()
+{
+    level.archi.restore_zombie_count = GetDvarInt("ARCHIPELAGO_LOAD_DATA_ZOMBIE_COUNT", -1);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_ZOMBIE_COUNT", "");
 }
 
 function save_players(save_player_data)

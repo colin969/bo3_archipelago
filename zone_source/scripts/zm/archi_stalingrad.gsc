@@ -57,6 +57,7 @@ function save_data_round_end()
 function save_state()
 {
     archi_save::save_round_number();
+    archi_save::save_zombie_count();
     archi_save::save_power_on();
     archi_save::save_doors_and_debris();
 
@@ -76,6 +77,7 @@ function save_player_data(xuid)
 function load_state()
 {
     archi_save::wait_restore_ready("zm_stalingrad");
+    archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
@@ -147,7 +149,7 @@ function setup_ee_quest()
 function setup_weapon_quests()
 {
     level thread _flag_to_location_thread("dragon_strike_acquired", level.archi.mapString + " Acquire the Dragonstrikes");
-    level thread _flag_to_location_thread("draconite_available", level.archi.ampString + " Upgrade the Dragonstrikes");
+    level thread _dragonstrike_upgrade(level.archi.ampString + " Upgrade the Dragonstrikes");
     level thread _flag_to_location_thread("dragon_egg_acquired", level.archi.mapString + " Dragon Gauntlets - Acquire the Dragon Egg");
     level thread _flag_to_location_thread("egg_awakened", level.archi.mapString + " Dragon Gauntlets - Warm up the Dragon Egg");
     level thread _flag_to_location_thread("gauntlet_step_2_complete", level.archi.mapString + " Dragon Gauntlets - Challenge 1 - Napalm Zombies");
@@ -171,6 +173,13 @@ function _waittill_to_location_thread(listener, hash, location)
 {
     listener waittill(hash);
 
+    archi_core::send_location(location);
+}
+
+function _dragonstrike_upgrade(location)
+{
+    level flag::wait_till("dragon_stage3_started");
+    level flag::wait_till("dragonstrike_stage_complete");
     archi_core::send_location(location);
 }
 
