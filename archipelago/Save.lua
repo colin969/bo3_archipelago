@@ -217,7 +217,7 @@ end
 
 function restore_player_flag(xuid, playerData, flag)
   if playerData["flags"] and playerData["flags"][flag] then
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_" .. xuid .. "_" .. string.upper(flag), 1)
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag), 1)
   end
 end
 
@@ -332,7 +332,7 @@ function save_flag(mapData, flag)
 end
 
 function save_player_flag(xuid, playerData, flag)
-  local val = Engine.DvarInt(0, "ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_" .. string.upper(flag))
+  local val = Engine.DvarInt(0, "ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag))
   if val ~= 0 then
     playerData["flags"][flag] = 1
   end

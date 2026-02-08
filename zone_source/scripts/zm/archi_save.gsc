@@ -489,7 +489,7 @@ function save_player_flag(flag, xuid)
 // Self is player
 function restore_player_flag(flag, xuid)
 {
-    dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_" + xuid + "_" + ToUpper(flag), 0);
+    dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_" + xuid + "_MAP_" + ToUpper(flag), 0);
     if (dvar_value > 0)
     {
         self flag::set(flag);
