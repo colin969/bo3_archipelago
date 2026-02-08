@@ -210,6 +210,7 @@ function game_start()
         //Collection of Locations that are checked, 
         level.archi.locationQueue = array();
 
+        level.archi.save_checkpoint = false;
         level.archi.save_zombie_count = true;
         level.archi.opened_doors = [];
         level.archi.opened_debris = [];

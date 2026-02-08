@@ -29,7 +29,6 @@
 function save_state_manager()
 {
     level.archi.save_state = &save_state;
-    level thread save_data_round_end();
     level waittill("end_game");
     level thread location_state_tracker();
 

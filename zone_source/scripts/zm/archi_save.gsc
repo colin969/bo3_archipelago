@@ -275,7 +275,20 @@ function restore_player_loadout(xuid)
                 // We're restoring, so remove the starting weapon
                 self zm_weapons::weapon_take(level.start_weapon);
             }
-            weapon = GetWeapon(weapon_name);
+            // Load attachments
+            j = 0;
+            attachments = [];
+            while (true)
+            {
+                attachment = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ATTACHMENT_" + j, "");
+                if (attachment == "")
+                {
+                    break;
+                }
+                attacments[attachments.size] = attachment;
+                j++;
+            }
+            weapon = GetWeapon(weapon_name, attachments);
             self zm_weapons::weapon_give(weapon, 0, 0, 1);
             weapon_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_CLIP", 0);
             weapon_lh_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", 0);
@@ -304,7 +317,14 @@ function restore_player_loadout(xuid)
 function send_save_data(mapName)
 {
     SetDvar("ARCHIPELAGO_SAVE_DATA", mapName);
-    LUINotifyEvent(&"ap_save_data", 0);
+    if (level.archi.save_checkpoint)
+    {
+        LUINotifyEvent(&"ap_save_checkpoint_data", 0);
+    } 
+    else
+    {
+        LUINotifyEvent(&"ap_save_data", 0);
+    }
 }
 
 function save_round_number()
@@ -349,7 +369,7 @@ function save_zombie_count()
         {
             zombies_left = 1;
         }
-        SetDvar("ARCHIPELAGO_SAVE_DATA_ZOMBIE_COUNT", zombies_left + ai_zombies);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_ZOMBIE_COUNT", zombies_left);
     }
     else
     {
@@ -403,19 +423,25 @@ function save_player_loadout(xuid)
 
     loadout = self zm_weapons::player_get_loadout();
     i = 0;
-    foreach ( weapon in loadout.weapons ) 
+    foreach ( weapon_data in loadout.weapons ) 
     {
         // Don't save the hero weapon
-        if (weapon["weapon"].name == hero_weapon.name)
+        if (weapon_data["weapon"].name == hero_weapon.name)
         {
             continue;
         }
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_WEAPON", weapon["weapon"].name);
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_CLIP", weapon["clip"]);
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_STOCK", weapon["stock"]);
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", weapon["lh_clip"]);
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTCLIP", weapon["alt_clip"]);
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTSTOCK", weapon["alt_stock"]);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_WEAPON", weapon_data["weapon"].rootWeapon.name);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_CLIP", weapon_data["clip"]);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_STOCK", weapon_data["stock"]);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", weapon_data["lh_clip"]);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTCLIP", weapon_data["alt_clip"]);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTSTOCK", weapon_data["alt_stock"]);
+        j = 0;
+        foreach ( attachment in weapon_data["weapon"].attachments )
+        {
+            SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ATTACHMENT_" + j, attachment);
+            j++;
+        }
         i++;
     }
 }

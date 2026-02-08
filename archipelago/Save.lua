@@ -312,6 +312,13 @@ function restore_player_loadout(xuid, playerData)
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_STOCK", weapon.stock )
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTCLIP", weapon.alt_clip or 0)
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTSTOCK", weapon.alt_stock or 0)
+      local j = 0
+      if weapon["attachments"] then
+        for _, attachment in ipairs(weapon["attachments"]) do
+          Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ATTACHMENT_" .. j, attachment)
+          j = j + 1
+        end
+      end
       i = i + 1
     end
   end
@@ -406,6 +413,17 @@ function save_player_loadout(xuid, playerData)
     local weaponStock = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_STOCK")
     local weaponAltClip = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTCLIP")
     local weaponAltStock = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTSTOCK")
+    local attachments = {}
+    local j = 0
+    while true do
+      local attachment = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ATTACHMENT_" .. j)
+      if attachment and attachment ~= "" then
+        table.insert(attachments, attachment)
+        j = j + 1
+      else
+        break
+      end
+    end
 
     if not weaponName or weaponName == "" then
       break
@@ -417,6 +435,7 @@ function save_player_loadout(xuid, playerData)
       stock = weaponStock,
       alt_clip = weaponAltClip,
       alt_stock = weaponAltStock,
+      attachments = attachments,
     })
     i = i + 1
   end

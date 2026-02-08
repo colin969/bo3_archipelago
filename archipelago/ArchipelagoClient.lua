@@ -73,10 +73,7 @@ Archi.FromGSC = function (model)
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_CLEAR_DATA")
     if mapName ~= "NONE" then
       if saveData[mapName] then
-        saveData[mapName] = {
-          players = {},
-          flags = {},
-        }
+        saveData[mapName] = nil
         local saveDataStr = json.encode(saveData, { indent = true })
         Archipelago.StoreSaveData(saveDataStr)
     

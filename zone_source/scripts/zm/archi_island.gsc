@@ -82,6 +82,7 @@ function save_player_data(xuid)
 function load_state()
 {
     level flag::init("ap_skullroom_finished");
+    level thread hard_checkpoint_trigger();
     archi_save::wait_restore_ready("zm_island");
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();
@@ -338,6 +339,20 @@ function give_GasmaskPart_Filter()
 function give_GasmaskPart_Strap()
 {
     archi_items::give_piece("gasmask", "part_strap");
+}
+
+function hard_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("elevator_part_gear1_found") && level flag::get("elevator_part_gear2_found") && level flag::get("elevator_part_gear_found"))
+    {
+        // Checkpoint already triggered
+        return;
+    }
+    level flag::wait_till_all(array("elevator_part_gear1_found","elevator_part_gear2_found","elevator_part_gear3_found"));
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
 }
 
 function save_map_state()
