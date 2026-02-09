@@ -286,6 +286,7 @@ function restore_player_loadout(xuid)
                     break;
                 }
                 attacments[attachments.size] = attachment;
+                SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ATTACHMENT_" + j, "");
                 j++;
             }
             weapon = GetWeapon(weapon_name, attachments);
@@ -454,7 +455,7 @@ function _unset_unlock_all()
 
 function save_flag(flag)
 {
-    if (level flag::get(flag))
+    if (level flag::exists(flag) && level flag::get(flag))
     {
         SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_" + ToUpper(flag), 1);
     }
@@ -467,8 +468,18 @@ function save_flag(flag)
 function restore_flag(flag)
 {
     dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_MAP_" + ToUpper(flag), 0);
-    if (dvar_value > 0)
+    if (dvar_value > 0 && level flag::exists(flag))
     {
+        level flag::set(flag);
+    }
+}
+
+function restore_flag_cb(flag, cb)
+{
+    dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_MAP_" + ToUpper(flag), 0);
+    if (dvar_value > 0 && level flag::exists(flag))
+    {
+        [[cb]]();
         level flag::set(flag);
     }
 }

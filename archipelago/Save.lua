@@ -42,6 +42,17 @@ function map_save_zm_zod(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
+  save_flag(mapData, "ap_got_summoning_key")
+  save_flag(mapData, "ritual_boxer_complete")
+  save_flag(mapData, "ritual_magician_complete")
+  save_flag(mapData, "ritual_detective_complete")
+  save_flag(mapData, "ritual_femme_complete")
+  save_flag(mapData, "ritual_pap_complete")
+  save_flag(mapData, "pap_door_open")
+  save_flag(mapData, "keeper_sword_locker")
+  for i = 0, 29 do
+    save_flag(mapData, "power_on" .. i)
+  end
 
   save_player_func = function (xuid, playerData)
     save_player_score(xuid, playerData)
@@ -58,6 +69,17 @@ function map_restore_zm_zod(mapData)
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
+  restore_flag(mapData, "ap_got_summoning_key")
+  restore_flag(mapData, "ritual_boxer_complete")
+  restore_flag(mapData, "ritual_magician_complete")
+  restore_flag(mapData, "ritual_detective_complete")
+  restore_flag(mapData, "ritual_femme_complete")
+  restore_flag(mapData, "ritual_pap_complete")
+  restore_flag(mapData, "pap_door_open")
+  restore_flag(mapData, "keeper_sword_locker")
+  for i = 0, 29 do
+    restore_flag(mapData, "power_on" .. i)
+  end
 
   restore_player_func = function (xuid, playerData)
     restore_player_score(xuid, playerData)
@@ -183,6 +205,23 @@ function map_save_zm_genesis(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
+  save_flag(mapData, "all_power_on")
+  save_flag(mapData, "character_stones_done")
+  save_flag(mapData, "got_audio1")
+  save_flag(mapData, "got_audio2")
+  save_flag(mapData, "got_audio3")
+  save_flag(mapData, "sophia_beam_locked")
+  save_flag(mapData, "book_picked_up")
+  save_flag(mapData, "book_placed")
+  save_flag(mapData, "grand_tour")
+  save_flag(mapData, "toys_collected")
+  save_flag(mapData, "acm_done")
+  save_flag(mapData, "electricity_rq_done");
+  save_flag(mapData, "fire_rq_done");
+  save_flag(mapData, "light_rq_done");
+  save_flag(mapData, "shadow_rq_done");
+
+
 
   save_player_func = function (xuid, playerData)
     save_player_score(xuid, playerData)
@@ -199,6 +238,22 @@ function map_restore_zm_genesis(mapData)
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
+  restore_flag(mapData, "all_power_on")
+  restore_flag(mapData, "character_stones_done")
+  restore_flag(mapData, "got_audio1")
+  restore_flag(mapData, "got_audio2")
+  restore_flag(mapData, "got_audio3")
+  restore_flag(mapData, "sophia_beam_locked")
+  restore_flag(mapData, "book_picked_up")
+  restore_flag(mapData, "book_placed")
+  restore_flag(mapData, "grand_tour")
+  restore_flag(mapData, "toys_collected")
+  restore_flag(mapData, "acm_done")
+  restore_flag(mapData, "electricity_rq_done");
+  restore_flag(mapData, "fire_rq_done");
+  restore_flag(mapData, "light_rq_done");
+  restore_flag(mapData, "shadow_rq_done");
+
 
   restore_player_func = function (xuid, playerData)
     restore_player_score(xuid, playerData)

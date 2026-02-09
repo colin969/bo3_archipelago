@@ -12,6 +12,7 @@
 #using scripts\shared\lui_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\scene_shared;
+#using scripts\zm\_zm_unitrigger;
 
 #using scripts\zm\archi_core;
 #using scripts\zm\archi_items;
@@ -62,6 +63,8 @@ function save_state()
 
     archi_save::save_players(&save_player_data);
 
+    save_map_state();
+
     archi_save::send_save_data("zm_genesis");
 }
 
@@ -82,6 +85,8 @@ function load_state()
     archi_save::restore_doors_and_debris();
 
     archi_save::restore_players(&restore_player_data);
+
+    restore_map_state();
 }
 
 // self is player
@@ -333,5 +338,167 @@ function reset_summoning_key_listener()
             }
         }
         wait(1);
+    }
+}
+
+function save_map_state()
+{
+    archi_save::save_flag("all_power_on");
+    archi_save::save_flag("character_stones_done");
+    archi_save::save_flag("got_audio1");
+    archi_save::save_flag("got_audio2");
+    archi_save::save_flag("got_audio3");
+    archi_save::save_flag("sophia_beam_locked");
+    archi_save::save_flag("book_picked_up");
+    archi_save::save_flag("book_placed");
+    archi_save::save_flag("grand_tour");
+    archi_save::save_flag("toys_collected");
+    archi_save::save_flag("acm_done");
+    archi_save::save_flag("electricity_rq_done");
+    archi_save::save_flag("fire_rq_done");
+    archi_save::save_flag("light_rq_done");
+    archi_save::save_flag("shadow_rq_done");
+}
+
+function restore_map_state()
+{
+    tape_recorders = struct::get_array("audio_reel_place", "targetname");
+    archi_save::restore_flag("shards_done");
+    if (level flag::get("shards_done"))
+    {
+        shards = struct::get_array("shard_piece", "targetname");
+        foreach (shard in shards)
+        {
+            shard delete();
+        }
+    }
+    archi_save::restore_flag("all_power_on");
+    if (level flag::get("all_power_on"))
+    {
+        level flag::set("power_on");
+    }
+    archi_save::restore_flag("character_stones_done");
+    wait(0.1);
+    archi_save::restore_flag("got_audio1");
+    wait(0.1);
+    if (level flag::get("got_audio1"))
+    {
+        foreach (recorder in tape_recorders)
+        {
+            if (recorder.script_int == 1)
+            {
+                recorder notify ("trigger_activated", level.players[0]);
+            }
+        }    
+    }
+    archi_save::restore_flag("acm_done");
+    wait(0.1);
+    archi_save::restore_flag("got_audio2");
+    wait(0.1);
+    if (level flag::get("got_audio2"))
+    {
+        foreach (recorder in tape_recorders)
+        {
+            if (recorder.script_int == 2)
+            {
+                recorder notify ("trigger_activated", level.players[0]);
+            }
+        }
+    }
+    archi_save::restore_flag("got_audio3");
+    wait(0.1);
+    if (level flag::get("got_audio3"))
+    {
+        foreach (recorder in tape_recorders)
+        {
+            if (recorder.script_int == 3)
+            {
+                recorder notify ("trigger_activated", level.players[0]);
+            }
+        }
+    }
+    wait(0.1);
+    // phased_sophia_start should flag auto
+    archi_save::restore_flag("sophia_beam_locked");
+    wait(0.1);
+    archi_save::restore_flag("book_picked_up");
+    wait(0.1);
+    if (level flag::get("book_picked_up"))
+    {
+        // Place book
+        theater_book = struct::get("ee_book_theater", "targetname");
+        theater_book notify("trigger_activated", level.players[0]);
+        wait(1);
+        // Restore collected runes
+        if(!isdefined(level.var_b1b99f8d))
+        {
+            level.var_b1b99f8d = [];
+        }
+        else if(!isarray(level.var_b1b99f8d))
+        {
+            level.var_b1b99f8d = array(level.var_b1b99f8d);
+        }
+        portal_rune_circle = getent("rift_entrance_rune_portal", "targetname");
+        archi_save::restore_flag("electricity_rq_done");
+        if (level flag::get("electricity_rq_done"))
+        {
+            level.var_b1b99f8d[level.var_b1b99f8d.size] = 0;
+            portal_rune_circle HidePart("tag_electricity_off");
+            portal_rune_circle ShowPart("tag_electricity_on");
+            level clientfield::set("gen_rune_electricity", 1);
+            level notify("widget_ui_override");
+        }
+        archi_save::restore_flag("fire_rq_done");
+        if (level flag::get("fire_rq_done"))
+        {
+            level.var_b1b99f8d[level.var_b1b99f8d.size] = 1;
+            portal_rune_circle HidePart("tag_fire_off");
+            portal_rune_circle ShowPart("tag_fire_on");
+            level clientfield::set("gen_rune_fire", 1);
+            level notify("widget_ui_override");
+        }
+        archi_save::restore_flag("light_rq_done");
+        if (level flag::get("light_rq_done"))
+        {
+            level.var_b1b99f8d[level.var_b1b99f8d.size] = 2;
+            portal_rune_circle HidePart("tag_light_off");
+            portal_rune_circle ShowPart("tag_light_on");
+            level clientfield::set("gen_rune_light", 1);
+            level notify("widget_ui_override");
+        }
+        archi_save::restore_flag("shadow_rq_done");
+        if (level flag::get("shadow_rq_done"))
+        {
+            level.var_b1b99f8d[level.var_b1b99f8d.size] = 3;
+            portal_rune_circle HidePart("tag_shadow_off");
+            portal_rune_circle ShowPart("tag_shadow_on");
+            level clientfield::set("gen_rune_shadow", 1);
+            level notify("widget_ui_override");
+        }
+    }
+    archi_save::restore_flag("toys_collected");
+    // If step in progress, teleport to arena to collect key first
+    archi_save::restore_flag_cb("grand_tour", &set_arena_teleport);
+    if (level flag::get("toys_collected"))
+    {
+        level clientfield::set("ee_quest_state", 10);
+
+    }
+}
+
+function set_arena_teleport()
+{
+    if (!level flag::get("toys_collected"))
+    {
+        level.var_62552381 = 1;
+    }
+    else 
+    {
+        wait(0.1);
+        // Already done step, delete key
+        s_loc = struct::get("arena_reward_pickup", "targetname");
+	    zm_unitrigger::unregister_unitrigger(s_loc.unitrigger_stub);
+        ball_visual = level.ball.visuals[0];
+        ball_visual.origin = (10000,10000,10000);
     }
 }
