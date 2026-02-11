@@ -83,7 +83,6 @@ function _do_zombie_count_restore()
         level waittill("zombie_total_set");
         // Restore saved zombie count
         restore_count = level.archi.restore_zombie_count;
-        IPrintLn("Restoring zombie count: " + restore_count);
         level.zombie_count = restore_count;
         if (level.zombie_count < 0)
         {
@@ -91,7 +90,6 @@ function _do_zombie_count_restore()
         }
         // Whack-a-mole to keep the count accurate until next round
         level thread _zombie_restore_watcher(restore_count);
-        IPrintLn("New level.zombie_count: " + level.zombie_count);
         //level flag::set("spawn_zombies");
     }
 }
@@ -158,7 +156,6 @@ function restore_players(restore_player_data)
     {
         xuid = level.players[i] GetXuid();
         level.players[i] [[restore_player_data]]();   
-        IPrintLn("Restored player " + xuid);
     }
 
     // When a new player connects, read in their saved state
@@ -258,7 +255,6 @@ function restore_player_loadout(xuid)
         if (hero_power >= 0)
         {
             WAIT_SERVER_FRAME
-            IPrintLn("Setting power to " + hero_power);
             self GadgetPowerSet(0, hero_power);
         }
     }
@@ -394,7 +390,6 @@ function save_players(save_player_data)
         xuid = e_player GetXuid();
         xuidString += xuid + ";";
         e_player [[save_player_data]](xuid);
-        IPrintLn("Saved player " + xuid);
     }
     SetDvar("ARCHIPELAGO_SAVE_DATA_XUIDS", xuidString);
 }

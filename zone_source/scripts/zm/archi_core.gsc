@@ -41,10 +41,9 @@
 #precache( "eventstring", "ap_clear_data" );
 #precache( "eventstring", "ap_debug_magicbox" );
 #precache( "eventstring", "ap_notification" );
-#precache( "eventstring", "ap_ui_get" );
-#precache( "eventstring", "ap_ui_send" );
 #precache( "eventstring", "ap_init_dll" );
 #precache( "eventstring", "ap_init_state" );
+#precache( "eventstring", "ap_init_goal_cond" );
 
 REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
@@ -105,13 +104,14 @@ function lua_init()
 
 function get_ap_settings()
 {
-    // Wait until the LUA client has set the settings dvars
+    // Wait until the dll client has set the settings dvars
     while (true)
     {
         dvar_value = GetDvarString("ARCHIPELAGO_SETTINGS_READY", "");
         if (dvar_value != "")
         {
             SetDvar("ARCHIPELAGO_SETTINGS_READY", "");
+            LUINotifyEvent(&"ap_init_goal_cond", 0);
             wait(0.1);
             break;
         }       
@@ -669,7 +669,6 @@ function on_player_connect()
     if (self IsHost())
     {
         level flag::wait_till("ap_loaded");
-        IPrintLn("Location checker started");
         self thread location_check_to_lua();
     }
 }
@@ -781,13 +780,13 @@ function item_get_from_lua()
             SetDvar("ARCHIPELAGO_ITEM_GET","NONE");
             
         }
-        wait .2;
+        wait (0.1);
     }
 }
 
 function award_item(item)
 {
-     if (isdefined(level.archi.items[item]))
+    if (isdefined(level.archi.items[item]))
     {
         ap_item = level.archi.items[item];
         ap_item.count += 1;
@@ -806,14 +805,8 @@ function award_item(item)
             self [[ap_item.getFunc]]();
         }
 
-        // if (isdefined(level.archi.items[item].clientField))
-        // {
-        //     //TODO: make this safe, so it checks if the clientfield exists first
-        //     level clientfield::set(level.archi.items[item].clientField, 1);
-        // }
-        //Notif happens a bit too early compared to log messages
-        wait .5;
-        LUINotifyEvent(&"ap_ui_get", 0);
+        // Notification on Hud
+        SetDvar("ARCHIPELAGO_UI_GET_TEXT", item);
     }
 }
 
@@ -833,7 +826,7 @@ function log_from_lua()
             SetDvar("ARCHIPELAGO_LOG_MESSAGE","NONE");
             
         }
-        wait .5;
+        wait (0.2);
     }
 }
 
@@ -850,11 +843,7 @@ function location_check_to_lua()
         {
             location = array::pop(level.archi.locationQueue);
             SetDvar("ARCHIPELAGO_LOCATION_SEND",location);
-            IPrintLn("Sending Location " + location);
             LUINotifyEvent(&"ap_notification", 0);
-
-            //Send notification for Send UI Image
-            LUINotifyEvent(&"ap_ui_send", 0);
         }
         wait .5;
     }
@@ -932,12 +921,10 @@ function setup_spare_change_trackers(total_machines)
 
     level thread track_all_change_collected_thread(total_machines);
     a_triggers = getentarray("audio_bump_trigger", "targetname");
-    // IPrintLn("Found triggers");
     foreach(t_audio_bump in a_triggers)
 	{
 		if(t_audio_bump.script_sound === "zmb_perks_bump_bottle")
 		{
-            // IPrintLn("Added thread to bottle bumper");
 			t_audio_bump thread track_change_collected_thread();
 		}
 	}
@@ -951,7 +938,6 @@ function track_all_change_collected_thread(total_machines)
     while (checked_machines < total_machines)
     {
         level waittill("ap_spare_change");
-        IPrintLn("Spare Change Collected");
         checked_machines += 1;
     }
 
@@ -1197,13 +1183,10 @@ function func_override_wallbuy_prompt(player)
 // self is player
 function check_override_wallbuy_purchase(weapon, weapon_spawn)
 {
-    IPrintLn("PIR");
-    IPrintLn("Checking " + weapon.name);
     if (IS_TRUE(level.archi.wallbuys[weapon.name])) 
     {
         return false;
     }
-    IPrintLn("Nope");
     return true;
 }
 

@@ -173,11 +173,44 @@ function map_save_zm_stalingrad(mapData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
+  save_flag(mapData, "dragonride_crafted");
+  save_flag(mapData, "dragon_strike_quest_complete");
+  save_flag(mapData, "generator_charged");
+  save_flag(mapData, "key_placement");
+  save_flag(mapData, "keys_placed");
+  save_flag(mapData, "scenarios_complete");
+  save_flag(mapData, "dragon_egg_acquired");
+  save_flag(mapData, "egg_awakened");
+  save_flag(mapData, "gauntlet_step_2_complete");
+  save_flag(mapData, "gauntlet_step_3_complete");
+  save_flag(mapData, "gauntlet_step_4_complete");
+  save_flag(mapData, "gauntlet_quest_complete");
+  save_flag(mapData, "dragon_wings_items_aquired");
+  save_flag(mapData, "dragon_platforms_all_used");
+  save_flag(mapData, "wearables_raz_mask_complete");
+  save_flag(mapData, "wearables_raz_arms_complete");
+  save_flag(mapData, "wearables_sentinel_arms_complete");
+  save_flag(mapData, "wearables_sentinel_camera_complete");
+  save_flag(mapData, "drshup_step_1_done");
+  save_flag(mapData, "drshup_bathed_in_flame");
+  save_flag(mapData, "drshup_factory_rune_hit");
+  save_flag(mapData, "drshup_judicial_rune_hit");
+  save_flag(mapData, "drshup_factory_rune_hit");
+  save_flag(mapData, "drshup_rune_step_done");
 
   save_player_func = function (xuid, playerData)
     save_player_score(xuid, playerData)
     save_player_perks(xuid, playerData)
     save_player_loadout(xuid, playerData)
+    save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+    save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+    save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+    save_player_flag(xuid, playerData, "flag_player_completed_challenge_4")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_4")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_5")
   end
 
   save_players(mapData, save_player_func)
@@ -189,11 +222,45 @@ function map_restore_zm_stalingrad(mapData)
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
+  restore_flag(mapData, "dragonride_crafted");
+  restore_flag(mapData, "dragon_strike_quest_complete");
+  restore_flag(mapData, "generator_charged");
+  restore_flag(mapData, "key_placement");
+  restore_flag(mapData, "keys_placed");
+  restore_flag(mapData, "scenarios_complete");
+  restore_flag(mapData, "dragon_egg_acquired");
+  restore_flag(mapData, "egg_awakened");
+  restore_flag(mapData, "gauntlet_step_2_complete");
+  restore_flag(mapData, "gauntlet_step_3_complete");
+  restore_flag(mapData, "gauntlet_step_4_complete");
+  restore_flag(mapData, "gauntlet_quest_complete");
+  restore_flag(mapData, "dragon_wings_items_aquired");
+  restore_flag(mapData, "dragon_platforms_all_used");
+  restore_flag(mapData, "wearables_raz_mask_complete");
+  restore_flag(mapData, "wearables_raz_arms_complete");
+  restore_flag(mapData, "wearables_sentinel_arms_complete");
+  restore_flag(mapData, "wearables_sentinel_camera_complete");
+  restore_flag(mapData, "drshup_step_1_done");
+  restore_flag(mapData, "drshup_bathed_in_flame");
+  restore_flag(mapData, "drshup_factory_rune_hit");
+  restore_flag(mapData, "drshup_judicial_rune_hit");
+  restore_flag(mapData, "drshup_factory_rune_hit");
+  restore_flag(mapData, "drshup_rune_step_done");
+
 
   restore_player_func = function (xuid, playerData)
     restore_player_score(xuid, playerData)
     restore_player_perks(xuid, playerData)
     restore_player_loadout(xuid, playerData)
+    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_4")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_4")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_5")
   end
 
   restore_players(mapData, restore_player_func)
@@ -227,6 +294,12 @@ function map_save_zm_genesis(mapData)
     save_player_score(xuid, playerData)
     save_player_perks(xuid, playerData)
     save_player_loadout(xuid, playerData)
+    save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+    save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+    save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+    save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
   end
 
   save_players(mapData, save_player_func)
@@ -259,6 +332,12 @@ function map_restore_zm_genesis(mapData)
     restore_player_score(xuid, playerData)
     restore_player_perks(xuid, playerData)
     restore_player_loadout(xuid, playerData)
+    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+    restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
   end
 
   restore_players(mapData, restore_player_func)

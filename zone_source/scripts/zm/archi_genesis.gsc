@@ -87,6 +87,9 @@ function load_state()
     archi_save::restore_players(&restore_player_data);
 
     restore_map_state();
+
+    wait(10);
+    level flag::clear("ap_prevent_checkpoints");
 }
 
 // self is player
@@ -198,6 +201,15 @@ function patch_sword_quest()
     // Add pack-a-punch overrides
     level.wallbuy_should_upgrade_weapon_override = &hope_wallbuy_override;
     level.magicbox_should_upgrade_weapon_override = &hope_magicbox_override;
+}
+
+function hard_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    level flag::wait_till("book_runes_in_progress");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
 }
 
 function hope_wallbuy_override()
@@ -334,7 +346,7 @@ function reset_summoning_key_listener()
             }
             else
             {
-                IPrintLn("Cannot reset the summoning key if you haven't unlocked it yet");
+                IPrintLnBold("Cannot reset the summoning key if you haven't unlocked it yet");
             }
         }
         wait(1);
@@ -358,6 +370,10 @@ function save_map_state()
     archi_save::save_flag("fire_rq_done");
     archi_save::save_flag("light_rq_done");
     archi_save::save_flag("shadow_rq_done");
+    foreach (player in level.players)
+    {
+        player _save_map_state_player();
+    }
 }
 
 function restore_map_state()
@@ -482,8 +498,13 @@ function restore_map_state()
     if (level flag::get("toys_collected"))
     {
         level clientfield::set("ee_quest_state", 10);
-
     }
+
+    foreach (player in level.players)
+    {
+        player thread _restore_map_state_player();
+    }
+    callback::on_spawned(player, &_restore_map_state_player);
 }
 
 function set_arena_teleport()
@@ -501,4 +522,30 @@ function set_arena_teleport()
         ball_visual = level.ball.visuals[0];
         ball_visual.origin = (10000,10000,10000);
     }
+}
+
+function _save_map_state_player()
+{
+    xuid = self GetXuid();
+    self archi_save::save_player_flag("flag_player_completed_challenge_1", xuid);
+    self archi_save::save_player_flag("flag_player_completed_challenge_2", xuid);
+    self archi_save::save_player_flag("flag_player_completed_challenge_3", xuid);
+    self archi_save::save_player_flag("flag_player_collected_reward_1", xuid);
+    self archi_save::save_player_flag("flag_player_collected_reward_2", xuid);
+    self archi_save::save_player_flag("flag_player_collected_reward_3", xuid);
+}
+
+// Self is player
+function _restore_map_state_player()
+{
+    level flag::wait_till("flag_init_player_challenges");
+    WAIT_SERVER_FRAME
+    xuid = self GetXuid();
+    self archi_save::restore_player_flag("flag_player_completed_challenge_1", xuid);
+    self archi_save::restore_player_flag("flag_player_completed_challenge_2", xuid);
+    self archi_save::restore_player_flag("flag_player_completed_challenge_3", xuid);
+    wait(0.1);
+    self archi_save::restore_player_flag("flag_player_collected_reward_1", xuid);
+    self archi_save::restore_player_flag("flag_player_collected_reward_2", xuid);
+    self archi_save::restore_player_flag("flag_player_collected_reward_3", xuid);
 }

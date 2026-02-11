@@ -150,14 +150,6 @@ function give_50Points()
     }
 }
 
-function give_Victory()
-{
-    iPrintln("Giving Victory");
-    //if in game, end game
-    level notify("end_game");
-}
-
-
 //The Giant Functions
 
 function give_TheGiantRandomPerk()

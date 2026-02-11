@@ -151,7 +151,6 @@ function _track_music_dead_again()
     while(bears_activated < bears.size)
     {
 		level waittill("ap_castle_dead_again");
-        IPrintLn("Bear Activated");
         bears_activated += 1;
     }
 
@@ -183,7 +182,6 @@ function _track_music_requiem()
     while(gramophones_activated < gramophones.size)
     {
 		level waittill("ap_castle_requiem");
-        IPrintLn("Gramophone Activated");
         gramophones_activated += 1;
     }
 
@@ -368,7 +366,6 @@ function _landing_pad_notify()
     level endon("end_game");
 
     level flag::wait_till(self.script_noteworthy);
-    IPrintLn("Landing Pad Activated");
     level notify("ap_castle_landing_pad_activated");
 }
 
