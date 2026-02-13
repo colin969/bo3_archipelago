@@ -32,9 +32,9 @@ oneTimeItems = {
   ["Gift - InstaKill Powerup"] = true,
   ["Gift - Fire Sale Powerup"] = true,
   ["Gift - Max Ammo Powerup"] = true,
-  ["Gift - Nuke Powerup"] = true,
   ["Gift - Free Perk Powerup"] = true,
   ["Trap - Third Person Mode"] = true,
+  ["Trap - Nuke Powerup"] = true,
 }
 instanceItemState = {}
 connectionItemState = {}

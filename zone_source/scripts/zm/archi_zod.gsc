@@ -27,6 +27,8 @@
 function save_state_manager()
 {
     level.archi.save_state = &save_state;
+    level thread archi_save::save_on_round_change();
+    level thread archi_save::round_checkpoints();
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
@@ -36,21 +38,6 @@ function save_state_manager()
     } else {
         IPrintLn("Host did not end game, clearing data...");
         clear_state();
-    }
-}
-
-function save_data_round_end()
-{
-    level endon("end_game");
-
-    while (true)
-    {
-        level waittill("start_of_round");
-        if (level.round_number != 1)
-        {
-            wait(1);
-            save_state();
-        }
     }
 }
 
@@ -66,6 +53,11 @@ function save_state()
     save_map_state();
 
     archi_save::send_save_data("zm_zod");
+
+    if (level.archi.save_checkpoint == true)
+    {
+        IPrintLnBold("Checkpoint Saved");
+    }
 }
 
 // self is player
@@ -89,6 +81,9 @@ function load_state()
     restore_map_state();
 
     archi_save::restore_players(&restore_player_data);
+
+    wait(10);
+    level flag::clear("ap_prevent_checkpoints");
 }
 
 // self is player

@@ -45,6 +45,49 @@ function wait_restore_ready(mapName)
     }
 }
 
+function save_on_round_change()
+{
+    level endon("end_game");
+
+    while (true)
+    {
+        level waittill("start_of_round");
+        if (level.round_number != 1 && isdefined(level.archi.save_state) && !(level flag::get("ap_prevent_checkpoints"))) // Make sure load is finished too
+        {
+            wait(1);
+            level.archi.save_zombie_count = 0;
+            [[level.archi.save_state]]();
+            level.archi.save_zombie_count = 1;
+        }
+    }
+}
+
+function round_checkpoints()
+{
+    level endon("end_game");
+
+    if (level.archi.difficulty_round_checkpoints == 0)
+    {
+        return;
+    }
+
+    while (true)
+    {
+        level waittill("start_of_round");
+        IPrintLn("Round: " + level.round_number);
+        IPrintLn("Checkpoint trigger: " + level.archi.difficulty_round_checkpoints);
+        if (level.round_number != 1 && level.round_number % level.archi.difficulty_round_checkpoints == 0 && !(level flag::get("ap_prevent_checkpoints")))
+        {
+            wait(6); // Allow round change to occur first?
+            level.archi.save_zombie_count = 0;
+            level.archi.save_checkpoint = true;
+            [[level.archi.save_state]]();
+            level.archi.save_checkpoint = false;
+            level.archi.save_zombie_couunt = 1;
+        }
+    }
+}
+
 function restore_round_number()
 {
     round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_ROUND", 0);

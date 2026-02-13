@@ -29,7 +29,22 @@
 
 function save_state_manager()
 {
+    if (level.archi.difficulty_ee_checkpoints >= 3)
+    {
+        level thread easy_checkpoint_trigger();
+    }
+    if (level.archi.difficulty_ee_checkpoints >= 2)
+    {
+        level thread medium_checkpoint_trigger();
+    }
+    if (level.archi.difficulty_ee_checkpoints >= 1)
+    {
+        level thread hard_checkpoint_trigger();
+    }
+
     level.archi.save_state = &save_state;
+    level thread archi_save::save_on_round_change();
+    level thread archi_save::round_checkpoints();
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
@@ -39,21 +54,6 @@ function save_state_manager()
     } else {
         IPrintLn("Host did not end game, clearing data...");
         clear_state();
-    }
-}
-
-function save_data_round_end()
-{
-    level endon("end_game");
-
-    while (true)
-    {
-        level waittill("start_of_round");
-        if (level.round_number != 1)
-        {
-            wait(1);
-            save_state();
-        }
     }
 }
 
@@ -69,6 +69,11 @@ function save_state()
     save_map_state();
 
     archi_save::send_save_data("zm_island");
+
+    if (level.archi.save_checkpoint == true)
+    {
+        IPrintLnBold("Checkpoint Saved");
+    }
 }
 
 // self is player
@@ -92,27 +97,6 @@ function load_state()
     archi_save::restore_players(&restore_player_data);
 
     restore_map_state();
-
-    if (level flag::get("ap_skullroom_finished"))
-    {
-        foreach (skull in level.var_a576e0b9)
-        {
-            skull.mdl_skull_p.origin = skull.mdl_skull_s.origin;
-            skull.mdl_skull_p.angles = skull.mdl_skull_s.angles;
-            skull.mdl_skull_p show();
-            skull.mdl_skull_s ghost();
-            skull.str_state = "completed";
-        }
-        level thread exploder::exploder("fxexp_503");
-        wait(0.25);
-        foreach (skull in level.var_a576e0b9)
-        {
-            skull.mdl_skull_p clientfield::set("skullquest_finish_done_glow_fx", 1);
-        }
-        level.var_d19220ee = 1; // Skull room unlocked
-        skullroom = struct::get("s_ut_skullroom", "targetname");
-        level thread play_skull_room();
-    }
 
     // Prevent checkpointing during initial load, just in case
     wait(10);
@@ -341,15 +325,42 @@ function give_GasmaskPart_Strap()
     archi_items::give_piece("gasmask", "part_strap");
 }
 
+// All elevator gears obtained
 function hard_checkpoint_trigger()
 {
     level flag::wait_till_clear("ap_prevent_checkpoints");
     if (level flag::get("elevator_part_gear1_found") && level flag::get("elevator_part_gear2_found") && level flag::get("elevator_part_gear_found"))
     {
-        // Checkpoint already triggered
         return;
     }
-    level flag::wait_till_all(array("elevator_part_gear1_found","elevator_part_gear2_found","elevator_part_gear3_found"));
+    level flag::wait_till_all(array("elevator_part_gear1_found", "elevator_part_gear2_found", "elevator_part_gear3_found"));
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// KT-4 or Skull Gun obtained
+function medium_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("ww_obtained") || level flag::get("a_player_got_skullgun"))
+    {
+        return;
+    }
+    level flag::wait_till_any(array("ww_obtained", "a_player_got_skullgun"));
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+function easy_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("pap_open"))
+    {
+        return;
+    }
+    level flag::wait_till("pap_open");
     level.archi.save_checkpoint = true;
     save_state();
     level.archi.save_checkpoint = false;
@@ -383,6 +394,7 @@ function save_map_state()
     {
         player _save_map_state_player();
     }
+    archi_save::save_flag("ap_skullroom_finished");
 }
 
 // Self is player
@@ -487,7 +499,29 @@ function restore_map_state()
     {
         player thread _restore_map_state_player();
     }
-    callback::on_spawned(player, &_restore_map_state_player);
+    callback::on_spawned(&_restore_map_state_player);
+
+    archi_save::restore_flag("ap_skullroom_finished");
+    if (level flag::get("ap_skullroom_finished"))
+    {
+        foreach (skull in level.var_a576e0b9)
+        {
+            skull.mdl_skull_p.origin = skull.mdl_skull_s.origin;
+            skull.mdl_skull_p.angles = skull.mdl_skull_s.angles;
+            skull.mdl_skull_p show();
+            skull.mdl_skull_s ghost();
+            skull.str_state = "completed";
+        }
+        level thread exploder::exploder("fxexp_503");
+        wait(0.25);
+        foreach (skull in level.var_a576e0b9)
+        {
+            skull.mdl_skull_p clientfield::set("skullquest_finish_done_glow_fx", 1);
+        }
+        level.var_d19220ee = 1; // Skull room unlocked
+        skullroom = struct::get("s_ut_skullroom", "targetname");
+        level thread play_skull_room();
+    }
 }
 
 // Self is player
@@ -506,12 +540,16 @@ function _restore_map_state_player()
 
 function restore_power_on()
 {
-    level flag::set("power_on1");
-    level flag::set("power_on2");
-    WAIT_SERVER_FRAME
-    level flag::set("power_on3");
-    WAIT_SERVER_FRAME
-    level flag::set("power_on4");
-    WAIT_SERVER_FRAME
-    level flag::set("power_on");
+    power_on = GetDvarInt("ARCHIPELAGO_LOAD_DATA_POWER_ON", 0);
+    if (power_on > 0)
+    {
+        level flag::set("power_on1");
+        level flag::set("power_on2");
+        WAIT_SERVER_FRAME
+        level flag::set("power_on3");
+        WAIT_SERVER_FRAME
+        level flag::set("power_on4");
+        WAIT_SERVER_FRAME
+        level flag::set("power_on");
+    }
 }

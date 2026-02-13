@@ -28,6 +28,8 @@
 function save_state_manager()
 {
     level.archi.save_state = &save_state;
+    level thread archi_save::save_on_round_change();
+    level thread archi_save::round_checkpoints();
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
@@ -37,21 +39,6 @@ function save_state_manager()
     } else {
         IPrintLn("Host did not end game, clearing data...");
         clear_state();
-    }
-}
-
-function save_data_round_end()
-{
-    level endon("end_game");
-
-    while (true)
-    {
-        level waittill("start_of_round");
-        if (level.round_number != 1)
-        {
-            wait(1);
-            save_state();
-        }
     }
 }
 
@@ -67,6 +54,11 @@ function save_state()
     save_map_state();
 
     archi_save::send_save_data("zm_stalingrad");
+
+    if (level.archi.save_checkpoint == true)
+    {
+        IPrintLnBold("Checkpoint Saved");
+    }
 }
 
 // self is player
@@ -88,6 +80,9 @@ function load_state()
     archi_save::restore_players(&restore_player_data);
 
     restore_map_state();
+
+    wait(10);
+    level flag::clear("ap_prevent_checkpoints");
 }
 
 // self is player
@@ -154,7 +149,7 @@ function setup_ee_quest()
 function setup_weapon_quests()
 {
     level thread _flag_to_location_thread("dragon_strike_acquired", level.archi.mapString + " Acquire the Dragonstrikes");
-    level thread _dragonstrike_upgrade(level.archi.ampString + " Upgrade the Dragonstrikes");
+    level thread _flag_to_location_thread("draconite_available", level.archi.mapString + " Upgrade the Dragonstrikes");
     level thread _flag_to_location_thread("dragon_egg_acquired", level.archi.mapString + " Dragon Gauntlets - Acquire the Dragon Egg");
     level thread _flag_to_location_thread("egg_awakened", level.archi.mapString + " Dragon Gauntlets - Warm up the Dragon Egg");
     level thread _flag_to_location_thread("gauntlet_step_2_complete", level.archi.mapString + " Dragon Gauntlets - Challenge 1 - Napalm Zombies");
@@ -178,13 +173,6 @@ function _waittill_to_location_thread(listener, hash, location)
 {
     listener waittill(hash);
 
-    archi_core::send_location(location);
-}
-
-function _dragonstrike_upgrade(location)
-{
-    level flag::wait_till("dragon_stage3_started");
-    level flag::wait_till("dragonstrike_stage_complete");
     archi_core::send_location(location);
 }
 
@@ -488,7 +476,7 @@ function restore_map_state()
     {
         player thread _restore_map_state_player();
     }
-    callback::on_spawned(player, &_restore_map_state_player);
+    callback::on_spawned(&_restore_map_state_player);
 }
 
 function _delete_egg_trigger()
@@ -530,4 +518,45 @@ function _restore_map_state_player()
     self archi_save::restore_player_flag("flag_player_collected_reward_3", xuid);
     self archi_save::restore_player_flag("flag_player_collected_reward_4", xuid);
     self archi_save::restore_player_flag("flag_player_collected_reward_5", xuid);  
+}
+
+// Before boss arena
+function hard_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("scenarios_complete"))
+    {
+        return;
+    }
+    level flag::wait_till("scenarios_complete");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// After audio reel 2 (9 holes inside apothicon)
+function medium_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("gauntlet_quest_complete"))
+    {
+        return;
+    }
+    level flag::wait_till("gauntlet_quest_complete");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+function easy_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("dragonride_crafted"))
+    {
+        return;
+    }
+    level flag::wait_till("dragonride_crafted");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
 }

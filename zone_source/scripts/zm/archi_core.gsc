@@ -49,6 +49,7 @@ REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
 function __init__()
 {
+    clientfield::register("world", "ap_mystery_box_changes", 1, 28, "int");
     level flag::init("ap_prevent_checkpoints", 1);
 
     // Some maps make requirements harder if not in a ranked match
@@ -170,9 +171,12 @@ function on_archi_connect_settings()
     level.archi.randomized_shield_parts = GetDvarInt("ARCHIPELAGO_RANDOMIZED_SHIELD_PARTS", 0);
     level.archi.map_specific_wallbuys = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_WALLBUYS", 0);
     level.archi.map_specific_machines = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_MACHINES", 0);
-    level.archi.randomized_box_wonder_weapons = GetDvarInt("ARCHIPELAGO_BOX_WONDER_WEAPON_ITEM_LOCK", 0);
+    level.archi.mystery_box_special_items = GetDvarInt("ARCHIPELAGO_MYSTERY_BOX_SPECIAL", 0);
+    level.archi.mystery_box_regular_items = GetDvarInt("ARCHIPELAGO_MYSTERY_BOX_REGULAR", 0);
     level.archi.difficulty_gorod_egg_cooldown = GetDvarInt("ARCHIPELAGO_DIFFICULTY_GOROD_EGG_COOLDOWN", 0);
     level.archi.difficulty_gorod_dragon_wings = GetDvarInt("ARCHIPELAGO_DIFFICULTY_GOROD_DRAGON_WINGS", 0);
+    level.archi.difficulty_ee_checkpoints = GetDvarInt("ARCHIPELAGO_DIFFICULTY_EE_CHECKPOINTS", 0);
+    level.archi.difficulty_round_checkpoints = GetDvarInt("ARCHIPELAGO_DIFFICULTY_ROUND_CHECKPOINTS", 0);
 
     init_string_mappings();
 }
@@ -207,6 +211,8 @@ function game_start()
         // Hold server-wide Archipelago Information
         level.archi = SpawnStruct();
 
+        on_archi_connect_settings();
+
         //Collection of Locations that are checked, 
         level.archi.locationQueue = array();
 
@@ -215,6 +221,9 @@ function game_start()
         level.archi.opened_doors = [];
         level.archi.opened_debris = [];
         level.archi.excluded_craftable_items = [];
+        level.archi.ap_box_keys = [];
+        level.archi.ap_box_states = [];
+        level.archi.ap_weapon_bits = [];
 
         zombie_doors = GetEntArray("zombie_door", "targetname");
         for (i = 0; i < zombie_doors.size; i++)
@@ -254,19 +263,22 @@ function game_start()
         archi_items::RegisterUniversalItem("50000 Points",&archi_items::give_50000Points);
 
         // Traps
-        archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson,undefined);
-        
+        archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson);
+        archi_items::RegisterUniversalItem("Trap - Grenade Party",&archi_items::give_Trap_GrenadeParty);
+        archi_items::RegisterUniversalItem("Trap - Nuke Powerup",&archi_items::give_Trap_NukePowerup);
+        archi_items::RegisterUniversalItem("Trap - Knuckle Crack",&archi_items::give_Trap_KnuckleCrack);
+
         // Gifts
-        archi_items::RegisterUniversalItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup,undefined);
-        archi_items::RegisterUniversalItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup,undefined);
-        archi_items::RegisterUniversalItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup,undefined);
-        archi_items::RegisterUniversalItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup,undefined);
-        archi_items::RegisterUniversalItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup,undefined);
-        archi_items::RegisterUniversalItem("Gift - Nuke Powerup",&archi_items::give_Gift_NukePowerup,undefined);
-        archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup,undefined);
+        archi_items::RegisterUniversalItem("Gift - Unlimited Sprint (2 Minutes)",&archi_items::give_Gift_UnlimitedSprint);
+        archi_items::RegisterUniversalItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup);
+        archi_items::RegisterUniversalItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup);
+        archi_items::RegisterUniversalItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup);
+        archi_items::RegisterUniversalItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup);
+        archi_items::RegisterUniversalItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup);
+        archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup);
 
         // Progressives
-        archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit,undefined);
+        archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit);
 
         archi_items::RegisterPap();
 
@@ -294,9 +306,15 @@ function game_start()
             level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
             level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_0");
-            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb");
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+            if (level.archi.mystery_box_special_items == 1) {
+                archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_0",0);
+                archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",2);
+            }
+
+            if (level.archi.mystery_box_regular_items == 1) {
+                universal_box_registration();
+            }
 
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -354,8 +372,14 @@ function game_start()
             level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
             level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+            if (level.archi.mystery_box_special_items == 1) {
+                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+            }
+
+            if (level.archi.mystery_box_regular_items == 1) {
+                universal_box_registration();
+            }
 
             level thread archi_castle::setup_locations();
 
@@ -370,12 +394,18 @@ function game_start()
             archi_items::RegisterItem("Ragnarok DG-4 Part - Guards",&archi_castle::give_RagnarokPart_Guards,undefined,false);
             archi_items::RegisterItem("Ragnarok DG-4 Part - Handle",&archi_castle::give_RagnarokPart_Handle,undefined,false);
 
+            // Machines
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
             archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
             archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
             archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
             archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+
+            // Wunderfizz
+            archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+            archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
         
             archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
             archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
@@ -411,9 +441,15 @@ function game_start()
             level.archi.craftable_piece_to_location["gasmask_part_filter"] = level.archi.mapString + " Gasmask Part Pickup - Filter";
             level.archi.craftable_piece_to_location["gasmask_part_strap"] = level.archi.mapString + " Gasmask Part Pickup - Strap";
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
-            archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000");
+            if (level.archi.mystery_box_special_items == 1) {
+                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+                archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000",2);
+            }
+
+            if (level.archi.mystery_box_regular_items == 1) {
+                universal_box_registration();
+            }
 
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -430,6 +466,7 @@ function game_start()
             archi_items::RegisterItem("Gasmask Part - Filter",&archi_island::give_GasmaskPart_Filter,undefined,true);
             archi_items::RegisterItem("Gasmask Part - Strap",&archi_island::give_GasmaskPart_Strap,undefined,true);
 
+            // Machines
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
             archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
@@ -481,9 +518,15 @@ function game_start()
             level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
             level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3");
+            if (level.archi.mystery_box_special_items == 1) {
+                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3",2);
+            }
+
+            if (level.archi.mystery_box_regular_items == 1) {
+                universal_box_registration();
+            }
 
             archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -493,12 +536,18 @@ function game_start()
             archi_items::RegisterItem("Dragonride Network Circuit - Codes",&archi_stalingrad::give_DragonridePart_Codes,undefined,false);
             archi_items::RegisterItem("Dragonride Network Circuit - Map",&archi_stalingrad::give_DragonridePart_Map,undefined,false);
 
+            // Machines
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
             archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
             archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
             archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
             archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+
+            // Wunderfizz
+            archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+            archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
 
             archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
             archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
@@ -543,12 +592,19 @@ function game_start()
             archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
             archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
 
-            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_genesis_0");
-            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb");
-            archi_items::RegisterBoxWeapon("Mystery Box - Ragnarok DG-4s","hero_gravityspikes_melee");
-            archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun");
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+            if (level.archi.mystery_box_special_items == 1) {
+                archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_genesis_0",0);
+                archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
+                archi_items::RegisterBoxWeapon("Mystery Box - Ragnarok DG-4s","hero_gravityspikes_melee",2);
+                archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun",3);
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",4);
+            }
 
+            if (level.archi.mystery_box_regular_items == 1) {
+                universal_box_registration();
+            }
+
+            // Machines
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
             archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
@@ -556,6 +612,10 @@ function game_start()
             archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
             archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
             archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+
+            // Wunderfizz
+            archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+            archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
 
             archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
             archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
@@ -583,10 +643,16 @@ function game_start()
             // 7 possible machines, 6 will spawn
             level thread setup_spare_change_trackers(6);
             
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
-            archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun");
-            
+            if (level.archi.mystery_box_special_items == 1) {
+                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
+                archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun");
+            }
+
+            if (level.archi.mystery_box_regular_items == 1) {
+                universal_box_registration();
+            }
+
             // Register Possible Global Items - Item name, callback, clientfield
             archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
             archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
@@ -609,15 +675,16 @@ function game_start()
 
         }
 
+        patch_wunderfizz();
+
         level thread setup_boarding_window();
         level thread setup_can_player_purchase_perk();
 
         //Server-wide thread to get items from the Lua/LUI
         level thread item_get_from_lua();
-
-        //Apply settings with Existing DVARS, should be set in menu during initial Room Connection
-        level thread on_archi_connect_settings();
     }
+
+    update_box_clientfield();
 
     //Setup default map changes
     default_map_changes();
@@ -798,6 +865,9 @@ function award_item(item)
                 weapon = GetWeapon(weapon_name);
                 z_weapon = level.zombie_weapons[weapon];
                 z_weapon.is_in_box = 1;
+                // Update clientfield state
+                level.archi.ap_box_states[weapon_name] = 0;
+                update_box_clientfield();
             }
         }
         else
@@ -1191,18 +1261,119 @@ function check_override_wallbuy_purchase(weapon, weapon_spawn)
 }
 
 
+// Good for most official maps
 function universal_box_registration()
 {
     // 2 best of each, ideally
-    archi_items::RegisterBoxWeapon("Mystery Box - Drakon","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - Locus","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - Man-o-War","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - HVK-30","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - ICR-1","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - Haymaker 12","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - 205 Brecci","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - Dingo","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - 48 Dredge","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - VMP","drakon");
-    archi_items::RegisterBoxWeapon("Mystery Box - Vesper","drakon");
+    archi_items::RegisterBoxWeapon("Mystery Box - FFAR","ar_famas",15);
+    archi_items::RegisterBoxWeapon("Mystery Box - Drakon","sniper_fastsemi",16);
+    archi_items::RegisterBoxWeapon("Mystery Box - Locus","sniper_fastbolt",17);
+    archi_items::RegisterBoxWeapon("Mystery Box - Man-o-War","ar_damage",18);
+    archi_items::RegisterBoxWeapon("Mystery Box - HVK-30","ar_cqb",19);
+    archi_items::RegisterBoxWeapon("Mystery Box - ICR-1","ar_accurate",20);
+    archi_items::RegisterBoxWeapon("Mystery Box - Haymaker 12","shotgun_fullauto",21);
+    archi_items::RegisterBoxWeapon("Mystery Box - 205 Brecci","shotgun_semiauto",22);
+    archi_items::RegisterBoxWeapon("Mystery Box - Dingo","lmg_cqb",23);
+    archi_items::RegisterBoxWeapon("Mystery Box - 48 Dredge","lmg_heavy",24);
+    // RPK is on about half the maps
+    archi_items::RegisterBoxWeapon("Mystery Box - RPK","lmg_rpk",25);
+    archi_items::RegisterBoxWeapon("Mystery Box - VMP","smg_versatile",26);
+    archi_items::RegisterBoxWeapon("Mystery Box - Vesper","smg_fastfire",27);
+}
+
+function update_box_clientfield()
+{
+    removed_items = 0;
+    foreach (weapon_name in GetArrayKeys(level.archi.ap_weapon_bits))
+    {
+        if (level.archi.ap_box_states[weapon_name] == 1)
+        {
+            removed_items |= (1 << level.archi.ap_weapon_bits[weapon_name]);
+        }
+    }
+    IPrintLn(removed_items);
+    level clientfield::set("ap_mystery_box_changes", removed_items);
+}
+
+function patch_wunderfizz()
+{
+    // Store original perk list
+    level.archi.original_random_perk_list = [];
+    foreach (perk in level._random_perk_machine_perk_list)
+    {
+        level.archi.original_random_perk_list[level.archi.original_random_perk_list.size] = perk;
+    }
+
+    // Add monitor to update wunderfizz when contents changes
+    level thread update_wunderfizz();
+    WAIT_SERVER_FRAME
+    level notify("ap_update_wunderfizz");
+
+    level.archi.original_custom_random_perk_weights = level.custom_random_perk_weights;
+    level.custom_random_perk_weights = &custom_random_perk_weights;
+}
+
+function custom_random_perk_weights()
+{
+    if(isdefined(level.archi.original_custom_random_perk_weights))
+    {
+        // Get keys from map's own weighting func
+        keys = [[level.archi.original_custom_random_perk_weights]]();
+        filtered_perks = [];
+        // Remove perks we haven't unlocked yet
+        foreach (key in keys) {
+            perk = level._random_perk_machine_perk_list[key];
+            IPrintLn("Comparing " + perk);
+            if (isdefined(level.archi.active_perk_machines[perk]))
+            {
+                if (level.archi.active_perk_machines[perk])
+                {
+                    filtered_perks[filtered_perks.size] = perk;
+                }
+            }
+            else
+            {
+                filtered_perks[filtered_perks.size] = perk;
+            }
+        }
+        level._random_perk_machine_perk_list = filtered_perks;
+        return GetArrayKeys(filtered_perks);
+    }
+    else
+    {
+        // No level weighting, just randomly return
+        temp_array = array::randomize(level._random_perk_machine_perk_list);
+        keys = GetArrayKeys(temp_array);
+        return keys;
+
+    }
+}
+
+// Updating list is important for trigger to go invisible for player with all available perks
+function update_wunderfizz()
+{
+    level endon("end_game");
+
+    while(true)
+    {
+        level waittill("ap_update_wunderfizz");
+
+        level._random_perk_machine_perk_list = [];
+        foreach (perk in level.archi.original_random_perk_list)
+        {
+            if (isdefined(level.archi.active_perk_machines[perk]))
+            {
+                if (level.archi.active_perk_machines[perk])
+                {
+                    level._random_perk_machine_perk_list[level._random_perk_machine_perk_list.size] = perk;
+                    IPrintLn("Added " + perk);
+                }
+            }
+            else
+            {
+                level._random_perk_machine_perk_list[level._random_perk_machine_perk_list.size] = perk;
+            }
+        }
+    }
+    
 }

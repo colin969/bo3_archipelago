@@ -26,7 +26,22 @@
 
 function save_state_manager()
 {
+    if (level.archi.difficulty_ee_checkpoints >= 3)
+    {
+        level thread easy_checkpoint_trigger();
+    }
+    if (level.archi.difficulty_ee_checkpoints >= 2)
+    {
+        level thread medium_checkpoint_trigger();
+    }
+    if (level.archi.difficulty_ee_checkpoints >= 1)
+    {
+        level thread hard_checkpoint_trigger();
+    }
+
     level.archi.save_state = &save_state;
+    level thread archi_save::save_on_round_change();
+    level thread archi_save::round_checkpoints();
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
@@ -36,21 +51,6 @@ function save_state_manager()
     } else {
         IPrintLn("Host did not end game, clearing data...");
         clear_state();
-    }
-}
-
-function save_data_round_end()
-{
-    level endon("end_game");
-
-    while (true)
-    {
-        level waittill("start_of_round");
-        if (level.round_number != 1)
-        {
-            wait(1);
-            save_state();
-        }
     }
 }
 
@@ -66,6 +66,11 @@ function save_state()
     save_map_state();
 
     archi_save::send_save_data("zm_genesis");
+
+    if (level.archi.save_checkpoint == true)
+    {
+        IPrintLnBold("Checkpoint Saved");
+    }
 }
 
 // self is player
@@ -203,10 +208,42 @@ function patch_sword_quest()
     level.magicbox_should_upgrade_weapon_override = &hope_magicbox_override;
 }
 
+// Before boss arena
 function hard_checkpoint_trigger()
 {
     level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("book_runes_in_progress"))
+    {
+        return;
+    }
     level flag::wait_till("book_runes_in_progress");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// After audio reel 2 (9 holes inside apothicon)
+function medium_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("got_audio2"))
+    {
+        return;
+    }
+    level flag::wait_till("got_audio2");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+function easy_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("all_power_on"))
+    {
+        return;
+    }
+    level flag::wait_till("all_power_on");
     level.archi.save_checkpoint = true;
     save_state();
     level.archi.save_checkpoint = false;
@@ -504,7 +541,7 @@ function restore_map_state()
     {
         player thread _restore_map_state_player();
     }
-    callback::on_spawned(player, &_restore_map_state_player);
+    callback::on_spawned(&_restore_map_state_player);
 }
 
 function set_arena_teleport()

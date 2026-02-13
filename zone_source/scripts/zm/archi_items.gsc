@@ -3,10 +3,15 @@
 #using scripts\shared\flag_shared;
 #using scripts\shared\array_shared;
 #using scripts\shared\util_shared;
+#using scripts\shared\math_shared;
+#using scripts\shared\laststand_shared;
 #using scripts\zm\_zm_audio;
+#using scripts\zm\_zm_equipment;
+#using scripts\zm\_zm_laststand;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_utility;
 #using scripts\zm\_zm_powerups;
+#using scripts\zm\_zm_weapons;
 #using scripts\zm\craftables\_zm_craftables;
 
 #insert scripts\shared\shared.gsh;
@@ -16,7 +21,7 @@
 
 #namespace archi_items;
 
-function RegisterBoxWeapon(itemName, weapon_name)
+function RegisterBoxWeapon(itemName, weapon_name, weapon_bit)
 {
     item = SpawnStruct();
     item.type = "box_weapon";
@@ -31,6 +36,8 @@ function RegisterBoxWeapon(itemName, weapon_name)
         if (isdefined(z_weapon))
         {
             z_weapon.is_in_box = 0;
+            level.archi.ap_weapon_bits[weapon_name] = weapon_bit;
+            level.archi.ap_box_states[weapon_name] = 1;
         }
         else
         {
@@ -110,6 +117,7 @@ function RegisterPerk(itemName, getFunc, specialtyName) {
     globalItem.clientfield = "ap_item_" + specialtyName;
     globalItem.count = 0;
 
+    level.archi.active_perk_machines[specialtyName] = false;
     level.archi.items[item.name] = item;
     level.archi.items[globalItem.name] = globalItem;
 }
@@ -179,6 +187,7 @@ function give_Perk(perk)
         s_custom_perk = level._custom_perks[perk];
         level.archi.active_perk_machines[perk] = true;
         level notify(s_custom_perk.alias + "_on");
+        level notify("ap_update_wunderfizz");
     }
 
 }
@@ -215,6 +224,10 @@ function give_DeadShot()
 function give_WidowsWine()
 {
     give_Perk(PERK_WIDOWS_WINE);
+}
+function give_ElectricCherry()
+{
+    give_Perk(PERK_ELECTRIC_CHERRY);
 }
 
 // Weapons
@@ -526,6 +539,46 @@ function give_Trap_ThirdPerson()
     level thread _give_Trap_ThirdPerson();
 }
 
+function give_Trap_NukePowerup()
+{
+    _drop_powerup("nuke");
+}
+
+function give_Trap_GrenadeParty()
+{
+    foreach (player in level.players)
+    {
+        if (IsAlive(player))
+        {
+            player thread _grenadeparty();
+        }
+    }
+}
+
+function _grenadeparty()
+{
+    self endon("disconnect");
+
+    spawn_point = (self.origin[0], self.origin[1], self.origin[2] + 1);
+    g_weapon = GetWeapon("frag_grenade");
+    g_count = RandomIntRange(3, 5);
+    for (i = 0; i < g_count; i++)
+    {
+        wait(0.3);
+        x_dir = RandomIntRange(30, 60);
+        y_dir = RandomIntRange(30, 60);
+        if (math::cointoss())
+        {
+            x_dir = -x_dir;
+        }
+        if (math::cointoss())
+        {
+            y_dir = -y_dir;
+        }
+        self MagicGrenadeType(g_weapon, spawn_point, (x_dir, y_dir, 300), 5);
+    }
+}
+
 function _give_Trap_ThirdPerson()
 {
     SetDvar("cg_thirdPerson", 1);
@@ -533,7 +586,84 @@ function _give_Trap_ThirdPerson()
     SetDvar("cg_thirdPerson", 0);
 }
 
+function give_Trap_KnuckleCrack()
+{
+    foreach (player in level.players)
+    {
+        if (IsAlive(player))
+        {
+            p_weapon = player GetCurrentWeapon();
+            if (p_weapon.name != "zombie_knuckle_crack")
+            {
+                player thread _Trap_KnuckleCrack();
+            }
+        }
+    }
+}
+
+// See _zm_pack_a_punch.gsc
+function _Trap_KnuckleCrack()
+{
+    self endon(#"disconnect");
+	self knuckle_crack_start();
+	self util::waittill_any("fake_death", "death", "player_downed", "weapon_change_complete");
+	self knuckle_crack_end();
+}
+
+function knuckle_crack_start()
+{
+    self zm_utility::increment_is_drinking();
+	self zm_utility::disable_player_move_states(1);
+	primaries = self getweaponslistprimaries();
+	original_weapon = self getcurrentweapon();
+	weapon = getweapon("zombie_knuckle_crack");
+	if(original_weapon != level.weaponnone && !zm_utility::is_placeable_mine(original_weapon) && !zm_equipment::is_equipment(original_weapon))
+	{
+		self notify(#"zmb_lost_knife");
+		// self takeweapon(original_weapon);
+	}
+	else
+	{
+		return;
+	}
+	self giveweapon(weapon);
+	self switchtoweapon(weapon);
+    self DisableWeaponCycling();
+}
+
+function knuckle_crack_end()
+{
+    self zm_utility::enable_player_move_states();
+	weapon = getweapon("zombie_knuckle_crack");
+    self EnableWeaponCycling();
+	if(self laststand::player_is_in_laststand() || (isdefined(self.intermission) && self.intermission))
+	{
+		self takeweapon(weapon);
+		return;
+	}
+	self zm_utility::decrement_is_drinking();
+	self takeweapon(weapon);
+	primaries = self getweaponslistprimaries();
+	if(self.is_drinking > 0)
+	{
+		return;
+	}
+	self zm_weapons::switch_back_primary_weapon();
+}
+
 // Gifts
+
+function give_Gift_UnlimitedSprint()
+{
+    level thread _Gift_UnlimitedSprint();
+}
+
+function _Gift_UnlimitedSprint()
+{
+    SetDvar("player_sprintUnlimited", 1);
+    wait(120);
+    SetDvar("player_sprintUnlimited", 0);
+}
 
 function give_Gift_CarpenterPowerup()
 {
@@ -547,7 +677,7 @@ function give_Gift_DoublePointsPowerup()
 
 function give_Gift_InstaKillPowerup()
 {
-    //_drop_powerup("insta_kill");
+    _drop_powerup("insta_kill");
 }
 
 function give_Gift_FireSalePowerup()
@@ -563,11 +693,6 @@ function give_Gift_FreePerkPowerup()
 function give_Gift_MaxAmmoPowerup()
 {
     _drop_powerup("full_ammo");
-}
-
-function give_Gift_NukePowerup()
-{
-    _drop_powerup("nuke");
 }
 
 function _drop_powerup(powerup)

@@ -29,6 +29,8 @@
 function save_state_manager()
 {
     level.archi.save_state = &save_state;
+    level thread archi_save::save_on_round_change();
+    level thread archi_save::round_checkpoints();
     level waittill("end_game");
     level thread location_state_tracker();
 
@@ -39,23 +41,6 @@ function save_state_manager()
     } else {
         IPrintLn("Host did not end game, clearing data...");
         clear_state();
-    }
-}
-
-function save_data_round_end()
-{
-    level endon("end_game");
-
-    while (true)
-    {
-        level waittill("start_of_round");
-        if (level.round_number != 1)
-        {
-            wait(1);
-            level.archi.save_zombie_count = false;
-            save_state();
-            level.archi.save_zombie_count = true;
-        }
     }
 }
 
@@ -70,7 +55,14 @@ function save_state()
 
     archi_save::save_players(&save_player_data);
 
+    save_map_state();
+
     archi_save::send_save_data("zm_castle");
+
+    if (level.archi.save_checkpoint == true)
+    {
+        IPrintLnBold("Checkpoint Saved");
+    }
 }
 
 // self is player
@@ -98,6 +90,11 @@ function load_state()
     level thread restore_boss_ready();
 
     archi_save::restore_players(&restore_player_data);
+
+    restore_map_state();
+
+    wait(10);
+    level flag::clear("ap_prevent_checkpoints");
 }
 
 // self is player
@@ -222,7 +219,7 @@ function setup_locations()
 // Clientfields: quest_state_<bow>_<num> for ui progress
 function setup_weapon_ee_rune_prison()
 {
-    level thread _flag_to_location_thread("rune_prison_obelisk", level.archi.mapString + " Rune Prison - Take the Arrow");
+    level thread _flag_to_location_thread("rune_prison_obelisk", level.archi.mapString + " Rune Prison - Take Broken Arrow");
     level thread _flag_to_location_thread("rune_prison_magma_ball", level.archi.mapString + " Rune Prison - Shoot the Orb");
     level thread _rune_prison_runic_circles();
     level thread _flag_to_location_thread("rune_prison_golf", level.archi.mapString + " Rune Prison - Magma Ball Golf");
@@ -428,10 +425,20 @@ function restore_dragonheads()
     if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_DRAGONHEADS"))
     {
         level.archi.zm_castle_dragonheads = 1;
-        foreach (soul_catcher in level.soul_catchers)
+        for(i = 0; i < level.soul_catchers.size; i++)
         {
+            level clientfield::set(level.soul_catchers[i].script_parameters, 6);
+            if (level.soul_catchers[i].script_label == "dragonhead_1")
+            {
+                m_collision = getent("uc_dragoncollision", "targetname");
+                m_collision delete();
+            }
+            else if(level.soul_catchers[i].script_label == "dragonhead_2")
+            {
+                m_collision = getent("lc_dragoncollision", "targetname");
+                m_collision delete();
+            }
             // Force eaten count to 8
-            // Animations won't work but quest will progress
             soul_catcher.var_98730ffa = 8;
             wait(0.2);
         }
@@ -488,4 +495,72 @@ function give_piece(craftableName, pieceName)
 {
     level.archi.craftable_parts[craftableName + "_" + pieceName] = true;
     zm_craftables::player_get_craftable_piece(craftableName, pieceName);
+}
+
+function save_map_state()
+{
+    archi_save::save_flag("death_ray_trap_used");
+    archi_save::save_flag("ee_fuse_held_by_team");
+    archi_save::save_flag("ee_fuse_placed");
+    archi_save::save_flag("ee_safe_open");
+    archi_save::save_flag("demon_gate_upgraded");
+    archi_save::save_flag("elemental_storm_upgraded");
+    archi_save::save_flag("rune_prison_upgraded");
+    archi_save::save_flag("wolf_howl_upgraded");
+    archi_save::save_flag("ee_start_done");
+    archi_save::save_flag("ee_golden_key");
+    archi_save::save_flag("mpd_canister_replacement");
+    archi_save::save_flag("channeling_stone_replacement");
+    archi_save::save_flag("start_channeling_stone_step");
+    archi_save::save_flag("boss_fight_ready");
+}
+
+function restore_map_state()
+{
+    archi_save::restore_flag("death_ray_trap_used");
+    archi_save::restore_flag("ee_fuse_held_by_team");
+    archi_save::restore_flag("ee_fuse_placed");
+    if (level flag::get("ee_fuse_placed"))
+    {
+        fuse_box = getent("fuse_box", "targetname");
+        fuse_box showpart("j_chip01");
+		fuse_box showpart("j_chip02");
+    }
+    archi_save::restore_flag("ee_safe_open");
+    archi_save::restore_flag("demon_gate_upgraded");
+    archi_save::restore_flag("elemental_storm_upgraded");
+    archi_save::restore_flag("rune_prison_upgraded");
+    archi_save::restore_flag("wolf_howl_upgraded");
+    archi_save::restore_flag("ee_start_done");
+    archi_save::restore_flag("ee_golden_key");
+    archi_save::restore_flag("mpd_canister_replacement");
+    archi_save::restore_flag("channeling_stone_replacement");
+    archi_save::restore_flag("start_channeling_stone_step");
+    // Complete simons says sequence to trigger rocket scene
+    if (level flag::get("start_channeling_stone_step"))
+    {
+        simon_terminals = struct::get_array("golden_key_slot");
+        for (i = 0; i < 2; i++)
+        {
+            level.var_cf5a713 = simon_terminals[i];
+            level flag::set("simon_terminal_activated");
+            WAIT_SERVER_FRAME
+            level.var_e3162591 = 1; // Mark success
+            level flag::set("end_simon");
+            wait(0.5);
+        }
+    }
+    archi_save::restore_flag("boss_fight_ready");
+    if (level flag::get("boss_fight_ready"))
+    {
+        // Uncover MPD
+        pyramids = getentarray("pyramid", "targetname");
+        foreach(pyramid in pyramids)
+        {
+            new_origin = (pyramid.origin[0], pyramid.origin[1], pyramid.origin[2] - 96);
+            pyramid notsolid();
+            pyramid connectpaths();
+            pyramid moveto(new_origin, 3);
+        }
+    }
 }
