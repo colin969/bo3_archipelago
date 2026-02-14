@@ -87,7 +87,6 @@ function save_player_data(xuid)
 function load_state()
 {
     level flag::init("ap_skullroom_finished");
-    level thread hard_checkpoint_trigger();
     archi_save::wait_restore_ready("zm_island");
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();

@@ -21,7 +21,7 @@
 
 #namespace archi_items;
 
-function RegisterBoxWeapon(itemName, weapon_name, weapon_bit)
+function RegisterBoxWeapon(itemName, weapon_name, weapon_bit, universal)
 {
     item = SpawnStruct();
     item.type = "box_weapon";
@@ -47,6 +47,16 @@ function RegisterBoxWeapon(itemName, weapon_name, weapon_bit)
     else
     {
         IPrintLn("Weapon not found: " + weapon_name);
+    }
+
+    if (isdefined(universal))
+    {
+        globalItem = SpawnStruct();
+        globalItem.type = "box_weapon";
+        globalItem.name = itemName;
+        globalItem.weapon_name = weapon_name;
+        globalItem.count = 0;
+        level.archi.items[globalItem.name] = globalItem;
     }
 
     level.archi.items[item.name] = item;

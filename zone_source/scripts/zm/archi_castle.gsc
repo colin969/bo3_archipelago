@@ -2,6 +2,7 @@
 #using scripts\shared\flag_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\array_shared;
+#using scripts\shared\exploder_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\player_shared;
 #using scripts\shared\callbacks_shared;
@@ -28,6 +29,19 @@
 
 function save_state_manager()
 {
+    if (level.archi.difficulty_ee_checkpoints >= 3)
+    {
+        level thread easy_checkpoint_trigger();
+    }
+    if (level.archi.difficulty_ee_checkpoints >= 2)
+    {
+        level thread medium_checkpoint_trigger();
+    }
+    if (level.archi.difficulty_ee_checkpoints >= 1)
+    {
+        level thread hard_checkpoint_trigger();
+    }
+
     level.archi.save_state = &save_state;
     level thread archi_save::save_on_round_change();
     level thread archi_save::round_checkpoints();
@@ -50,7 +64,6 @@ function save_state()
     archi_save::save_zombie_count();
     archi_save::save_power_on();
     archi_save::save_doors_and_debris();
-    save_dragonheads();
     save_landingpads();
 
     archi_save::save_players(&save_player_data);
@@ -73,11 +86,52 @@ function save_player_data(xuid)
     self archi_save::save_player_loadout(xuid);
 }
 
+// Boss fight ready
+function hard_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("boss_fight_ready"))
+    {
+        return;
+    }
+    level flag::wait_till("boss_fight_ready");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// Safe opened
+function medium_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("ee_safe_open"))
+    {
+        return;
+    }
+    level flag::wait_till("ee_safe_open");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// Dragonheads fed
+function easy_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("soul_catchers_charged"))
+    {
+        return;
+    }
+    level flag::wait_till("soul_catchers_charged");
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+
 function load_state()
 {
-    level.archi.zm_castle_dragonheads = 0;
     level.archi.zm_castle_landingpads = 0;
-    level.archi.zm_castle_boss_ready = 0;
     archi_save::wait_restore_ready("zm_castle");
     // Disable rocket pad death plane
     level flag::set("castle_teleporter_used");
@@ -85,9 +139,7 @@ function load_state()
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
-    level thread restore_dragonheads();
     restore_landingpads();
-    level thread restore_boss_ready();
 
     archi_save::restore_players(&restore_player_data);
 
@@ -374,11 +426,6 @@ function location_state_tracker()
     {
         level waittill("ap_location_found", loc_str);
 
-        if (loc_str === level.archi.mapString + AP_LOCATION_DRAGONHEADS)
-        {
-            level.archi.zm_castle_dragonheads = 1;
-            continue;
-        }
         if (loc_str === level.archi.mapString + AP_LOCATION_LANDINGPADS)
         {
             level.archi.zm_castle_landingpads = 1;
@@ -387,27 +434,11 @@ function location_state_tracker()
     }
 } 
 
-function save_dragonheads()
-{
-    if (IS_TRUE(level.archi.zm_castle_dragonheads))
-    {
-        SetDvar("ARCHIPELAGO_SAVE_DATA_CASTLE_DRAGONHEADS", 1);
-    }
-}
-
 function save_landingpads()
 {
     if (IS_TRUE(level.archi.zm_castle_landingpads))
     {
         SetDvar("ARCHIPELAGO_SAVE_DATA_CASTLE_LANDINGPADS", 1);
-    }
-}
-
-function save_boss_ready()
-{
-    if (IS_TRUE(level.archi.zm_castle_boss_ready))
-    {
-        SetDvar("ARCHIPELAGO_SAVE_DATA_CASTLE_BOSS_READY", 1);
     }
 }
 
@@ -420,31 +451,6 @@ function save_flag_exists(dvar_name)
     return false;
 }
 
-function restore_dragonheads()
-{
-    if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_DRAGONHEADS"))
-    {
-        level.archi.zm_castle_dragonheads = 1;
-        for(i = 0; i < level.soul_catchers.size; i++)
-        {
-            level clientfield::set(level.soul_catchers[i].script_parameters, 6);
-            if (level.soul_catchers[i].script_label == "dragonhead_1")
-            {
-                m_collision = getent("uc_dragoncollision", "targetname");
-                m_collision delete();
-            }
-            else if(level.soul_catchers[i].script_label == "dragonhead_2")
-            {
-                m_collision = getent("lc_dragoncollision", "targetname");
-                m_collision delete();
-            }
-            // Force eaten count to 8
-            soul_catcher.var_98730ffa = 8;
-            wait(0.2);
-        }
-    }
-}
-
 function restore_landingpads()
 {
     if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_LANDINGPADS"))
@@ -455,24 +461,6 @@ function restore_landingpads()
         {
            level flag::set(landing_pad.script_noteworthy);
         }
-    }
-}
-
-function restore_boss_ready()
-{
-    if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_BOSS_READY"))
-    {
-        level.archi.zm_castle_boss_ready = 1;
-        pyramids = getentarray("pyramid", "targetname");
-        foreach(pyramid in pyramids)
-        {
-            new_origin = (pyramid.origin[0], pyramid.origin[1], pyramid.origin[2] - 96);
-            pyramid notsolid();
-            pyramid connectpaths();
-            pyramid moveto(new_origin, 3);
-        }
-        level flag::set("boss_fight_ready");
-        level flag::set("mpd_canister_replacement");
     }
 }
 
@@ -499,10 +487,12 @@ function give_piece(craftableName, pieceName)
 
 function save_map_state()
 {
+    archi_save::save_flag("soul_catchers_charged");
     archi_save::save_flag("death_ray_trap_used");
-    archi_save::save_flag("ee_fuse_held_by_team");
     archi_save::save_flag("ee_fuse_placed");
     archi_save::save_flag("ee_safe_open");
+    archi_save::save_flag("tesla_connector_launch_platform");
+    archi_save::save_flag("tesla_connector_lower_tower");
     archi_save::save_flag("demon_gate_upgraded");
     archi_save::save_flag("elemental_storm_upgraded");
     archi_save::save_flag("rune_prison_upgraded");
@@ -517,8 +507,35 @@ function save_map_state()
 
 function restore_map_state()
 {
+    archi_save::restore_flag("soul_catchers_charged");
+    if (level flag::get("soul_catchers_charged"))
+    {
+        for(i = 0; i < level.soul_catchers.size; i++)
+        {
+            // Force eaten count to 8
+            level.soul_catchers[i].var_98730ffa = 8;
+            wait(0.2);
+            // Crumble head
+            level clientfield::set(level.soul_catchers[i].script_parameters, 6);
+        }
+    }
     archi_save::restore_flag("death_ray_trap_used");
-    archi_save::restore_flag("ee_fuse_held_by_team");
+    archi_save::restore_flag("ee_safe_open");
+    wait(0.1);
+    archi_save::restore_flag("tesla_connector_launch_platform");
+    if (level flag::get("tesla_connector_launch_platform"))
+    {
+        tower = struct::get("tc_launch_platform");
+	    util::spawn_model("p7_zm_ctl_deathray_base_part", tower.origin, tower.angles);
+	    exploder::exploder("fxexp_721");
+    }
+    archi_save::restore_flag("tesla_connector_lower_tower");
+    if (level flag::get("tesla_connector_lower_tower"))
+    {
+        tower = struct::get("tc_lower_tower");
+	    util::spawn_model("p7_zm_ctl_deathray_base_part", tower.origin, tower.angles);
+	    exploder::exploder("fxexp_711");
+    }
     archi_save::restore_flag("ee_fuse_placed");
     if (level flag::get("ee_fuse_placed"))
     {
@@ -526,30 +543,17 @@ function restore_map_state()
         fuse_box showpart("j_chip01");
 		fuse_box showpart("j_chip02");
     }
-    archi_save::restore_flag("ee_safe_open");
+    wait(0.1);
     archi_save::restore_flag("demon_gate_upgraded");
     archi_save::restore_flag("elemental_storm_upgraded");
     archi_save::restore_flag("rune_prison_upgraded");
     archi_save::restore_flag("wolf_howl_upgraded");
     archi_save::restore_flag("ee_start_done");
     archi_save::restore_flag("ee_golden_key");
+    wait(0.1);
     archi_save::restore_flag("mpd_canister_replacement");
     archi_save::restore_flag("channeling_stone_replacement");
     archi_save::restore_flag("start_channeling_stone_step");
-    // Complete simons says sequence to trigger rocket scene
-    if (level flag::get("start_channeling_stone_step"))
-    {
-        simon_terminals = struct::get_array("golden_key_slot");
-        for (i = 0; i < 2; i++)
-        {
-            level.var_cf5a713 = simon_terminals[i];
-            level flag::set("simon_terminal_activated");
-            WAIT_SERVER_FRAME
-            level.var_e3162591 = 1; // Mark success
-            level flag::set("end_simon");
-            wait(0.5);
-        }
-    }
     archi_save::restore_flag("boss_fight_ready");
     if (level flag::get("boss_fight_ready"))
     {
@@ -562,5 +566,27 @@ function restore_map_state()
             pyramid connectpaths();
             pyramid moveto(new_origin, 3);
         }
+    }
+    // Complete simons says sequence to trigger rocket scene
+    if (level flag::get("start_channeling_stone_step"))
+    {
+        wait(1);
+        simon_terminals = struct::get_array("golden_key_slot");
+        for (i = 0; i < 2; i++)
+        {
+            level.var_cf5a713 = simon_terminals[i];
+            level flag::set("simon_terminal_activated");
+            WAIT_SERVER_FRAME
+            level notify("hash_706f7f9a"); // Skip intro
+            WAIT_SERVER_FRAME
+            level.var_521b0bd1 = 9; // Number of successful presses
+            level flag::set("simon_press_check"); // Success press
+            WAIT_SERVER_FRAME
+            level notify("hash_b7f06cd9"); // Press release (3 seconds later)
+            wait(0.5);
+        }
+        wait(1);
+        button = struct::get("death_ray_button");
+        button notify("trigger_activated");
     }
 }

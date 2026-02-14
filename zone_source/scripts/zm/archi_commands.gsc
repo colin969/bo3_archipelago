@@ -41,6 +41,7 @@ function init_commands()
     level thread _basic_trigger("ap_set_flag", &_set_flag);
     level thread _basic_trigger("ap_set_player_flag", &_set_player_flag);
     level thread _basic_trigger("ap_testkit", &_give_testkit);
+    level thread _basic_trigger("ap_debug_dragonheads", &_dragonhead_debug);
   }
 }
 
@@ -361,5 +362,16 @@ function _give_testkit(val)
     player zm_utility::give_player_all_perks();
     player zm_score::add_to_player_score(100000);
     SetDvar("player_SprintUnlimited", 1);
+  }
+}
+
+function _dragonhead_debug(val)
+{
+  if (val != "")
+  { 
+    foreach (dh in level.soul_catchers)
+    {
+      IPrintLn("Soul Catcher Fill: " + dh.var_98730ffa);
+    }  
   }
 }

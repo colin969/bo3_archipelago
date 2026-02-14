@@ -29,17 +29,20 @@ function __init__()
             level._ap_weapon_bits["idgun_0"] = 0;
             level._ap_weapon_bits["octobomb"] = 1;
             level._ap_weapon_bits["ray_gun"] = 2;
+            add_universal_box_bits();
             break;
         case "zm_castle":
             level._ap_weapons_table = "gamedata/weapons/zm/zm_castle_weapons.csv";
             level._ap_weapon_bits["cymbal_monkey"] = 0;
             level._ap_weapon_bits["ray_gun"] = 1;
+            add_universal_box_bits();
             break;
         case "zm_island":
             level._ap_weapons_table = "gamedata/weapons/zm/zm_island_weapons.csv";
             level._ap_weapon_bits["cymbal_monkey"] = 0;
             level._ap_weapon_bits["ray_gun"] = 1;
             level._ap_weapon_bits["hero_mirg2000"] = 2;
+            add_universal_box_bits();
             break;
         case "zm_stalingrad":
             level._ap_weapons_table = "gamedata/weapons/zm/zm_stalingrad_weapons.csv";
@@ -55,6 +58,14 @@ function __init__()
             level._ap_weapon_bits["hero_gravityspikes_melee"] = 2;
             level._ap_weapon_bits["thundergun"] = 3;
             level._ap_weapon_bits["ray_gun"] = 4;
+            add_universal_box_bits();
+            break;
+        case "zm_factory":
+            level._ap_weapons_table = "gamedata/weapons/zm/zm_factory_weapons.csv";
+            level._ap_weapon_bits["cymbal_monkey"] = 0;
+            level._ap_weapon_bits["ray_gun"] = 1;
+            level._ap_weapon_bits["tesla_gun"] = 2;
+            add_universal_box_bits();
             break;
     }
 
@@ -91,7 +102,6 @@ function __init__()
 
 function update_mystery_box( localclientnum, oldval, newval, bnewent, binitialsnap, fieldname, bwastimejump )
 {
-    IPrintLnBold("Updating Box");
     if (level._ap_weapon_data.size > 0)
     {
         // Reset box and add back weapons we know are in there

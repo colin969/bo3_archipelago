@@ -644,9 +644,9 @@ function game_start()
             level thread setup_spare_change_trackers(6);
             
             if (level.archi.mystery_box_special_items == 1) {
-                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey");
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun");
-                archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun");
+                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+                archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun",2);
             }
 
             if (level.archi.mystery_box_regular_items == 1) {
@@ -1291,7 +1291,6 @@ function update_box_clientfield()
             removed_items |= (1 << level.archi.ap_weapon_bits[weapon_name]);
         }
     }
-    IPrintLn(removed_items);
     level clientfield::set("ap_mystery_box_changes", removed_items);
 }
 
