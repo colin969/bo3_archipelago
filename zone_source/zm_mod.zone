@@ -19,6 +19,7 @@ scriptparsetree,scripts/zm/archi_zod.gsc
 scriptparsetree,scripts/zm/archi_island.gsc
 scriptparsetree,scripts/zm/archi_stalingrad.gsc
 scriptparsetree,scripts/zm/archi_genesis.gsc
+scriptparsetree,scripts/zm/archi_factory.gsc
 scriptparsetree,scripts/zm/archi_items.gsc
 scriptparsetree,scripts/zm/archi_save.gsc
 
@@ -56,6 +57,7 @@ rawfile,archipelago/JsonUtils/Sax.lua
 rawfile,archipelago/Json.lua
 rawfile,archipelago/Utils.lua
 rawfile,archipelago/Save.lua
+rawfile,archipelago/AttachmentRando.lua
 rawfile,archipelago/SettingsFile.lua
 rawfile,archipelago/Locations.lua
 

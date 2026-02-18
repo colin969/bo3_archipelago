@@ -24,6 +24,47 @@
 
 #insert scripts\zm\archi_core.gsh;
 
+// Setup
+
+function setup_map_saving()
+{
+    if (isdefined(level.archi.save_state_manager))
+    {
+        level thread [[level.archi.save_state_manager]]();
+    }
+
+    if (isdefined(level.archi.load_state_manager))
+    {
+        level thread [[level.archi.load_state_manager]]();
+    }
+    else
+    {
+        // Just so we don't break flow elsewhere
+        wait(10);
+        level flag::clear("ap_prevent_checkpoints");
+    }
+
+    level thread save_player_stats_monitor_endgame();
+    level thread save_player_stats_monitor();
+    restore_universal();
+}
+
+function save_player_stats_monitor_endgame()
+{
+    level waittill("end_game");
+
+    save_universal();
+}
+
+function save_player_stats_monitor()
+{
+    while (true)
+    {
+        level waittill("start_of_round");
+        save_universal();
+    }
+}
+
 // Common functions for save states, use them in individual map support
 
 // Wait for the restore to be ready
@@ -40,9 +81,78 @@ function wait_restore_ready(mapName)
         dvar_value = GetDvarString("ARCHIPELAGO_LOAD_DATA", "");
         if (dvar_value == "NONE")
         {
+            level flag::set("ap_loaded_save_data");
             break;
         }
     }
+}
+
+function restore_universal()
+{
+    level flag::wait_till("initial_blackscreen_passed");
+
+    SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERAL", "true");
+    LUINotifyEvent(&"ap_load_data_universal", 0);
+
+    while(true)
+    {
+        WAIT_SERVER_FRAME
+        dvar_value = GetDvarString("ARCHIPELAGO_LOAD_DATA", "");
+        if (dvar_value == "NONE")
+        {
+            foreach (player in level.players)
+            {
+                player restore_universal_player();
+            }
+            callback::on_connect(&restore_universal_player);
+            break;
+        }
+    }
+}
+
+function save_universal()
+{
+    xuidString = "";
+    foreach (player in level.players)
+    {
+        xuid = player GetXuid();
+        xuidString += xuid + ";";
+        player save_universal_player(xuid);
+    }
+    SetDvar("ARCHIPELAGO_SAVE_DATA_XUIDS", xuidString);
+
+    LUINotifyEvent(&"ap_save_data_universal", 0);
+}
+
+function save_universal_player(xuid)
+{
+    self save_stats(xuid);
+}
+
+function restore_universal_player()
+{
+    xuid = self GetXuid();
+
+    if (archi_save::can_restore_universal_player(xuid))
+    {
+        self archi_save::restore_stats(xuid);
+    }
+}
+
+function restore_stats(xuid)
+{
+    self.kills += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" + xuid, 0);
+    self.headshots += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" + xuid, 0);
+    self.revives += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" + xuid, 0);
+    self.downs += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" + xuid, 0);
+}
+
+function save_stats(xuid)
+{
+    SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" + xuid, self.kills);
+    SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" + xuid, self.headshots);
+    SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" + xuid, self.revives);
+    SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" + xuid, self.downs);
 }
 
 function save_on_round_change()
@@ -74,8 +184,6 @@ function round_checkpoints()
     while (true)
     {
         level waittill("start_of_round");
-        IPrintLn("Round: " + level.round_number);
-        IPrintLn("Checkpoint trigger: " + level.archi.difficulty_round_checkpoints);
         if (level.round_number != 1 && level.round_number % level.archi.difficulty_round_checkpoints == 0 && !(level flag::get("ap_prevent_checkpoints")))
         {
             wait(6); // Allow round change to occur first?
@@ -90,6 +198,41 @@ function round_checkpoints()
 
 function restore_round_number()
 {
+    dog_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_DOG_ROUND", 0);
+    if (dog_round_number > 0)
+    {
+        level.next_dog_round = dog_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_DOG_ROUND", "");
+    }
+
+    wasp_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_WASP_ROUND", 0);
+    if (wasp_round_number > 0)
+    {
+        level.next_wasp_round = wasp_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_WASP_ROUND", "");
+    }
+    
+    mechz_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_MECHZ_ROUND", 0);
+    if (mechz_round_number > 0)
+    {
+        level.next_mechz_round = mechz_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_MECHZ_ROUND", "");
+    }
+    
+    monkey_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_MONKEY_ROUND", 0);
+    if (monkey_round_number > 0)
+    {
+        level.next_monkey_round = monkey_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_MONKEY_ROUND", "");
+    }
+
+    astro_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_ASTRO_ROUND", 0);
+    if (astro_round_number > 0)
+    {
+        level.next_astro_round = astro_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_ASTRO_ROUND", "");
+    }
+
     round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_ROUND", 0);
     if (round_number > 1) {
         if (isdefined(level.archi.restore_zombie_count) && level.archi.restore_zombie_count > 0)
@@ -116,55 +259,6 @@ function _fix_max_func()
 {
     wait(0.1);
     level.max_zombie_func = level.archi.orig_max_fn;
-}
-
-function _do_zombie_count_restore()
-{
-    if (isdefined(level.archi.restore_zombie_count) && level.archi.restore_zombie_count > 0)
-    {
-        //level flag::clear("spawn_zombies");
-        level waittill("zombie_total_set");
-        // Restore saved zombie count
-        restore_count = level.archi.restore_zombie_count;
-        level.zombie_count = restore_count;
-        if (level.zombie_count < 0)
-        {
-            level.zombie_count = 0;
-        }
-        // Whack-a-mole to keep the count accurate until next round
-        level thread _zombie_restore_watcher(restore_count);
-        //level flag::set("spawn_zombies");
-    }
-}
-
-function _zombie_restore_watcher(restore_count)
-{
-    level endon("end_of_round");
-
-    made_safe = 0;
-    while(true)
-    {
-        if (level.zombie_count < 0)
-        {
-            // Something is manually spawning, exit to avoid breaking it
-            break;
-        }
-        // Try and keep the same zombies alive
-        zombies = array::get_all_closest(level.players[0].origin, GetAITeamArray(level.zombie_team));
-        foreach (zombie in zombies)
-        {
-            if (made_safe < restore_count && !isdefined(zombie.ap_keep_alive))
-            {
-                zombie.ap_keep_alive = 1;
-                made_safe++;
-            }
-            if (!isdefined(zombie.ap_keep_alive))
-            {
-                zombie kill();
-            }
-        }
-        wait(0.5);
-    }
 }
 
 function restore_power_on()
@@ -259,6 +353,16 @@ function can_restore_player(xuid)
     return false;
 }
 
+function can_restore_universal_player(xuid)
+{
+    can_restore = GetDvarString("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" + xuid, "");
+    if (can_restore != "") {
+        return true;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" + xuid, "");
+    }
+    return false;
+}
+
 // self is player
 function restore_player_score(xuid)
 {
@@ -277,8 +381,8 @@ function restore_player_perks(xuid)
     while (true) {
         perk = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_PERK_" + xuid + "_" + i, "");
         if (perk != "") {
-            SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_PERK_" + xuid, "");
-            self zm_perks::give_perk(perk);
+            SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_PERK_" + xuid + "_" + i, "");
+            self zm_perks::give_perk(perk, false);
         } else {
             break;
         }
@@ -290,11 +394,13 @@ function restore_player_loadout(xuid)
 {
     // Restore Hero Weapon
     hero_weapon_name = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON", "");
+    SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON", "");
     if (hero_weapon_name != "")
     {  
         weapon = GetWeapon(hero_weapon_name);
         self zm_weapons::weapon_give(weapon, 0, 0, 1, 0);
         hero_power = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON_POWER" , -1);
+        SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON_POWER" , "");
         if (hero_power >= 0)
         {
             WAIT_SERVER_FRAME
@@ -314,21 +420,7 @@ function restore_player_loadout(xuid)
                 // We're restoring, so remove the starting weapon
                 self zm_weapons::weapon_take(level.start_weapon);
             }
-            // Load attachments
-            j = 0;
-            attachments = [];
-            while (true)
-            {
-                attachment = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ATTACHMENT_" + j, "");
-                if (attachment == "")
-                {
-                    break;
-                }
-                attacments[attachments.size] = attachment;
-                SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ATTACHMENT_" + j, "");
-                j++;
-            }
-            weapon = GetWeapon(weapon_name, attachments);
+            weapon = GetWeapon(weapon_name);
             self zm_weapons::weapon_give(weapon, 0, 0, 1);
             weapon_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_CLIP", 0);
             weapon_lh_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", 0);
@@ -370,6 +462,26 @@ function send_save_data(mapName)
 function save_round_number()
 {
     SetDvar("ARCHIPELAGO_SAVE_DATA_ROUND", level.round_number);
+    if (isdefined(level.next_dog_round))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_DOG_ROUND", level.next_dog_round);
+    }
+    if (isdefined(level.next_wasp_round))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_WASP_ROUND", level.next_wasp_round);
+    }
+    if (isdefined(level.next_mechz_round))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_MECHZ_ROUND", level.next_mechz_round);
+    }
+    if (isdefined(level.next_monkey_round))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_MONKEY_ROUND", level.next_monkey_round);
+    }
+    if (isdefined(level.next_astro_round))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_ASTRO_ROUND", level.next_astro_round);
+    }
 }
 
 function save_power_on()
@@ -475,12 +587,6 @@ function save_player_loadout(xuid)
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", weapon_data["lh_clip"]);
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTCLIP", weapon_data["alt_clip"]);
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ALTSTOCK", weapon_data["alt_stock"]);
-        j = 0;
-        foreach ( attachment in weapon_data["weapon"].attachments )
-        {
-            SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" + xuid + "_" + i + "_ATTACHMENT_" + j, attachment);
-            j++;
-        }
         i++;
     }
 }
@@ -506,6 +612,7 @@ function save_flag(flag)
 function restore_flag(flag)
 {
     dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_MAP_" + ToUpper(flag), 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_MAP_" + ToUpper(flag), "");
     if (dvar_value > 0 && level flag::exists(flag))
     {
         level flag::set(flag);
@@ -515,6 +622,7 @@ function restore_flag(flag)
 function restore_flag_cb(flag, cb)
 {
     dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_MAP_" + ToUpper(flag), 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_MAP_" + ToUpper(flag), "");
     if (dvar_value > 0 && level flag::exists(flag))
     {
         [[cb]]();
@@ -539,6 +647,7 @@ function save_player_flag(flag, xuid)
 function restore_player_flag(flag, xuid)
 {
     dvar_value = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_" + xuid + "_MAP_" + ToUpper(flag), 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_" + xuid + "_MAP_" + ToUpper(flag), "");
     if (dvar_value > 0)
     {
         self flag::set(flag);

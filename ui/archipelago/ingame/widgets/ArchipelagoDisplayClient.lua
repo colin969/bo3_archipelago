@@ -10,7 +10,7 @@ CoD.ArchipelagoDisplayClient.new = function (menu, controller)
     local TitleText = LUI.UIText.new(menu, controller)
     local version = Engine.DvarString( nil, "MOD_VERSION" ) 
     TitleText:setLeftRight(false, false,-20,20 )
-    TitleText:setTopBottom(false, false, -110, -90)
+    TitleText:setTopBottom(false, false, -120, -100)
     TitleText:setText("(Client) Archipelago Mod v" .. version)
     self:addElement(TitleText)
     self.TitleText = TitleText

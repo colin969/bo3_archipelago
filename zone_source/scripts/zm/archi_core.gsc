@@ -3,6 +3,7 @@
 #using scripts\shared\system_shared;
 #using scripts\shared\array_shared;
 #using scripts\shared\util_shared;
+#using scripts\shared\laststand_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\hud_shared;
 #using scripts\shared\hud_message_shared;
@@ -15,6 +16,7 @@
 #using scripts\zm\_zm_pack_a_punch;
 #using scripts\zm\_zm_pack_a_punch_util;
 #using scripts\zm\_zm_perks;
+#using scripts\zm\_zm_weapons;
 #using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_items;
@@ -24,6 +26,8 @@
 #using scripts\zm\archi_stalingrad;
 #using scripts\zm\archi_genesis;
 #using scripts\zm\archi_zod;
+#using scripts\zm\archi_factory;
+#using scripts\zm\archi_save;
 
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\shared\shared.gsh;
@@ -37,13 +41,16 @@
 
 #precache( "eventstring", "ap_save_checkpoint_data");
 #precache( "eventstring", "ap_save_data" );
+#precache( "eventstring", "ap_save_data_universal" );
 #precache( "eventstring", "ap_load_data" );
+#precache( "eventstring", "ap_load_data_universal" );
 #precache( "eventstring", "ap_clear_data" );
 #precache( "eventstring", "ap_debug_magicbox" );
 #precache( "eventstring", "ap_notification" );
 #precache( "eventstring", "ap_init_dll" );
 #precache( "eventstring", "ap_init_state" );
 #precache( "eventstring", "ap_init_goal_cond" );
+#precache( "eventstring", "ap_deathlink_triggered" );
 
 REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
@@ -51,12 +58,17 @@ function __init__()
 {
     clientfield::register("world", "ap_mystery_box_changes", 1, 28, "int");
     level flag::init("ap_prevent_checkpoints", 1);
+    level flag::init("ap_attachment_rando_ready");
+    level flag::init("ap_loaded_save_data");
 
     // Some maps make requirements harder if not in a ranked match
     level.rankedmatch = 1;
     SetDvar("zm_private_rankedmatch", 1);
 
     SetDvar( "MOD_VERSION", MOD_VERSION );
+
+    // First gobblegum free each round
+    SetDvar("scr_firstGumFree", 1);
     
     //Message Passing Dvars
     SetDvar("ARCHIPELAGO_ITEM_GET", "NONE");
@@ -65,7 +77,9 @@ function __init__()
     SetDvar("ARCHIPELAGO_SAVE_DATA", "NONE");
     SetDvar("ARCHIPELAGO_LOAD_DATA", "NONE");
     SetDvar("ARCHIPELAGO_LOAD_DATA_SEED", "NONE");
+    SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERAL", "NONE");
     SetDvar("ARCHIPELAGO_SAVE_PROGRESS", "NONE");
+    SetDvar("ARCHIPELAGO_DEATHNLINK_RECIEVED", "NONE");
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
     SetDvar("ARCHIPELAGO_LOAD_READY", 0);
@@ -177,6 +191,11 @@ function on_archi_connect_settings()
     level.archi.difficulty_gorod_dragon_wings = GetDvarInt("ARCHIPELAGO_DIFFICULTY_GOROD_DRAGON_WINGS", 0);
     level.archi.difficulty_ee_checkpoints = GetDvarInt("ARCHIPELAGO_DIFFICULTY_EE_CHECKPOINTS", 0);
     level.archi.difficulty_round_checkpoints = GetDvarInt("ARCHIPELAGO_DIFFICULTY_ROUND_CHECKPOINTS", 0);
+    level.archi.attachments_randomized = GetDvarInt("ARCHIPELAGO_ATTACHMENT_RANDO_ENABLED", 0);
+    level.archi.attachments_sight_weight = GetDvarInt("ARCHIPELAGO_ATTACHMENT_RANDO_SIGHT_SIZE_WEIGHT", 25);
+    level.archi.deathlink_enabled = GetDvarInt("ARCHIPELAGO_DEATHLINK_ENABLED", 0);
+    level.archi.deathlink_send_mode = GetDvarInt("ARCHIPELAGO_DEATHLINK_SEND_MODE", 0);
+    level.archi.deathlink_recv_mode = GetDvarInt("ARCHIPELAGO_DEATHLINK_RECV_MODE", 0);
 
     init_string_mappings();
 }
@@ -278,9 +297,9 @@ function game_start()
         archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup);
 
         // Progressives
+        patch_pap();
+        archi_items::RegisterUniversalItem("Progressive - Pack-A-Punch Machine",&archi_items::give_ProgressivePap);
         archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit);
-
-        archi_items::RegisterPap();
 
         archi_commands::init_commands();
         level thread round_start_location();
@@ -353,8 +372,8 @@ function game_start()
 
             level thread setup_spare_change_trackers(7);
 
-            level thread archi_zod::save_state_manager();
-            level thread archi_zod::load_state();
+            level.archi.save_state_manager = &archi_zod::save_state_manager;
+            level.archi.load_state_manager = &archi_zod::load_state;
         }
 
         if (mapName == "zm_castle")
@@ -419,9 +438,9 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
             archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-        
-            level thread archi_castle::save_state_manager();
-            level thread archi_castle::load_state();
+
+            level.archi.save_state_manager = &archi_castle::save_state_manager;
+            level.archi.load_state_manager = &archi_castle::load_state;
         }
 
         if (mapName == "zm_island")
@@ -489,9 +508,9 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
             archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-
-            level thread archi_island::save_state_manager();
-            level thread archi_island::load_state();
+            
+            level.archi.save_state_manager = &archi_island::save_state_manager;
+            level.archi.load_state_manager = &archi_island::load_state;
         }
 
         if (mapName == "zm_stalingrad")
@@ -564,8 +583,8 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
-            level thread archi_stalingrad::save_state_manager();
-            level thread archi_stalingrad::load_state();
+            level.archi.save_state_manager = &archi_stalingrad::save_state_manager;
+            level.archi.load_state_manager = &archi_stalingrad::load_state;
         }
 
         if (mapName == "zm_genesis")
@@ -632,8 +651,8 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
-            level thread archi_genesis::save_state_manager();
-            level thread archi_genesis::load_state();
+            level.archi.save_state_manager = &archi_genesis::save_state_manager;
+            level.archi.load_state_manager = &archi_genesis::load_state;
         }
 
         if (mapName == "zm_factory")
@@ -673,7 +692,13 @@ function game_start()
             archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
             archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
+            level.archi.save_state_manager = &archi_factory::save_state_manager;
+            level.archi.load_state_manager = &archi_factory::load_state;
         }
+
+        level thread init_attachment_rando();
+        WAIT_SERVER_FRAME
+        level thread archi_save::setup_map_saving();
 
         patch_wunderfizz();
 
@@ -682,6 +707,13 @@ function game_start()
 
         //Server-wide thread to get items from the Lua/LUI
         level thread item_get_from_lua();
+
+    }
+
+    if (level.archi.deathlink_enabled == 1)
+    {
+        level thread deathlink_send_monitor();
+        level thread deathlink_recv_monitor();
     }
 
     update_box_clientfield();
@@ -717,9 +749,11 @@ function can_player_purchase_perk()
 
 function default_map_changes()
 {
-    level.initial_quick_revive_power_off = true;
+    level.initial_quick_revive_power_off = 1;
 
     wait 1;
+
+    zombie_utility::set_zombie_var("zombie_intermission_time", 4);
     //Turn off/Hide Gobblebum Machines by Yeeting them into the Sun
     // if (isdefined(level.bgb_machines))
     // {
@@ -864,7 +898,10 @@ function award_item(item)
                 weapon_name = ap_item.weapon_name;
                 weapon = GetWeapon(weapon_name);
                 z_weapon = level.zombie_weapons[weapon];
-                z_weapon.is_in_box = 1;
+                if (isdefined(z_weapon))
+                {
+                    z_weapon.is_in_box = 1;
+                }
                 // Update clientfield state
                 level.archi.ap_box_states[weapon_name] = 0;
                 update_box_clientfield();
@@ -1080,7 +1117,7 @@ function keep_pap_locked()
 
     foreach(t_machine in vending_weapon_upgrade_trigger)
     {
-        t_machine SetHintString("'Pack-A-Punch Machine' is required");
+        t_machine SetHintString("'Progressive - Pack-A-Punch Machine' is required");
     }
 
     while(true) 
@@ -1100,7 +1137,7 @@ function keep_pap_locked()
         wait(0.5);
         foreach(t_machine in vending_weapon_upgrade_trigger)
         {
-            t_machine SetHintString("'Pack-A-Punch Machine' is required");
+            t_machine SetHintString("'Progressive - Pack-A-Punch Machine' is required");
         }
     }
 }
@@ -1122,11 +1159,9 @@ function keep_pap_hint_string()
         vending_weapon_upgrade_trigger = zm_pap_util::get_triggers();
         foreach(t_machine in vending_weapon_upgrade_trigger)
         {
-            t_machine SetHintString("'Pack-A-Punch Machine' is required");
+            t_machine SetHintString("'Progressive - Pack-A-Punch Machine' is required");
         }
     }
-
-
 }
 
 function keep_perk_machine_locked(perk, ap_hint_string)
@@ -1296,6 +1331,7 @@ function update_box_clientfield()
 
 function patch_wunderfizz()
 {
+    level._random_zombie_perk_cost = 2000;
     // Store original perk list
     level.archi.original_random_perk_list = [];
     foreach (perk in level._random_perk_machine_perk_list)
@@ -1322,7 +1358,6 @@ function custom_random_perk_weights()
         // Remove perks we haven't unlocked yet
         foreach (key in keys) {
             perk = level._random_perk_machine_perk_list[key];
-            IPrintLn("Comparing " + perk);
             if (isdefined(level.archi.active_perk_machines[perk]))
             {
                 if (level.archi.active_perk_machines[perk])
@@ -1344,7 +1379,8 @@ function custom_random_perk_weights()
         temp_array = array::randomize(level._random_perk_machine_perk_list);
         keys = GetArrayKeys(temp_array);
         return keys;
-
+        
+        
     }
 }
 
@@ -1365,7 +1401,6 @@ function update_wunderfizz()
                 if (level.archi.active_perk_machines[perk])
                 {
                     level._random_perk_machine_perk_list[level._random_perk_machine_perk_list.size] = perk;
-                    IPrintLn("Added " + perk);
                 }
             }
             else
@@ -1374,5 +1409,330 @@ function update_wunderfizz()
             }
         }
     }
-    
+}
+
+function register_weapon_attachments( weapon_name )
+{
+    switch( weapon_name )
+    {
+        case "ar_garand":
+        case "ar_galil":
+        case "ar_famas":
+        case "ar_m16":
+        case "ar_standard":
+        case "ar_marksman":
+        case "ar_longburst":
+        case "ar_damage":
+        case "ar_cqb":
+        case "ar_accurate":
+            self.ap_sights_large = array( "acog", "dualoptic", "ir" );
+            self.ap_sights_small = array( "none", "holo", "reddot", "reflex" );
+            self.ap_attachments = array( "damage", "extbarrel", "extclip", "fastreload", "fmj", "grip", "quickdraw", "rf", "stalker", "steadyaim", "suppressed" );
+            if( weapon_name == "ar_m16" || weapon_name == "ar_famas" )
+            {
+                ArrayRemoveValue( self.ap_sights_large, "dualoptic" );
+            }
+            break;
+
+        case "lmg_rpk":
+        case "lmg_slowfire":
+        case "lmg_light":
+        case "lmg_heavy":
+        case "lmg_cqb":
+            self.ap_sights_large = array( "acog", "dualoptic", "ir" );
+            self.ap_sights_small = array( "none", "holo", "reddot", "reflex" );
+            self.ap_attachments = array( "extclip", "fastreload", "fmj", "grip", "quickdraw", "rf", "stalker", "steadyaim", "suppressed" );
+            if( weapon_name == "lmg_rpk" )
+            {
+                ArrayRemoveValue( self.ap_sights_large, "dualoptic" );
+            }
+            break;
+
+        case "smg_ak74u":
+        case "smg_versatile":
+        case "smg_standard":
+        case "smg_ppsh":
+        case "smg_fastfire":
+        case "smg_capacity":
+        case "smg_longrange":
+        case "smg_burst":
+        case "smg_mp40":
+            self.ap_sights_large = array( "acog", "dualoptic" );
+            self.ap_sights_small = array( "none", "holo", "reddot", "reflex" );
+            self.ap_attachments = array( "extbarrel", "extclip", "fastreload", "fmj", "grip", "quickdraw", "rf", "stalker", "steadyaim", "suppressed" );
+            if( weapon_name == "smg_ak74u" || weapon_name == "smg_mp40" )
+            {
+                // Bad compat with large scopes
+                self.ap_sights_large = self.ap_sights_small;
+            }
+            if ( weapon_name == "smg_ppsh" ) {
+                self.ap_sights_large = array("none");
+                self.ap_sights_small = array("none");
+            }
+            break;
+
+        case "shotgun_semiauto":
+        case "shotgun_pump":
+        case "shotgun_precision":
+        case "shotgun_fullauto":
+        case "shotgun_energy":
+            // No large sights, duplicate array instead
+            self.ap_sights_large = array( "none", "holo", "reddot", "reflex" );
+            self.ap_sights_small = array( "none", "holo", "reddot", "reflex" );
+            self.ap_attachments = array( "extbarrel", "extclip", "fastreload", "quickdraw", "rf", "stalker", "steadyaim", "suppressed" );
+            break;
+
+        case "pistol_fullauto":
+        case "pistol_burst":
+        case "pistol_energy":
+        case "pistol_m1911":
+        case "pistol_standard":
+            // No large sights, duplicate array instead
+            self.ap_sights_large = array( "none", "reddot", "reflex" );
+            self.ap_sights_small = array( "none", "reddot", "reflex" );
+            self.ap_attachments = array( "damage", "extbarrel", "extclip", "fastreload", "fmj", "quickdraw", "steadyaim", "suppressed" );
+            break;
+
+        case "sniper_fastsemi":
+        case "sniper_powerbolt":
+        case "sniper_fastbolt":
+            self.ap_sights_large = array( "none", "acog", "dualoptic", "ir" );
+            self.ap_sights_small = array( "reddot" );
+            self.ap_attachments = array( "extclip", "fastreload", "fmj", "rf", "stalker", "suppressed", "swayreduc" );
+            break;
+    }
+}
+
+// function attachment_rando()
+// {
+//     foreach (weapon in GetArrayKeys(level.zombie_weapons))
+//     {
+//         level.zombie_weapons[weapon] register_weapon_attachments(weapon.name);
+//         attachments = generate_attachments(weapon);
+//         level.zombie_weapons[weapon].force_attachments = attachments;
+//     }
+// }
+
+function init_attachment_rando()
+{
+    level flag::wait_till("ap_loaded_save_data");
+
+    if (level.archi.attachments_randomized == 1)
+    {
+        foreach (weapon in GetArrayKeys(level.zombie_weapons))
+        {
+            base_weapon = zm_weapons::get_base_weapon( weapon.rootweapon );
+            attachment_str = GetDvarString("ARCHIPELAGO_ATTACHMENT_RANDO_" + ToUpper(base_weapon.name), "");
+            if (attachment_str != "")
+            {
+                level.zombie_weapons[weapon].force_attachments = strtok(attachment_str, "+");
+            }
+        }
+    }
+
+    level flag::set("ap_attachment_rando_ready");
+}
+
+function generate_attachments(weapon)
+{
+    dw_weapons = array("pistol_standard_upgraded","pistol_m1911_upgraded","pistol_revolver38_upgraded","pistol_shotgun_dw","pistol_shotgun_dw_upgraded");
+    weapon_name = weapon.name;
+    upgrade = StrEndsWith( weapon_name, "_upgraded" );
+    base_weapon = zm_weapons::get_base_weapon( weapon.rootweapon );
+    weapon_data = level.zombie_weapons[ base_weapon ];
+    attachments = [];
+    sight = undefined;
+    if (isdefined(weapon_data.ap_sights_large) && weapon_data.ap_sights_large.size > 0)
+    {
+        if (RandomInt(100) < level.archi.attachments_sight_weight)
+        {
+            sight = array::random(weapon_data.ap_sights_large);
+        }
+        else
+        {
+            sight = array::random(weapon_data.ap_sights_small);
+        }
+        attachments[attachments.size] = sight;
+    }
+    if (isdefined(weapon_data.ap_attachments))
+    {
+        num_attachments = min(3, weapon_data.ap_attachments.size);
+        attachment_bag = array::randomize(weapon_data.ap_attachments);
+        for (i = 0; i < num_attachments; i++)
+        {
+            attachments[attachments.size] = attachment_bag[i];
+        }
+    }
+    // Add dual wield to expected weapons
+    if( IsInArray(dw_weapons, weapon_name) )
+    {
+        ArrayInsert( attachments, "dw", 0 );
+    }
+    // Remove either sight or sway reduction since incompatible on snipers
+    if( isdefined( sight ) && IsInArray( attachments, "swayreduc" ) )
+    {
+        ArrayRemoveValue( attachments, ( RandomInt(3) != 0 ? sight : "swayreduc" ) );
+    }
+
+    return attachments;
+}
+
+function patch_pap()
+{
+    // Disable AATs WIP
+    vending_weapon_upgrade_trigger = zm_pap_util::get_triggers();
+    if (vending_weapon_upgrade_trigger.size >= 1)
+    {
+        array::thread_all(vending_weapon_upgrade_trigger, &keep_aats_locked);
+    }
+}
+
+function keep_aats_locked()
+{
+    level endon("ap_aats_enabled");
+
+    if(!isdefined(self.powered) || !self.powered.power)
+    {
+        level waittill("pack_a_punch_on");
+    }
+    wait(1);
+
+    while(true)
+    {
+        vending_weapon_upgrade_trigger.aat_cost = 999999;
+        level waittill("hash_ab83a4db");
+        WAIT_SERVER_FRAME
+        vending_weapon_upgrade_trigger.aat_cost = 999999;
+        level waittill("bonfire_sale_off");
+        WAIT_SERVER_FRAME
+    }
+}
+
+function deathlink_recv_monitor()
+{
+    while(true)
+    {
+        dvar_value = GetDvarString("ARCHIPELAGO_DEATHNLINK_RECIEVED", "NONE");
+        if (dvar_value != "NONE")
+        {   
+            IPrintLnBold("Deathlink :)");
+            SetDvar("ARCHIPELAGO_DEATHNLINK_RECIEVED", "NONE");
+
+            // Down a random player
+            if (level.archi.deathlink_recv_mode == 0)
+            {
+                players = array::randomize(level.players);
+                foreach(player in players)
+                {
+                    if (IsAlive(player) && !player laststand::player_is_in_laststand())
+                    {
+                        player dodamage(player.health + 666, player.origin);
+                        break;
+                    }
+                }
+            }
+
+            // Kill a random player
+            if (level.archi.deathlink_recv_mode == 1)
+            {
+                players = array::randomize(level.players);
+                foreach(player in players)
+                {
+                    if (player.sessionstate != "spectator")
+                    {
+                        player disableinvulnerability();
+                        player.lives = 0;
+                        player dodamage(player.health + 1000, player.origin);
+                        player.bleedout_time = 0;
+                        break;
+                    }
+                }
+            }
+
+            // Down all players
+            if (level.archi.deathlink_recv_mode == 2)
+            {
+                foreach (player in level.players)
+                {
+                    player dodamage(player.health + 666, player.origin);
+                }
+            }
+
+            // End game
+            if (level.archi.deathlink_recv_mode == 3)
+            {
+                level notify("end_game");
+            }
+        }
+        wait(0.5);
+    }
+}
+
+function deathlink_send_monitor()
+{
+    // Single down
+    if (level.archi.deathlink_send_mode == 0)
+    {
+        foreach(player in level.players)
+        {
+            player thread deathlink_any_player_down();
+        }
+        callback::on_connect(&deathlink_any_player_down);
+    }
+
+    // Single death
+    if (level.archi.deathlink_send_mode == 1)
+    {
+        foreach(player in level.players)
+        {
+            player thread deathlink_any_player_death();
+        }
+        callback::on_connect(&deathlink_any_player_death);
+    }
+
+    // Monitor both end game scenarios
+    level thread end_game_via_player_death_monitor();
+
+    level waittill("end_game");
+    // Check if game ended from a player disconnecting while all others players are on the ground, they'll all be in last stand
+    foreach (player in level.players)
+    {
+        if (!player.sessionstate != "spectator" && !player laststand::player_is_in_laststand())
+        {
+            return;
+        }
+    }
+
+    LUINotifyEvent(&"ap_deathlink_triggered", 0);
+}
+
+function end_game_via_player_death_monitor()
+{
+    level waittill("last_player_died");
+    LUINotifyEvent(&"ap_deathlink_triggered", 0);
+}
+
+function deathlink_any_player_down()
+{
+    self endon("disconnect");
+
+    while(true) {
+        evt = self util::waittill_any_return("death", "player_downed");
+        LUINotifyEvent(&"ap_deathlink_triggered", 0);
+        if (evt == "player_downed")
+        {
+            // Make sure death doesn't double trigger
+            self util::waittill_any_return("death", "player_revived");
+        }
+    }
+}
+
+function deathlink_any_player_death()
+{
+    self endon("disconnect");
+
+    while(true) {
+        self waittill("death");
+        LUINotifyEvent(&"ap_deathlink_triggered", 0);
+    }
 }

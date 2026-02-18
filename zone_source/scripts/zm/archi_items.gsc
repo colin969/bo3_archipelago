@@ -12,6 +12,7 @@
 #using scripts\zm\_zm_utility;
 #using scripts\zm\_zm_powerups;
 #using scripts\zm\_zm_weapons;
+#using scripts\zm\_zm_pack_a_punch_util;
 #using scripts\zm\craftables\_zm_craftables;
 
 #insert scripts\shared\shared.gsh;
@@ -21,7 +22,7 @@
 
 #namespace archi_items;
 
-function RegisterBoxWeapon(itemName, weapon_name, weapon_bit, universal)
+function RegisterBoxWeapon(itemName, weapon_name, weapon_bit)
 {
     item = SpawnStruct();
     item.type = "box_weapon";
@@ -49,16 +50,13 @@ function RegisterBoxWeapon(itemName, weapon_name, weapon_bit, universal)
         IPrintLn("Weapon not found: " + weapon_name);
     }
 
-    if (isdefined(universal))
-    {
-        globalItem = SpawnStruct();
-        globalItem.type = "box_weapon";
-        globalItem.name = itemName;
-        globalItem.weapon_name = weapon_name;
-        globalItem.count = 0;
-        level.archi.items[globalItem.name] = globalItem;
-    }
-
+    globalItem = SpawnStruct();
+    globalItem.type = "box_weapon";
+    globalItem.name = itemName;
+    globalItem.weapon_name = weapon_name;
+    globalItem.count = 0;
+        
+    level.archi.items[globalItem.name] = globalItem;
     level.archi.items[item.name] = item;
 }
 
@@ -132,17 +130,6 @@ function RegisterPerk(itemName, getFunc, specialtyName) {
     level.archi.items[globalItem.name] = globalItem;
 }
 
-function RegisterPap()
-{
-    item = SpawnStruct();
-    item.name = "Pack-A-Punch Machine";
-    item.getFunc = &give_Pap;
-    item.clientfield = "ap_item_pap";
-    item.count = 0;
-
-    level.archi.items[item.name] = item;
-}
-
 //General/Universal gives
 function give_500Points()
 {
@@ -182,6 +169,30 @@ function give_TheGiantRandomPerk()
 function give_ProgressivePerkLimit()
 {
     level.archi.progressive_perk_limit += 1;
+}
+
+function give_ProgressivePap()
+{
+    item = level.archi.items["Progressive - Pack-A-Punch Machine"];
+    if (isdefined(item))
+    {
+        if (item.count == 1)
+        {
+            // Unlock pap
+            level.archi.pap_active = true;
+            level notify("Pack_A_Punch_on");
+        }
+        if (item.count == 2)
+        {
+            level notify("ap_aats_enabled");
+            wait(0.1);
+            vending_weapon_upgrade_trigger = zm_pap_util::get_triggers();
+            foreach (trigger in vending_weapon_upgrade_trigger)
+            {
+                trigger.aat_cost = 2500;
+            }
+        }
+    }
 }
 
 function give_Pap()

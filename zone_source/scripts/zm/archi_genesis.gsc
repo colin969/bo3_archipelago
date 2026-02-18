@@ -84,6 +84,7 @@ function save_player_data(xuid)
 function load_state()
 {
     archi_save::wait_restore_ready("zm_genesis");
+    level flag::wait_till("ap_attachment_rando_ready");
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     archi_save::restore_power_on();

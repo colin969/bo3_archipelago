@@ -133,6 +133,7 @@ function load_state()
 {
     level.archi.zm_castle_landingpads = 0;
     archi_save::wait_restore_ready("zm_castle");
+    level flag::wait_till("ap_attachment_rando_ready");
     // Disable rocket pad death plane
     level flag::set("castle_teleporter_used");
     archi_save::restore_zombie_count();
@@ -455,6 +456,7 @@ function restore_landingpads()
 {
     if (save_flag_exists("ARCHIPELAGO_LOAD_DATA_CASTLE_LANDINGPADS"))
     {
+        SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_LANDINGPADS", "");
         level.archi.zm_castle_landingpads = 1;
         landing_pads = struct::get_array("115_flinger_landing_pad", "targetname");
         foreach(landing_pad in landing_pads)

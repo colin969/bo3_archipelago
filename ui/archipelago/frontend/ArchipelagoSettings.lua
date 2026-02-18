@@ -16,7 +16,7 @@ UpdateConnectionStatus = function(update)
 	Engine.SetModelValue(Engine.GetModel(Engine.GetModel( Engine.GetGlobalModel(), "archipelago" ), "connectionValidated"),"Connection: "..update)
 end
 
-local ConnectArchi = function()
+local ConnectArchi = function(savedServer, savedSlot)
 	if Archipelago == nil then 
 		local modname = bo3_archipelago
 		local filespath = [[.\mods\bo3_archipelago\]]
@@ -37,10 +37,8 @@ local ConnectArchi = function()
 
 		end)
 	end
-	local server = Engine.DvarString(nil,"ARCHIPELAGO_SERVER")
-	local slot = Engine.DvarString(nil,"ARCHIPELAGO_SLOT")
 
-	Archipelago.CheckConnection(server,slot,".\\mods\\bo3_archipelago\\zone\\")
+	Archipelago.CheckConnection(savedServer,savedSlot,".\\mods\\bo3_archipelago\\zone\\")
 	--
 	
 end
@@ -244,7 +242,7 @@ LUI.createMenu.ArchipelagoSettings = function ( controller )
 	end, false )
 
     Menu:AddButtonCallbackFunction( self, controller, Enum.LUIButton.LUI_KEY_XBY_PSTRIANGLE, nil, function ( f20_arg0, f20_arg1, f20_arg2, f20_arg3 )
-		ConnectArchi()
+		ConnectArchi(savedServer, savedSlot)
 		return true
 	end, function ( f21_arg0, f21_arg1, f21_arg2 )
 		CoD.Menu.SetButtonLabel( f21_arg1, Enum.LUIButton.LUI_KEY_XBY_PSTRIANGLE, "Test Connection" )

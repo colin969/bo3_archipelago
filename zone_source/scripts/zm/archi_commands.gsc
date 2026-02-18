@@ -3,14 +3,19 @@
 #using scripts\shared\system_shared;
 #using scripts\shared\array_shared;
 #using scripts\shared\util_shared;
+#using scripts\shared\laststand_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\hud_shared;
 #using scripts\shared\hud_message_shared;
 #using scripts\shared\hud_util_shared;
 #using scripts\shared\lui_shared;
 #using scripts\shared\clientfield_shared;
+#using scripts\zm\_zm_bgb;
+#using scripts\zm\_zm_equipment;
 #using scripts\zm\_zm_score;
+#using scripts\zm\_zm_weapons;
 #using scripts\zm\_zm_utility;
+#using scripts\zm\gametypes\_globallogic_score;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
@@ -42,6 +47,9 @@ function init_commands()
     level thread _basic_trigger("ap_set_player_flag", &_set_player_flag);
     level thread _basic_trigger("ap_testkit", &_give_testkit);
     level thread _basic_trigger("ap_debug_dragonheads", &_dragonhead_debug);
+    level thread _basic_trigger("ap_debug_stats", &_test_scoreboard);
+    level thread _basic_trigger("ap_gum", &_test_general);
+    level thread _basic_trigger("ap_stats", &_test_scoreboard);
   }
 }
 
@@ -319,13 +327,10 @@ function _start_grand_tour(val)
 {
   level.var_62552381 = 1;
   level flag::set("character_stones_done");
-  IPrintLn("Stones");
   wait(1);
   level flag::set("phased_sophia_start");
-  IPrintLn("Sophia");
   wait(1);
   level flag::set("grand_tour");
-  IPrintLn("Grand Tour");
   wait(1);
   level.var_62552381 = 0;
 }
@@ -373,5 +378,121 @@ function _dragonhead_debug(val)
     {
       IPrintLn("Soul Catcher Fill: " + dh.var_98730ffa);
     }  
+  }
+}
+
+function _test_scoreboard()
+{
+  foreach (player in level.players)
+  {
+    player.pers["headshots"] += 20;
+    player.headshots = player.pers["headshots"];
+    IPrintLn(player.pers["headshots"]);
+  }
+}
+
+function _test_general()
+{
+  foreach (player in level.players)
+  {
+    bgb_keys = GetArrayKeys(level.bgb);
+    selected_bgb = array::random(bgb_keys);
+    gun = player bgb_anim_start(selected_bgb, 0);
+    evt = player util::waittill_any_return("fake_death", "death", "player_downed", "weapon_change_complete", "disconnect");
+    if(evt == "weapon_change_complete")
+	  {
+        player thread bgb::give(selected_bgb);
+        player notify("bgb_gumball_anim_give", selected_bgb);
+    }
+    player bgb_anim_end(gun, selected_bgb, 0);
+  }
+}
+
+function bgb_anim_start(bgb, activating)
+{
+  self zm_utility::increment_is_drinking();
+	self zm_utility::disable_player_move_states(1);
+	w_original = self getcurrentweapon();
+	weapon = bgb_get_gumball_anim_weapon(bgb, activating);
+	self giveweapon(weapon, self calcweaponoptions(level.bgb[bgb].camo_index, 0, 0));
+	self switchtoweapon(weapon);
+	if(weapon == level.weaponbgbgrab)
+	{
+		self playsound("zmb_bgb_powerup_default");
+	}
+	if(weapon == level.weaponbgbuse)
+	{
+		self clientfield::increment_to_player("bgb_blow_bubble");
+	}
+	return w_original;
+}
+
+function bgb_anim_end(w_original, bgb, activating)
+{
+  self zm_utility::enable_player_move_states();
+  weapon = bgb_get_gumball_anim_weapon(bgb, activating);
+	if(self laststand::player_is_in_laststand() || (isdefined(self.intermission) && self.intermission))
+	{
+		self takeweapon(weapon);
+		return;
+	}
+	self takeweapon(weapon);
+	if(self zm_utility::is_multiple_drinking())
+	{
+		self zm_utility::decrement_is_drinking();
+		return;
+	}
+	if(w_original != level.weaponnone && !zm_utility::is_placeable_mine(w_original) && !zm_equipment::is_equipment_that_blocks_purchase(w_original))
+	{
+		self zm_weapons::switch_back_primary_weapon(w_original);
+		if(zm_utility::is_melee_weapon(w_original))
+		{
+			self zm_utility::decrement_is_drinking();
+			return;
+		}
+	}
+	else
+	{
+		self zm_weapons::switch_back_primary_weapon();
+	}
+	self util::waittill_any_timeout(1, "weapon_change_complete");
+	if(!self laststand::player_is_in_laststand() && (!(isdefined(self.intermission) && self.intermission)))
+	{
+		self zm_utility::decrement_is_drinking();
+	}
+}
+
+function bgb_get_gumball_anim_weapon(bgb, activating)
+{
+	if(activating)
+	{
+		return level.weaponbgbuse;
+	}
+	return level.weaponbgbgrab;
+}
+
+// function _test_scoreboard()
+// {
+//   foreach (player in level.players)
+//   {
+//     player incrementplayerstat("headshots", 1);
+//   }
+// }
+
+function jiggle_bodies()
+{
+  flip = true;
+  while(true)
+  {
+    if (flip) 
+    {
+      SetDvar("phys_gravity_dir", (0, 0, -1));
+      flip = false;
+    }
+    else
+    {
+      SetDvar("phys_gravity_dir", (0, 0, 1));
+    }
+    wait(0.2);
   }
 }

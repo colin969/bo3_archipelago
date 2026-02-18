@@ -88,6 +88,7 @@ function load_state()
 {
     level flag::init("ap_skullroom_finished");
     archi_save::wait_restore_ready("zm_island");
+    level flag::wait_till("ap_attachment_rando_ready");
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     restore_power_on();
@@ -280,6 +281,10 @@ function _all_skull_cleanse(location)
 
 function _skull_room_defense(location)
 {
+    if(!level flag::exists("skullroom_defend_inprogress"))
+	{
+		level flag::init("skullroom_defend_inprogress");
+	}
     level flag::wait_till("skullroom_defend_inprogress");
     level flag::wait_till_clear("skullroom_defend_inprogress");
     level flag::set("ap_skullroom_finished");

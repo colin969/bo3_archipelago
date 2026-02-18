@@ -5,7 +5,6 @@ function map_save_zm_castle(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
   save_zm_castle_landingpads(mapData)
-  save_zm_castle_boss_ready(mapData)
   save_flag(mapData, "soul_catchers_charged")
   save_flag(mapData, "death_ray_trap_used")
   save_flag(mapData, "ee_fuse_placed")
@@ -40,7 +39,6 @@ function map_restore_zm_castle(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
   restore_zm_castle_landingpads(mapData)
-  restore_zm_castle_boss_ready(mapData)
   restore_flag(mapData, "soul_catchers_charged")
   restore_flag(mapData, "death_ray_trap_used")
   restore_flag(mapData, "ee_fuse_placed")
@@ -375,6 +373,38 @@ function map_restore_zm_genesis(mapData)
   restore_players(mapData, restore_player_func)
 end
 
+function map_save_zm_factory(mapData)
+  Archi.LogMessage("Saving map data for The Giant");
+  save_zombie_count(mapData)
+  save_round_number(mapData)
+  save_power_on(mapData)
+  save_doors_and_debris(mapData)
+
+  save_player_func = function (xuid, playerData)
+    save_player_score(xuid, playerData)
+    save_player_perks(xuid, playerData)
+    save_player_loadout(xuid, playerData)
+  end
+
+  save_players(mapData, save_player_func)
+end
+
+function map_restore_zm_factory(mapData)
+  Archi.LogMessage("Restoring map data for The Giant");
+  restore_zombie_count(mapData);
+  restore_round_number(mapData)
+  restore_power_on(mapData)
+  restore_doors_and_debris(mapData)
+
+  restore_player_func = function (xuid, playerData)
+    restore_player_score(xuid, playerData)
+    restore_player_perks(xuid, playerData)
+    restore_player_loadout(xuid, playerData)
+  end
+
+  restore_players(mapData, restore_player_func)
+end
+
 function restore_flag(mapData, flag)
   if mapData["flags"] and mapData["flags"][flag] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_MAP_" .. string.upper(flag), 1)
@@ -390,6 +420,26 @@ end
 function restore_round_number(mapData)
   if mapData["round_number"] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_ROUND", mapData["round_number"])
+  end
+
+  if mapData["next_dog_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_DOG_ROUND", mapData["next_dog_round"])
+  end
+  
+  if mapData["next_wasp_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_WASP_ROUND", mapData["next_wasp_round"])
+  end
+  
+  if mapData["next_mechz_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_MECHZ_ROUND", mapData["next_mechz_round"])
+  end
+  
+  if mapData["next_monkey_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_MONKEY_ROUND", mapData["next_monkey_round"])
+  end
+  
+  if mapData["next_astro_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_ASTRO_ROUND", mapData["next_astro_round"])
   end
 end
 
@@ -478,13 +528,6 @@ function restore_player_loadout(xuid, playerData)
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_STOCK", weapon.stock )
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTCLIP", weapon.alt_clip or 0)
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTSTOCK", weapon.alt_stock or 0)
-      local j = 0
-      if weapon["attachments"] then
-        for _, attachment in ipairs(weapon["attachments"]) do
-          Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ATTACHMENT_" .. j, attachment)
-          j = j + 1
-        end
-      end
       i = i + 1
     end
   end
@@ -492,6 +535,7 @@ end
 
 function save_flag(mapData, flag)
   local val = Engine.DvarInt(0, "ARCHIPELAGO_SAVE_DATA_MAP_" .. string.upper(flag))
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_" .. string.upper(flag), "")
   if val ~= 0 then
     mapData["flags"][flag] = 1
   end
@@ -499,6 +543,7 @@ end
 
 function save_player_flag(xuid, playerData, flag)
   local val = Engine.DvarInt(0, "ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag))
+  Engine.DvarInt("ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag), "")
   if val ~= 0 then
     playerData["flags"][flag] = 1
   end
@@ -507,13 +552,50 @@ end
 function save_round_number(mapData)
   local roundNumber = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_ROUND")
   if roundNumber and roundNumber > 1 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_ROUND", "")
     mapData.round_number = roundNumber
+  end
+
+  local dogRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_DOG_ROUND")
+  if dogRound and dogRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_DOG_ROUND", "")
+    mapData.next_dog_round = dogRound
+  end
+  
+  local waspRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_WASP_ROUND")
+  if waspRound and waspRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_WASP_ROUND", "")
+    mapData.next_wasp_round = waspRound
+  end
+  
+  local mechzRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_MECHZ_ROUND")
+  if mechzRound and mechzRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_MECHZ_ROUND", "")
+    mapData.next_mechz_round = mechzRound
+  end
+  
+  local monkeyRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_MONKEY_ROUND")
+  if monkeyRound and monkeyRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_MONKEY_ROUND", "")
+    mapData.next_monkey_round = monkeyRound
+  end
+  
+  local astroRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_ASTRO_ROUND")
+  if astroRound and astroRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_ASTRO_ROUND", "")
+    mapData.next_astro_round = astroRound
   end
 end
 
 function save_doors_and_debris(mapData)
   local doorStr = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_OPENED_DOORS");
   local debrisStr = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_OPENED_DEBRIS");
+  if doorStr then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_OPENED_DOORS", "");
+  end
+  if debrisStr then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_OPENED_DEBRIS", "");
+  end
   local doorsOpened = {}
   local debrisOpened = {}
 
@@ -531,6 +613,7 @@ end
 function save_power_on(mapData)
   local powerOn = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_POWER_ON")
   if powerOn and powerOn > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_POWER_ON", "")
     mapData.power_on = 1
   else
     mapData.power_on = 0
@@ -539,12 +622,14 @@ end
 
 function save_zombie_count(mapData)
   local zombieCount = Engine.DvarInt(-1, "ARCHIPELAGO_SAVE_DATA_ZOMBIE_COUNT")
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_ZOMBIE_COUNT", "")
   mapData.zombie_count = zombieCount
 end
 
 function save_player_score(xuid, playerData)
   local score = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_SCORE_" .. xuid)
   if score and score > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_SCORE_" .. xuid, "")
     playerData.score = score
   end
 end
@@ -557,6 +642,7 @@ function save_player_perks(xuid, playerData)
     if not perk or perk == "" then
       break
     end
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_PERK_" .. xuid .. "_" .. i, "")
     table.insert(playerData.perks, perk)
     i = i + 1
   end
@@ -565,6 +651,7 @@ end
 function save_player_loadout(xuid, playerData)
   local heroWeaponName = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_HEROWEAPON")
   if heroWeaponName and heroWeaponName ~= "" then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_HEROWEAPON", nil)
     playerData.heroWeapon = heroWeaponName
     local heroPower = Engine.DvarInt(-1, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_HEROWEAPON_POWER")
     playerData.heroPower = heroPower
@@ -579,21 +666,11 @@ function save_player_loadout(xuid, playerData)
     local weaponStock = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_STOCK")
     local weaponAltClip = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTCLIP")
     local weaponAltStock = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ALTSTOCK")
-    local attachments = {}
-    local j = 0
-    while true do
-      local attachment = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_ATTACHMENT_" .. j)
-      if attachment and attachment ~= "" then
-        table.insert(attachments, attachment)
-        j = j + 1
-      else
-        break
-      end
-    end
 
     if not weaponName or weaponName == "" then
       break
     end
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_" .. i .. "_WEAPON", "")
     table.insert(playerData.weapons, {
       weapon = weaponName,
       clip = weaponClip,
@@ -601,42 +678,18 @@ function save_player_loadout(xuid, playerData)
       stock = weaponStock,
       alt_clip = weaponAltClip,
       alt_stock = weaponAltStock,
-      attachments = attachments,
     })
     i = i + 1
-  end
-end
-
-function save_zm_castle_dragonheads(mapData)
-  local dragonheads = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_CASTLE_DRAGONHEADS")
-  if dragonheads and dragonheads > 0 then
-    mapData.dragonheads = 1
-  else 
-    mapData.dragonheads = 0
   end
 end
 
 function save_zm_castle_landingpads(mapData)
   local landingpads = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_CASTLE_LANDINGPADS")
   if landingpads and landingpads > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_CASTLE_LANDINGPADS","")
     mapData.landingpads = 1
   else 
     mapData.landingpads = 0
-  end
-end
-
-function save_zm_castle_boss_ready(mapData)
-  local boss_ready = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_CASTLE_BOSS_READY")
-  if boss_ready and boss_ready > 0 then
-    mapData.boss_ready = 1
-  else 
-    mapData.boss_ready = 0
-  end
-end
-
-function restore_zm_castle_dragonheads(mapData)
-  if mapData["dragonheads"] then
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_DRAGONHEADS", mapData["dragonheads"])
   end
 end
 
@@ -646,9 +699,57 @@ function restore_zm_castle_landingpads(mapData)
   end
 end
 
-function restore_zm_castle_boss_ready(mapData)
-  if mapData["boss_ready"] then
-    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_CASTLE_BOSS_READY", mapData["boss_ready"])
+function save_universal(uniData)
+  if not uniData["players"] then
+    uniData["players"] = {}
+  end
+  local xuidList = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA_XUIDS")
+  for xuid in string.gmatch(xuidList, "[^;]+") do
+    uniData.players[xuid] = {}
+
+    local kills = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" .. xuid)
+    if kills and kills >= 0 then
+      uniData.players[xuid]["kills"] = kills
+    end
+    
+    local headshots = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid)
+    if headshots and headshots >= 0 then
+      uniData.players[xuid]["headshots"] = headshots
+    end
+    
+    local revives = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid)
+    if revives and revives >= 0 then
+      uniData.players[xuid]["revives"] = revives
+    end
+    
+    local downs = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid)
+    if downs and downs >= 0 then
+      uniData.players[xuid]["downs"] = downs
+    end
+  end
+end
+
+function restore_universal(uniData)
+  if not uniData["players"] then
+    uniData["players"] = {}
+  end
+  if uniData["players"] then
+    for xuid, playerData in pairs(uniData.players) do
+      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" .. xuid, "true" )
+
+      if playerData["kills"] then
+        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" .. xuid, playerData["kills"])
+      end
+      if playerData["headshots"] then
+        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid, playerData["headshots"])
+      end
+      if playerData["revives"] then
+        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid, playerData["revives"])
+      end
+      if playerData["downs"] then
+        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid, playerData["downs"])
+      end
+    end
   end
 end
 
@@ -658,6 +759,7 @@ map_saves = {
   zm_island = map_save_zm_island,
   zm_stalingrad = map_save_zm_stalingrad,
   zm_genesis = map_save_zm_genesis,
+  zm_factory = map_save_zm_factory,
 }
 
 map_restores = {
@@ -666,9 +768,12 @@ map_restores = {
   zm_island = map_restore_zm_island,
   zm_stalingrad = map_restore_zm_stalingrad,
   zm_genesis = map_restore_zm_genesis,
+  zm_factory = map_restore_zm_factory,
 }
 
 return {
   map_saves = map_saves,
   map_restores = map_restores,
+  save_universal = save_universal,
+  restore_universal = restore_universal,
 }

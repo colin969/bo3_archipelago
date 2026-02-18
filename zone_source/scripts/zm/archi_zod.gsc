@@ -73,6 +73,7 @@ function load_state()
     level flag::init("ap_got_summoning_key");
 
     archi_save::wait_restore_ready("zm_zod");
+    level flag::wait_till("ap_attachment_rando_ready");
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     archi_save::restore_power_on();

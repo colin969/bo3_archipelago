@@ -8,6 +8,7 @@ local json = require("Archipelago.Json")
 local save_system = require("Archipelago.Save")
 local settings_file = require("Archipelago.SettingsFile")
 local locations = require("Archipelago.Locations")
+local attachment_rando = require("Archipelago.AttachmentRando")
 
 local notifyFunc = nil
 local goalCondInitialized = false
@@ -40,11 +41,17 @@ instanceItemState = {}
 connectionItemState = {}
 
 saveData = nil
-seed = nil
+local seed = nil
 
 Archi.SocketDisconnected = function ()
   ItemQueue = List.new()
   connectionItemState = {}
+end
+
+Archi.DeathlinkRecv = function(timestamp)
+  -- Send to GSC
+  Archi.LogMessage("Deathlink Recieved");
+  Engine.SetDvar("ARCHIPELAGO_DEATHNLINK_RECIEVED", "true")
 end
 
 Archi.FromGSC = function (model)
@@ -79,6 +86,12 @@ Archi.FromGSC = function (model)
   if IsParamModelEqualToString(model, "ap_debug_magicbox") then
     save_magicbox_list()
   end
+  if IsParamModelEqualToString(model, "ap_deathlink_triggered") then
+    if Archipelago then
+      Archi.LogMessage("Deathlink Triggered")
+      Archipelago.SendDeathlink()
+    end
+  end
   if IsParamModelEqualToString(model, "ap_init_state") then
     seed = Engine.DvarString("","ARCHIPELAGO_SEED")
 
@@ -105,6 +118,40 @@ Archi.FromGSC = function (model)
       local saveDataStr = json.encode(saveData, { indent = true })
       Archipelago.StoreSaveData(saveDataStr)
     end
+  end
+  if IsParamModelEqualToString(model, "ap_save_data_universal") then
+    if saveData == nil then
+      saveData = {}
+    end
+
+    if not saveData["universal"] then
+      saveData["universal"] = {
+        players = {}
+      }
+    end
+
+    save_system.save_universal(saveData["universal"])
+
+    local saveDataStr = json.encode(saveData, { indent = true })
+    Archipelago.StoreSaveData(saveDataStr)
+
+    -- We're done saving, let gsc know
+    Engine.SetDvar( "ARCHIPELAGO_SAVE_DATA_UNIVERSAL", "NONE" )
+  end
+  if IsParamModelEqualToString(model, "ap_load_data_universal") then
+    if saveData == nil then
+      saveData = {}
+    end
+
+    if not saveData["universal"] then
+      saveData["universal"] = {
+        players = {}
+      }
+    end
+
+    save_system.restore_universal(saveData["universal"])
+
+    Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_UNIVERSAL", "NONE" )
   end
   if IsParamModelEqualToString(model, "ap_save_checkpoint_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA")
@@ -160,6 +207,7 @@ Archi.FromGSC = function (model)
     if mapName ~= "NONE" then
       local checkpointName = "_checkpoint_" .. mapName
       local mapRestore = save_system.map_restores[mapName]
+
       if mapRestore then
         if saveData[mapName] then
           mapRestore(saveData[mapName])
@@ -167,16 +215,13 @@ Archi.FromGSC = function (model)
           mapRestore(saveData[checkpointName])
         end
       else
-        if not mapRestore then
-          Archi.LogMessage("No restore func found for " .. mapName)
-        end
+        Archi.LogMessage("No restore func found for '" .. mapName .. "'")
       end
 
-      -- saveData[mapName] = {
-      --   players = {}
-      -- } -- Clear map save data and save the file back
-      -- local saveDataStr = json.encode(saveData)
-      -- Archipelago.StoreSaveData(saveDataStr)
+      -- Load attachment rando data
+      sight_weight = Engine.DvarInt(0,"ARCHIPELAGO_ATTACHMENT_RANDO_SIGHT_SIZE_WEIGHT")
+      attachment_data = attachment_rando.generate_weapon_attachments_for_seed(seed, sight_weight)
+      attachment_rando.load_attachments_into_gsc(attachment_data)
   
       -- Pass values over expected dvars
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA", "NONE" )
@@ -258,7 +303,7 @@ end
 
 Archi.LocationNotifyLoop = function()
   local UIRootFull = LUI.roots.UIRootFull;
-	UIRootFull.LocHUDRefreshTimer = LUI.UITimer.newElementTimer(100, false, function()
+	UIRootFull.LocHUDRefreshTimer = LUI.UITimer.newElementTimer(200, false, function()
     if not List.isEmpty(LocationQueue) and goalCondInitialized and saveLoaded then
       local code = List.popleft(LocationQueue)
       if not saveData["universal"]["locationsFound"][code] then
@@ -275,7 +320,7 @@ end
 
 Archi.GiveItemsLoop = function()
   local UIRootFull = LUI.roots.UIRootFull;
-	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(100, false, function()
+	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(200, false, function()
     local item = Engine.DvarString(nil,"ARCHIPELAGO_ITEM_GET")
     if (not List.isEmpty(ItemQueue)) and item == "NONE" and goalCondInitialized and saveLoaded then
       local networkItem = List.popleft(ItemQueue)
@@ -373,7 +418,9 @@ Archi.LoadData = function ()
   end
 
   if not saveData["universal"] then
-    saveData["universal"] = {}
+    saveData["universal"] = {
+      players = {}
+    }
   end
 
   if not saveData["universal"]["itemsReceived"] then
