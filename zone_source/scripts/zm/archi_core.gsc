@@ -270,12 +270,6 @@ function game_start()
         // Map State
         level.archi.progressive_perk_limit = 0;
         level.archi.craftable_parts = [];
-    
-        // Settings
-        level.archi.perk_limit_default_modifier = 0;
-        level.archi.randomized_shield_parts = 0;
-        level.archi.map_specific_wallbuys = 0;
-        level.archi.map_specific_machines = 0;
 
         archi_items::RegisterUniversalItem("50 Points",&archi_items::give_50Points);
         archi_items::RegisterUniversalItem("500 Points",&archi_items::give_500Points);
