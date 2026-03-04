@@ -237,7 +237,7 @@ function setup_weapon_quests()
     
     level thread _first_skull_cleanse(level.archi.mapString + " Skull of Nan'Sapwe - Cleanse a Ritual Skull");
     level thread _all_skull_cleanse(level.archi.mapString + " Skull of Nan'Sapwe - Cleanse all 4 Ritual Skulls");
-    level thread _skull_room_defense(level.archi.mapString + " Skull of Nan'Sapwe - Survive the Skull Room Assault");
+    level thread _skull_room_defense(level.archi.mapString + " Skull of Nan'Sapwe - Survive the Skull Room");
 }
 
 function setup_side_ee()

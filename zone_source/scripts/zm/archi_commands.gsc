@@ -53,6 +53,9 @@ function init_commands()
     level thread _basic_trigger("ap_debug_stats", &_test_scoreboard);
     level thread _basic_trigger("ap_gum", &_test_general);
     level thread _basic_trigger("ap_stats", &_test_scoreboard);
+    level thread _basic_trigger("ap_give_weapon", &_give_weapon);
+    level thread _basic_trigger("ap_reticle", &_set_reticle);
+    level thread _basic_trigger("ap_get_dvar", &_get_dvar);
   }
 }
 
@@ -513,3 +516,66 @@ function bgb_get_gumball_anim_weapon(bgb, activating)
 //     player incrementplayerstat("headshots", 1);
 //   }
 // }
+
+function _give_weapon(val)
+{
+  if (val != "")
+  {
+    weapon = GetWeapon(val);
+    if (isdefined(weapon))
+    {
+      foreach (player in level.players)
+      {
+        player zm_weapons::weapon_give(weapon, 0, 1);
+      }
+    }
+    else
+    {
+      IPrintLn("Weapon not found");
+    }
+  }
+}
+
+function _set_reticle(val)
+{
+  if (val != "")
+  {
+    val = Int(val);
+    level.players[0] _set_player_reticle(val);
+  }
+}
+
+function _set_player_reticle(reticle)
+{
+  weapon = self GetCurrentWeapon();
+  base_weapon = zm_weapons::get_base_weapon( weapon );
+  force_attachments = zm_weapons::get_force_attachments( base_weapon.rootweapon );
+  if( isdefined( force_attachments ) && force_attachments.size )
+	{
+		weapon_options = self CalcWeaponOptions( 1, 0, reticle );
+	}
+  else
+  {
+    weapon_options = self CalcWeaponOptions( 1, 0, reticle );
+    weapon = self GetBuildKitWeapon( weapon, zm_weapons::is_weapon_upgraded( weapon ) );
+  }
+  if( IsSubStr( weapon.name, "+dualoptic" ) )
+  {
+    self TakeWeapon(self GetCurrentWeapon());
+    self GiveWeapon(weapon, weapon_options);
+  }
+  else
+  {
+  self UpdateWeaponOptions( weapon, weapon_options );
+
+  }
+}
+
+function _get_dvar(val)
+{
+  if (val != "")
+  {
+    dvar_value = GetDvarString(val, "");
+    IPrintLn(dvar_value);
+  }
+}

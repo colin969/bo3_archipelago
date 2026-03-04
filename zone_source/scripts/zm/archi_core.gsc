@@ -82,11 +82,17 @@ function __init__()
     SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERAL", "NONE");
     SetDvar("ARCHIPELAGO_SAVE_PROGRESS", "NONE");
     SetDvar("ARCHIPELAGO_DEATHNLINK_RECIEVED", "NONE");
+    SetDvar("ARCHIPELAGO_LUA_CLEAR_DATA", "");
+    SetDvar("ARCHIPELAGO_CLEAR_DATA_CHECKPOINTS", "NONE");
     //Lua Log Passing Dvars
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
     SetDvar("ARCHIPELAGO_LOAD_READY", 0);
     SetDvar("ARCHIPELAGO_SEED", "");
-    SetDvar("ARCHIPELAGO_SETTINGS_READY", "");
+    settingsDone = GetDvarString("ARCHIPELAGO_SETTINGS_READY", "");
+    if (settingsDone == "")
+    {
+        SetDvar("ARCHIPELAGO_SETTINGS_READY", "");
+    }
 
     //Server-wide thread to print Log messages from Lua/LUI
     level thread log_from_lua();
@@ -127,7 +133,6 @@ function get_ap_settings()
         dvar_value = GetDvarString("ARCHIPELAGO_SETTINGS_READY", "");
         if (dvar_value != "")
         {
-            SetDvar("ARCHIPELAGO_SETTINGS_READY", "");
             LUINotifyEvent(&"ap_init_goal_cond", 0);
             wait(0.1);
             break;
@@ -202,514 +207,512 @@ function wait_for_start()
 
 function game_start()
 {
-    //TODO Error out here if there is no connection settings
-    if (!isdefined(level.archi))
+    // Hold server-wide Archipelago Information
+    level.archi = SpawnStruct();
+
+    on_archi_connect_settings();
+
+    //Collection of Locations that are checked, 
+    level.archi.locationQueue = array();
+
+    level.archi.monitor_strings = [];
+    level.archi.save_checkpoint = false;
+    level.archi.save_zombie_count = true;
+    level.archi.opened_doors = [];
+    level.archi.opened_debris = [];
+    level.archi.excluded_craftable_items = [];
+    level.archi.ap_box_keys = [];
+    level.archi.ap_box_states = [];
+    level.archi.ap_weapon_bits = [];
+    level flag::init("ap_map_locked");
+    level.archi.map_key_item = undefined;
+
+    zombie_doors = GetEntArray("zombie_door", "targetname");
+    for (i = 0; i < zombie_doors.size; i++)
     {
-        // Hold server-wide Archipelago Information
-        level.archi = SpawnStruct();
+        zombie_doors[i].id = i;
+    }
+    array::thread_all(zombie_doors, &track_door_open);
 
-        on_archi_connect_settings();
+    zombie_debris = GetEntArray("zombie_debris", "targetname");
+    for (i = 0; i < zombie_debris.size; i++)
+    {
+        zombie_debris[i].id = i;
+    }
+    array::thread_all(zombie_debris, &track_debris_open);
 
-        //Collection of Locations that are checked, 
-        level.archi.locationQueue = array();
+    // Get Map Name String
+    mapName = GetDvarString( "mapname" );
 
-        level.archi.save_checkpoint = false;
-        level.archi.save_zombie_count = true;
-        level.archi.opened_doors = [];
-        level.archi.opened_debris = [];
-        level.archi.excluded_craftable_items = [];
-        level.archi.ap_box_keys = [];
-        level.archi.ap_box_states = [];
-        level.archi.ap_weapon_bits = [];
-        level flag::init("ap_map_locked");
-        level.archi.map_key_item = undefined;
+    level.archi.wallbuy_mappings = [];
+    level.archi.wallbuys = [];
+    level.archi.craftable_piece_to_location = [];
+    level.archi.check_override_wallbuy_purchase = &check_override_wallbuy_purchase;
+    level.archi.boarded_windows = 0;
 
-        zombie_doors = GetEntArray("zombie_door", "targetname");
-        for (i = 0; i < zombie_doors.size; i++)
-        {
-            zombie_doors[i].id = i;
-        }
-        array::thread_all(zombie_doors, &track_door_open);
+    // Map State
+    level.archi.progressive_perk_limit = 0;
+    level.archi.craftable_parts = [];
 
-        zombie_debris = GetEntArray("zombie_debris", "targetname");
-        for (i = 0; i < zombie_debris.size; i++)
-        {
-            zombie_debris[i].id = i;
-        }
-        array::thread_all(zombie_debris, &track_debris_open);
+    archi_items::RegisterUniversalItem("200 Points",&archi_items::give_200Points);
+    archi_items::RegisterUniversalItem("1500 Points",&archi_items::give_1500Points);
+    archi_items::RegisterUniversalItem("50000 Points",&archi_items::give_50000Points);
 
-        // Get Map Name String
-        mapName = GetDvarString( "mapname" );
+    // Traps
+    archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson);
+    archi_items::RegisterUniversalItem("Trap - Grenade Party",&archi_items::give_Trap_GrenadeParty);
+    archi_items::RegisterUniversalItem("Trap - Nuke Powerup",&archi_items::give_Trap_NukePowerup);
+    archi_items::RegisterUniversalItem("Trap - Knuckle Crack",&archi_items::give_Trap_KnuckleCrack);
 
-        level.archi.wallbuy_mappings = [];
-        level.archi.wallbuys = [];
-        level.archi.craftable_piece_to_location = [];
-        level.archi.check_override_wallbuy_purchase = &check_override_wallbuy_purchase;
-        level.archi.boarded_windows = 0;
+    // Gifts
+    archi_items::RegisterUniversalItem("Gift - Unlimited Sprint (2 Minutes)",&archi_items::give_Gift_UnlimitedSprint);
+    archi_items::RegisterUniversalItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup);
+    archi_items::RegisterUniversalItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup);
+    archi_items::RegisterUniversalItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup);
+    archi_items::RegisterUniversalItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup);
+    archi_items::RegisterUniversalItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup);
+    archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup);
 
-        // Map State
-        level.archi.progressive_perk_limit = 0;
-        level.archi.craftable_parts = [];
+    // Progressives
+    patch_pap();
+    archi_items::RegisterUniversalItem("Progressive - Pack-A-Punch Machine",&archi_items::give_ProgressivePap);
+    archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit);
 
-        archi_items::RegisterUniversalItem("200 Points",&archi_items::give_200Points);
-        archi_items::RegisterUniversalItem("1500 Points",&archi_items::give_1500Points);
-        archi_items::RegisterUniversalItem("50000 Points",&archi_items::give_50000Points);
+    archi_commands::init_commands();
+    level thread round_start_location();
+    level thread round_end_noti();
+    level thread repaired_board_noti();
 
-        // Traps
-        archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson);
-        archi_items::RegisterUniversalItem("Trap - Grenade Party",&archi_items::give_Trap_GrenadeParty);
-        archi_items::RegisterUniversalItem("Trap - Nuke Powerup",&archi_items::give_Trap_NukePowerup);
-        archi_items::RegisterUniversalItem("Trap - Knuckle Crack",&archi_items::give_Trap_KnuckleCrack);
+    if (mapName == "zm_zod")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
+        level.archi.map_key_item = "Map Unlock - Shadows of Evil";
+        level.archi.sync_perk_exploders = &archi_zod::sync_perk_exploders;
 
-        // Gifts
-        archi_items::RegisterUniversalItem("Gift - Unlimited Sprint (2 Minutes)",&archi_items::give_Gift_UnlimitedSprint);
-        archi_items::RegisterUniversalItem("Gift - Carpenter Powerup",&archi_items::give_Gift_CarpenterPowerup);
-        archi_items::RegisterUniversalItem("Gift - Double Points Powerup",&archi_items::give_Gift_DoublePointsPowerup);
-        archi_items::RegisterUniversalItem("Gift - InstaKill Powerup",&archi_items::give_Gift_InstaKillPowerup);
-        archi_items::RegisterUniversalItem("Gift - Fire Sale Powerup",&archi_items::give_Gift_FireSalePowerup);
-        archi_items::RegisterUniversalItem("Gift - Max Ammo Powerup",&archi_items::give_Gift_MaxAmmoPowerup);
-        archi_items::RegisterUniversalItem("Gift - Free Perk Powerup",&archi_items::give_Gift_FreePerkPowerup);
+        replace_craftable_onPickup("craft_shield_zm");
+        level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+        level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+        level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
 
-        // Progressives
-        patch_pap();
-        archi_items::RegisterUniversalItem("Progressive - Pack-A-Punch Machine",&archi_items::give_ProgressivePap);
-        archi_items::RegisterUniversalItem("Progressive - Perk Limit Increase",&archi_items::give_ProgressivePerkLimit);
+        replace_craftable_onPickup("idgun");
+        level.archi.craftable_piece_to_location["idgun_part_heart"] = level.archi.mapString + " Apothicon Servant Part Pickup - Margwa Heart";
+        level.archi.craftable_piece_to_location["idgun_part_skeleton"] = level.archi.mapString + " Apothicon Servant Part Pickup - Margwa Tentacle";
+        level.archi.craftable_piece_to_location["idgun_part_xenomatter"] = level.archi.mapString + " Apothicon Servant Part Pickup - Xenomatter";
 
-        archi_commands::init_commands();
-        level thread round_start_location();
-        level thread round_end_noti();
-        level thread repaired_board_noti();
+        replace_craftable_onPickup("police_box");
+        level.archi.craftable_piece_to_location["police_box_fuse_01"] = level.archi.mapString + " Civil Protector Part Pickup - Waterfront Fuse";
+        level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
+        level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
 
-        if (mapName == "zm_zod")
-        {
-            level.archi.mapString = ARCHIPELAGO_MAP_SHADOWS_OF_EVIL;
-            level.archi.map_key_item = "Map Unlock - Shadows of Evil";
-            level.archi.sync_perk_exploders = &archi_zod::sync_perk_exploders;
-
-            replace_craftable_onPickup("craft_shield_zm");
-            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
-            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
-            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
-
-            replace_craftable_onPickup("idgun");
-            level.archi.craftable_piece_to_location["idgun_part_heart"] = level.archi.mapString + " Apothicon Servant Part Pickup - Margwa Heart";
-            level.archi.craftable_piece_to_location["idgun_part_skeleton"] = level.archi.mapString + " Apothicon Servant Part Pickup - Margwa Tentacle";
-            level.archi.craftable_piece_to_location["idgun_part_xenomatter"] = level.archi.mapString + " Apothicon Servant Part Pickup - Xenomatter";
-
-            replace_craftable_onPickup("police_box");
-            level.archi.craftable_piece_to_location["police_box_fuse_01"] = level.archi.mapString + " Civil Protector Part Pickup - Waterfront Fuse";
-            level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
-            level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
-
-            if (level.archi.mystery_box_special_items == 1) {
-                archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_0",0);
-                archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",2);
-            }
-
-            if (level.archi.mystery_box_regular_items == 1) {
-                universal_box_registration();
-            }
-
-            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
-            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
-            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
-
-            archi_items::RegisterItem("Apothicon Servant Part - Margwa Heart",&archi_zod::give_ApothiconServantPart_Heart,undefined,false);
-            archi_items::RegisterItem("Apothicon Servant Part - Margwa Tentacle",&archi_zod::give_ApothiconServantPart_Tentacle,undefined,false);
-            archi_items::RegisterItem("Apothicon Servant Part - Xenomatter",&archi_zod::give_ApothiconServantPart_Xenomatter,undefined,false);
-
-            archi_items::RegisterItem("Civil Protector Part - Waterfront Fuse",&archi_zod::give_CivilProtectorPart_Fuse01,undefined,false);
-            archi_items::RegisterItem("Civil Protector Part - Canals Fuse",&archi_zod::give_CivilProtectorPart_Fuse02,undefined,false);
-            archi_items::RegisterItem("Civil Protector Part - Footlight Fuse",&archi_zod::give_CivilProtectorPart_Fuse03,undefined,false);
-
-            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
-            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
-            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
-            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
-            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
-            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-
-            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-            archi_items::RegisterWeapon("Wallbuy - Bootlegger",&archi_items::give_Weapon_BRM,"smg_sten");
-            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-
-            level thread archi_zod::setup_locations();
-
-            level thread setup_spare_change_trackers(7);
-
-            level.archi.save_state_manager = &archi_zod::save_state_manager;
-            level.archi.load_state_manager = &archi_zod::load_state;
+        if (level.archi.mystery_box_special_items == 1) {
+            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_0",0);
+            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",2);
         }
 
-        if (mapName == "zm_castle")
-        {
-            level.archi.mapString = ARCHIPELAGO_MAP_CASTLE;
-            level.archi.map_key_item = "Map Unlock - Castle"; 
-            level.archi.sync_perk_exploders = &archi_castle::sync_perk_exploders;
-
-            // Replace craftable logic with AP locations
-            replace_craftable_onPickup("craft_shield_zm");
-            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
-            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
-            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
-
-            replace_craftable_onPickup("gravityspike");
-            level.archi.craftable_piece_to_location["gravityspike_part_body"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Body";
-            level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
-            level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
-
-            if (level.archi.mystery_box_special_items == 1) {
-                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-            }
-
-            if (level.archi.mystery_box_regular_items == 1) {
-                universal_box_registration();
-            }
-
-            level thread archi_castle::setup_locations();
-
-            level thread setup_spare_change_trackers(6);
-
-            // Register Map Unique Items - Item name, callback, clientfield
-            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
-            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
-            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
-
-            archi_items::RegisterItem("Ragnarok DG-4 Part - Body",&archi_castle::give_RagnarokPart_Body,undefined,false);
-            archi_items::RegisterItem("Ragnarok DG-4 Part - Guards",&archi_castle::give_RagnarokPart_Guards,undefined,false);
-            archi_items::RegisterItem("Ragnarok DG-4 Part - Handle",&archi_castle::give_RagnarokPart_Handle,undefined,false);
-
-            // Machines
-            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
-            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
-            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
-            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
-            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
-
-            // Wunderfizz
-            archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-            archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
-            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-        
-            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-            archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
-            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-
-            level.archi.save_state_manager = &archi_castle::save_state_manager;
-            level.archi.load_state_manager = &archi_castle::load_state;
+        if (level.archi.mystery_box_regular_items == 1) {
+            universal_box_registration();
         }
 
-        if (mapName == "zm_island")
-        {
-            level.archi.mapString = ARCHIPELAGO_MAP_ZETSUBOU;
-            level.archi.map_key_item = "Map Unlock - Zetsubou No Shima";
-            level.archi.sync_perk_exploders = &archi_island::sync_perk_exploders;
+        archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+        archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+        archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
 
-            // 2 underwater
-            level thread setup_spare_change_trackers(5);
+        archi_items::RegisterItem("Apothicon Servant Part - Margwa Heart",&archi_zod::give_ApothiconServantPart_Heart,undefined,false);
+        archi_items::RegisterItem("Apothicon Servant Part - Margwa Tentacle",&archi_zod::give_ApothiconServantPart_Tentacle,undefined,false);
+        archi_items::RegisterItem("Apothicon Servant Part - Xenomatter",&archi_zod::give_ApothiconServantPart_Xenomatter,undefined,false);
 
-            replace_craftable_onPickup("craft_shield_zm");
-            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
-            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
-            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+        archi_items::RegisterItem("Civil Protector Part - Waterfront Fuse",&archi_zod::give_CivilProtectorPart_Fuse01,undefined,false);
+        archi_items::RegisterItem("Civil Protector Part - Canals Fuse",&archi_zod::give_CivilProtectorPart_Fuse02,undefined,false);
+        archi_items::RegisterItem("Civil Protector Part - Footlight Fuse",&archi_zod::give_CivilProtectorPart_Fuse03,undefined,false);
 
-            replace_craftable_onPickup("gasmask");
-            level.archi.craftable_piece_to_location["gasmask_part_visor"] = level.archi.mapString + " Gasmask Part Pickup - Visor";
-            level.archi.craftable_piece_to_location["gasmask_part_filter"] = level.archi.mapString + " Gasmask Part Pickup - Filter";
-            level.archi.craftable_piece_to_location["gasmask_part_strap"] = level.archi.mapString + " Gasmask Part Pickup - Strap";
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
 
-            if (level.archi.mystery_box_special_items == 1) {
-                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-                archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000",2);
-            }
+        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+        archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+        archi_items::RegisterWeapon("Wallbuy - Bootlegger",&archi_items::give_Weapon_BRM,"smg_sten");
+        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
-            if (level.archi.mystery_box_regular_items == 1) {
-                universal_box_registration();
-            }
+        level thread archi_zod::setup_locations();
 
-            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
-            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
-            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+        level thread setup_spare_change_trackers(7);
 
-            archi_island::setup_main_quest();
-            archi_island::setup_main_ee_quest();
-            archi_island::setup_weapon_quests();
-            archi_island::setup_challenges();
-            archi_island::adjust_host_bgb_pack();
-            archi_island::setup_side_ee();
-
-            // TODO
-            archi_items::RegisterItem("Gasmask Part - Visor",&archi_island::give_GasmaskPart_Visor,undefined,true);
-            archi_items::RegisterItem("Gasmask Part - Filter",&archi_island::give_GasmaskPart_Filter,undefined,true);
-            archi_items::RegisterItem("Gasmask Part - Strap",&archi_island::give_GasmaskPart_Strap,undefined,true);
-
-            // Machines
-            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
-            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
-            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
-            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
-            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
-            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-
-            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-            archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
-            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
-            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
-            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-            
-            level.archi.save_state_manager = &archi_island::save_state_manager;
-            level.archi.load_state_manager = &archi_island::load_state;
-        }
-
-        if (mapName == "zm_stalingrad")
-        {
-            level.archi.mapString = ARCHIPELAGO_MAP_GOROD_KROVI;
-            level.archi.map_key_item = "Map Unlock - Gorod Krovi";
-
-            // Mule Kick is underwater
-            level thread setup_spare_change_trackers(5);
-
-            level thread archi_stalingrad::setup_locations();
-            level thread archi_stalingrad::setup_patches();
-
-            replace_craftable_onPickup("craft_shield_zm");
-            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
-            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
-            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
-
-            replace_craftable_onPickup("dragonride");
-            level.archi.craftable_piece_to_location["dragonride_part_transmitter"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Transmitter";
-            level.archi.craftable_piece_to_location["dragonride_part_codes"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Codes";
-            level.archi.craftable_piece_to_location["dragonride_part_map"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Map";
-
-            level.archi.excluded_craftable_items["dragonride_part_transmitter"] = 1;
-            level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
-            level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
-
-            if (level.archi.mystery_box_special_items == 1) {
-                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3",2);
-            }
-
-            if (level.archi.mystery_box_regular_items == 1) {
-                universal_box_registration();
-            }
-
-            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
-            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
-            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
-
-            archi_items::RegisterItem("Dragonride Network Circuit - Transmitter",&archi_stalingrad::give_DragonridePart_Transmitter,undefined,false);
-            archi_items::RegisterItem("Dragonride Network Circuit - Codes",&archi_stalingrad::give_DragonridePart_Codes,undefined,false);
-            archi_items::RegisterItem("Dragonride Network Circuit - Map",&archi_stalingrad::give_DragonridePart_Map,undefined,false);
-
-            // Machines
-            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
-            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
-            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
-            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
-            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
-            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-
-            // Wunderfizz
-            archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-            archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
-            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-
-            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-            archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
-            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
-            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
-            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-
-            level.archi.save_state_manager = &archi_stalingrad::save_state_manager;
-            level.archi.load_state_manager = &archi_stalingrad::load_state;
-        }
-
-        if (mapName == "zm_genesis")
-        {
-            level.archi.mapString = ARCHIPELAGO_MAP_REVELATIONS;
-            level.archi.map_key_item = "Map Unlock - Revelations";
-
-            level thread setup_spare_change_trackers(7);
-
-            level thread archi_genesis::setup_main_quest();
-            level thread archi_genesis::setup_keeper_friend();
-            level thread archi_genesis::setup_main_ee_quest();
-            level thread archi_genesis::setup_weapon_quest();
-            level thread archi_genesis::setup_wearables();
-            level thread archi_genesis::setup_challenges();
-
-            level thread archi_genesis::patch_sword_quest();
-
-            replace_craftable_onPickup("craft_shield_zm");
-            level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
-            level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
-            level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
-
-            archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
-            archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
-            archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
-
-            if (level.archi.mystery_box_special_items == 1) {
-                archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_genesis_0",0);
-                archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
-                archi_items::RegisterBoxWeapon("Mystery Box - Ragnarok DG-4s","hero_gravityspikes_melee",2);
-                archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun",3);
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",4);
-            }
-
-            if (level.archi.mystery_box_regular_items == 1) {
-                universal_box_registration();
-            }
-
-            // Machines
-            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
-            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
-            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
-            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
-            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
-            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-            archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-
-            // Wunderfizz
-            archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-            archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
-
-            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-            archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
-            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-            archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-            archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
-            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-            archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
-            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-
-            level.archi.save_state_manager = &archi_genesis::save_state_manager;
-            level.archi.load_state_manager = &archi_genesis::load_state;
-        }
-
-        if (mapName == "zm_factory")
-        {
-            level.archi.mapString = ARCHIPELAGO_MAP_THE_GIANT;
-            level.archi.map_key_item = "Map Unlock - The Giant";
-
-            // 7 possible machines, 6 will spawn
-            level thread setup_spare_change_trackers(5);
-
-            archi_factory::setup_locations();
-            
-            if (level.archi.mystery_box_special_items == 1) {
-                archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-                archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-                archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun",2);
-            }
-
-            if (level.archi.mystery_box_regular_items == 1) {
-                universal_box_registration();
-            }
-
-            // Register Possible Global Items - Item name, callback, clientfield
-            archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
-            archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
-            archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
-            archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
-            archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
-            archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-            archi_items::RegisterPerk("Dead Shot",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-
-            archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-            archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-            archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-            archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-            archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-            archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-            archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-            archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-            archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-            archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-
-            level.archi.save_state_manager = &archi_factory::save_state_manager;
-            level.archi.load_state_manager = &archi_factory::load_state;
-        }
-
-        level thread map_lock();
-
-        level thread init_attachment_rando();
-        WAIT_SERVER_FRAME
-        level thread archi_save::setup_map_saving();
-
-        patch_wunderfizz();
-
-        level thread setup_boarding_window();
-        level thread setup_can_player_purchase_perk();
-
-        //Server-wide thread to get items from the Lua/LUI
-        level thread map_unlock_text();
-        level thread item_get_from_lua();
-
+        level.archi.save_state_manager = &archi_zod::save_state_manager;
+        level.archi.load_state_manager = &archi_zod::load_state;
     }
 
+    if (mapName == "zm_castle")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_CASTLE;
+        level.archi.map_key_item = "Map Unlock - Castle"; 
+        level.archi.sync_perk_exploders = &archi_castle::sync_perk_exploders;
+
+        // Replace craftable logic with AP locations
+        replace_craftable_onPickup("craft_shield_zm");
+        level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+        level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+        level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+        replace_craftable_onPickup("gravityspike");
+        level.archi.craftable_piece_to_location["gravityspike_part_body"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Body";
+        level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
+        level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
+
+        if (level.archi.mystery_box_special_items == 1) {
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+        }
+
+        if (level.archi.mystery_box_regular_items == 1) {
+            universal_box_registration();
+        }
+
+        level thread archi_castle::setup_locations();
+
+        level thread setup_spare_change_trackers(6);
+
+        // Register Map Unique Items - Item name, callback, clientfield
+        archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+        archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+        archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+        archi_items::RegisterItem("Ragnarok DG-4 Part - Body",&archi_castle::give_RagnarokPart_Body,undefined,false);
+        archi_items::RegisterItem("Ragnarok DG-4 Part - Guards",&archi_castle::give_RagnarokPart_Guards,undefined,false);
+        archi_items::RegisterItem("Ragnarok DG-4 Part - Handle",&archi_castle::give_RagnarokPart_Handle,undefined,false);
+
+        // Machines
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+
+        // Wunderfizz
+        archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+    
+        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+        archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+        archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
+        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+        level.archi.save_state_manager = &archi_castle::save_state_manager;
+        level.archi.load_state_manager = &archi_castle::load_state;
+    }
+
+    if (mapName == "zm_island")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_ZETSUBOU;
+        level.archi.map_key_item = "Map Unlock - Zetsubou No Shima";
+        level.archi.sync_perk_exploders = &archi_island::sync_perk_exploders;
+
+        // 2 underwater
+        level thread setup_spare_change_trackers(5);
+
+        replace_craftable_onPickup("craft_shield_zm");
+        level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+        level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+        level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+        replace_craftable_onPickup("gasmask");
+        level.archi.craftable_piece_to_location["gasmask_part_visor"] = level.archi.mapString + " Gasmask Part Pickup - Visor";
+        level.archi.craftable_piece_to_location["gasmask_part_filter"] = level.archi.mapString + " Gasmask Part Pickup - Filter";
+        level.archi.craftable_piece_to_location["gasmask_part_strap"] = level.archi.mapString + " Gasmask Part Pickup - Strap";
+
+        if (level.archi.mystery_box_special_items == 1) {
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+            archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000",2);
+        }
+
+        if (level.archi.mystery_box_regular_items == 1) {
+            universal_box_registration();
+        }
+
+        archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+        archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+        archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+        archi_island::setup_main_quest();
+        archi_island::setup_main_ee_quest();
+        archi_island::setup_weapon_quests();
+        archi_island::setup_challenges();
+        archi_island::adjust_host_bgb_pack();
+        archi_island::setup_side_ee();
+
+        // TODO
+        archi_items::RegisterItem("Gasmask Part - Visor",&archi_island::give_GasmaskPart_Visor,undefined,true);
+        archi_items::RegisterItem("Gasmask Part - Filter",&archi_island::give_GasmaskPart_Filter,undefined,true);
+        archi_items::RegisterItem("Gasmask Part - Strap",&archi_island::give_GasmaskPart_Strap,undefined,true);
+
+        // Machines
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+
+        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+        archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+        archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
+        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+        archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
+        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+        archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
+        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+        
+        level.archi.save_state_manager = &archi_island::save_state_manager;
+        level.archi.load_state_manager = &archi_island::load_state;
+    }
+
+    if (mapName == "zm_stalingrad")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_GOROD_KROVI;
+        level.archi.map_key_item = "Map Unlock - Gorod Krovi";
+
+        // Mule Kick is underwater
+        level thread setup_spare_change_trackers(5);
+
+        level thread archi_stalingrad::setup_locations();
+        level thread archi_stalingrad::setup_patches();
+
+        replace_craftable_onPickup("craft_shield_zm");
+        level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+        level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+        level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+        replace_craftable_onPickup("dragonride");
+        level.archi.craftable_piece_to_location["dragonride_part_transmitter"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Transmitter";
+        level.archi.craftable_piece_to_location["dragonride_part_codes"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Codes";
+        level.archi.craftable_piece_to_location["dragonride_part_map"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Map";
+
+        level.archi.excluded_craftable_items["dragonride_part_transmitter"] = 1;
+        level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
+        level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
+
+        if (level.archi.mystery_box_special_items == 1) {
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3",2);
+        }
+
+        if (level.archi.mystery_box_regular_items == 1) {
+            universal_box_registration();
+        }
+
+        archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+        archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+        archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+        archi_items::RegisterItem("Dragonride Network Circuit - Transmitter",&archi_stalingrad::give_DragonridePart_Transmitter,undefined,false);
+        archi_items::RegisterItem("Dragonride Network Circuit - Codes",&archi_stalingrad::give_DragonridePart_Codes,undefined,false);
+        archi_items::RegisterItem("Dragonride Network Circuit - Map",&archi_stalingrad::give_DragonridePart_Map,undefined,false);
+
+        // Machines
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+
+        // Wunderfizz
+        archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+
+        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+        archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+        archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
+        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+        archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
+        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+        archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
+        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+        level.archi.save_state_manager = &archi_stalingrad::save_state_manager;
+        level.archi.load_state_manager = &archi_stalingrad::load_state;
+    }
+
+    if (mapName == "zm_genesis")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_REVELATIONS;
+        level.archi.map_key_item = "Map Unlock - Revelations";
+
+        level thread setup_spare_change_trackers(7);
+
+        level thread archi_genesis::setup_main_quest();
+        level thread archi_genesis::setup_keeper_friend();
+        level thread archi_genesis::setup_main_ee_quest();
+        level thread archi_genesis::setup_weapon_quest();
+        level thread archi_genesis::setup_wearables();
+        level thread archi_genesis::setup_challenges();
+
+        level thread archi_genesis::patch_sword_quest();
+
+        replace_craftable_onPickup("craft_shield_zm");
+        level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+        level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+        level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+        archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+        archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+        archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+        if (level.archi.mystery_box_special_items == 1) {
+            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_genesis_0",0);
+            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
+            archi_items::RegisterBoxWeapon("Mystery Box - Ragnarok DG-4s","hero_gravityspikes_melee",2);
+            archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun",3);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",4);
+        }
+
+        if (level.archi.mystery_box_regular_items == 1) {
+            universal_box_registration();
+        }
+
+        // Machines
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+
+        // Wunderfizz
+        archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+
+        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+        archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+        archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
+        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
+        archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
+        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+        archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
+        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+        level.archi.save_state_manager = &archi_genesis::save_state_manager;
+        level.archi.load_state_manager = &archi_genesis::load_state;
+    }
+
+    if (mapName == "zm_factory")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_THE_GIANT;
+        level.archi.map_key_item = "Map Unlock - The Giant";
+
+        // 7 possible machines, 6 will spawn
+        level thread setup_spare_change_trackers(5);
+
+        archi_factory::setup_locations();
+        
+        if (level.archi.mystery_box_special_items == 1) {
+            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
+            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
+            archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun",2);
+        }
+
+        if (level.archi.mystery_box_regular_items == 1) {
+            universal_box_registration();
+        }
+
+        // Register Possible Global Items - Item name, callback, clientfield
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+        archi_items::RegisterPerk("Dead Shot",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+
+        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
+        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
+        archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
+        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
+        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
+        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
+        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
+        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
+        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
+        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+
+        level.archi.save_state_manager = &archi_factory::save_state_manager;
+        level.archi.load_state_manager = &archi_factory::load_state;
+    }
+
+    level thread map_lock();
+
+    level thread init_attachment_rando();
+    WAIT_SERVER_FRAME
+    level thread archi_save::setup_map_saving();
+
+    patch_wunderfizz();
+
+    level thread setup_boarding_window();
+    level thread setup_can_player_purchase_perk();
+
+    //Server-wide thread to get items from the Lua/LUI
+    level thread map_unlock_text();
+    level thread item_get_from_lua();
 
     if (level.archi.deathlink_enabled == 1)
     {
         level thread deathlink_send_monitor();
         level thread deathlink_recv_monitor();
     }
+    level thread cleared_restart_ready_montior();
 
     update_box_clientfield();
 
     //Setup default map changes
     default_map_changes();
+
+    level thread archi_save::state_dvar_monitor();
 }
 
 function setup_can_player_purchase_perk()
@@ -832,7 +835,6 @@ function setup_boarding_window()
 
 function watch_player_boarding_window()
 {
-    level endon("end_game");
     self endon("disconnect");
 
     while(true)
@@ -861,10 +863,11 @@ function repaired_board_noti()
 //Recieved commands from the Archipelago Lua Coponent
 function item_get_from_lua()
 {
-    level flag::wait_till( "initial_blackscreen_passed" );
-    wait 5; // Wait for log to clear on game startup
     level endon("end_game");
 	level endon("end_round_think");
+    level flag::wait_till( "initial_blackscreen_passed" );
+    wait 5; // Wait for log to clear on game startup
+
     while(true)
     {
         item = GetDvarString("ARCHIPELAGO_ITEM_GET");
@@ -880,6 +883,8 @@ function item_get_from_lua()
 
 function map_unlock_text()
 {
+    level endon("end_game");
+
     while(true)
     {
         dvar_value = GetDvarString("ARCHIPELAGO_MAP_UNLOCK_NOTIFY", "NONE");
@@ -926,10 +931,10 @@ function award_item(item)
 
 function log_from_lua()
 {
-    level waittill( "initial_blackscreen_passed" );
-
     level endon("end_game");
 	level endon("end_round_think");
+    level waittill( "initial_blackscreen_passed" );
+
     while(true)
     {
         message = GetDvarString("ARCHIPELAGO_LOG_MESSAGE");
@@ -947,10 +952,10 @@ function log_from_lua()
 //When we trip a Location, give to Lua
 function location_check_to_lua()
 {
+    self endon( "disconnect" );
     level flag::wait_till( "initial_blackscreen_passed" );
     //TODO tune this wait till it feels good vs archipelago log messages
     wait 3;
-    self endon( "disconnect" );
     while(true)
     {
         if (level.archi.locationQueue.size > 0)
@@ -1061,6 +1066,8 @@ function track_all_change_collected_thread(total_machines)
 
 function track_change_collected_thread()
 {
+    level endon("end_game");
+
 	while(true)
 	{
 		self waittill("trigger", e_player);
@@ -1102,6 +1109,8 @@ function change_to_round(round_number)
 
 function track_door_open()
 {
+    level endon("end_game");
+
     if (self.script_noteworthy == "electric_door" || self.script_noteworthy == "local_electric_door")
     {
         // Ignore non-buyable doors
@@ -1114,12 +1123,16 @@ function track_door_open()
 
 function track_debris_open()
 {
+    level endon("end_game");
+
     self waittill("kill_debris_prompt_thread");
     level.archi.opened_debris[level.archi.opened_debris.size] = self.id;
 }
 
 function keep_pap_locked()
 {
+    level endon("end_game");
+
     vending_weapon_upgrade_trigger = zm_pap_util::get_triggers();
 
     foreach(t_machine in vending_weapon_upgrade_trigger)
@@ -1453,6 +1466,36 @@ function init_attachment_rando()
         }
     }
 
+    foreach (weapon in GetArrayKeys(level.zombie_weapons))
+    {
+        base_weapon = zm_weapons::get_base_weapon( weapon.rootweapon );
+        camo_index = GetDvarInt("ARCHIPELAGO_CAMO_RANDO_" + ToUpper(base_weapon.name), -1);
+        if (camo_index != -1)
+        {
+            level.zombie_weapons[weapon].ap_camo = camo_index;
+        }
+        pap_camo_index = GetDvarInt("ARCHIPELAGO_CAMO_RANDO_" + ToUpper(base_weapon.name) + "_UPGRADED", -1);
+        if (pap_camo_index != -1)
+        {
+            level.zombie_weapons[weapon].ap_pap_camo = pap_camo_index;
+        }
+    }
+
+    foreach (weapon in GetArrayKeys(level.zombie_weapons))
+    {
+        base_weapon = zm_weapons::get_base_weapon( weapon.rootweapon );
+        reticle = GetDvarInt("ARCHIPELAGO_RETICLE_RANDO_" + ToUpper(base_weapon.name), -1);
+        if (reticle != -1)
+        {
+            level.zombie_weapons[weapon].ap_reticle = reticle;
+        }
+        pap_reticle = GetDvarInt("ARCHIPELAGO_RETICLE_RANDO_" + ToUpper(base_weapon.name) + "_UPGRADED", -1);
+        if (pap_reticle != -1)
+        {
+            level.zombie_weapons[weapon].ap_pap_reticle = pap_reticle;
+        }
+    }
+
     level flag::set("ap_attachment_rando_ready");
 }
 
@@ -1512,6 +1555,7 @@ function patch_pap()
 
 function keep_aats_locked()
 {
+    level endon("end_game");
     level endon("ap_aats_enabled");
 
     if(!isdefined(self.powered) || !self.powered.power)
@@ -1533,6 +1577,8 @@ function keep_aats_locked()
 
 function deathlink_recv_monitor()
 {
+    level endon("end_game");
+
     while(true)
     {
         dvar_value = GetDvarString("ARCHIPELAGO_DEATHNLINK_RECIEVED", "NONE");
@@ -1629,8 +1675,40 @@ function deathlink_send_monitor()
     LUINotifyEvent(&"ap_deathlink_triggered", 0);
 }
 
+function cleared_restart_ready_montior()
+{
+    level endon("end_game");
+
+    while(true)
+    {
+        wait(0.5);
+
+        dvar_value = GetDvarString("ARCHIPELAGO_LUA_CLEAR_DATA", "");
+        if (isdefined(dvar_value) && dvar_value != "")
+        {
+            IPrintLn("Clearing save data...");
+            SetDvar("ARCHIPELAGO_LUA_CLEAR_DATA", "");
+            mapName = GetDvarString( "mapname" );
+            SetDvar("ARCHIPELAGO_CLEAR_DATA", mapName);
+            LUINotifyEvent(&"ap_clear_data", 0);
+            while(true)
+            {
+                dvar_res = GetDvarString("ARCHIPELAGO_CLEAR_DATA", "");
+                if (dvar_res == "NONE")
+                {
+                    break;
+                }
+                wait(0.2);
+            }
+            Map_Restart(false);
+        }
+    }
+}
+
 function end_game_via_player_death_monitor()
 {
+    level endon("end_game");
+
     level waittill("last_player_died");
     LUINotifyEvent(&"ap_deathlink_triggered", 0);
 }
@@ -1708,6 +1786,8 @@ function map_lock()
 
 function map_lock_text()
 {
+    level endon("end_game");
+
     while(level flag::get("ap_map_locked")) {
         IPrintLnBold("Item Required: " + level.archi.map_key_item);
         wait(5.1);
@@ -1724,3 +1804,4 @@ function map_lock_player()
         self EnableWeapons();
     }
 }
+

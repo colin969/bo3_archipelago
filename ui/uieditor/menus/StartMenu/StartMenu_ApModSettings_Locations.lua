@@ -64,33 +64,30 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
 	return tabList
 end, true )
 
-LUI.createMenu.StartMenu_ApModSettings_Locations = function( controller )
-	local self = CoD.Menu.NewForUIEditor( "StartMenu_ApModSettings_Locations" )
+CoD.StartMenu_ApModSettings_Locations = InheritFrom( LUI.UIElement )
+CoD.StartMenu_ApModSettings_Locations.new = function( menu, controller )
+	local self = LUI.UIElement.new()
 
 	if PreLoadFunc then
 		PreLoadFunc( self, controller )
 	end
 
+	self:setUseStencil( false )
+	self:setClass( CoD.StartMenu_ApModSettings_Locations )
+	self.id = "StartMenu_ApModSettings_Locations"
 	self.soundSet = "ChooseDecal"
-	self:setOwner( controller )
-	self:setLeftRight( true, false, 0, 1280 )
-	self:setTopBottom( true, false, 0, 720 )
-	self:playSound( "menu_open", controller )
-	self.buttonModel = Engine.CreateModel( Engine.GetModelForController( controller ), "StartMenu_ApModSettings_Locations.buttonPrompts" )
+	self:setLeftRight( true, false, 0, 1150 )
+	self:setTopBottom( true, false, 0, 520 )
+	self:makeFocusable()
 	self.anyChildUsesUpdateState = true
+	self.onlyChildrenFocusable = true
 
-	self.Background = CoD.StartMenu_Background.new( self, controller )
-	self.Background:setLeftRight( true, true, 0, 0 )
-	self.Background:setTopBottom( true, true, 0, 0 )
-	self.Background:setAlpha( 0.75 )
-	self:addElement( self.Background )
-
-	self.TabFrame = LUI.UIFrame.new( self, controller, 0, 0, false )
+	self.TabFrame = LUI.UIFrame.new( menu, controller, 0, 0, false )
 	self.TabFrame:setLeftRight( true, false, 80, 400 )
 	self.TabFrame:setTopBottom( false, false, 0, 0 )
 	self:addElement( self.TabFrame )
 
-	self.TabList = CoD.StartMenu_TabList.new( self, controller )
+	self.TabList = CoD.StartMenu_TabList.new( menu, controller )
 	self.TabList:setLeftRight( true, false, 40, 300)
 	self.TabList:setTopBottom( true, false, 0, 0 )
 	self.TabList.grid:setHorizontalCount( 1 )
@@ -98,71 +95,24 @@ LUI.createMenu.StartMenu_ApModSettings_Locations = function( controller )
 	self.TabList.grid:setDataSource( "ApModSettingsLocationsTabs" )
 	self:addElement( self.TabList )
 
-	self:AddButtonCallbackFunction( self, controller, Enum.LUIButton.LUI_KEY_XBB_PSCIRCLE, nil, function ( element, event, controller, menu )
-	    GoBack( event, controller )
-	    return true
-	end, function ( element, menu, controller )
-	    CoD.Menu.SetButtonLabel( menu, Enum.LUIButton.LUI_KEY_XBB_PSCIRCLE, "MENU_BACK" )
-	    return true
-	end, false )
-
-	self:AddButtonCallbackFunction( self, controller, Enum.LUIButton.LUI_KEY_START, "M", function ( element, event, controller, menu )
-	    GoBack( event, controller )
-	    return true
-	end, function ( element, menu, controller )
-	    CoD.Menu.SetButtonLabel( menu, Enum.LUIButton.LUI_KEY_START, "MENU_DISMISS_MENU" )
-	    return true
-	end, false )
-
-	self:AddButtonCallbackFunction( self, controller, Enum.LUIButton.LUI_KEY_XBA_PSCROSS, nil, function ( element, event, controller, menu )
-	    PlaySoundSetSound( self, "list_action" )
-	    return true
-	end, function ( element, menu, controller )
-	    CoD.Menu.SetButtonLabel( menu, Enum.LUIButton.LUI_KEY_XBA_PSCROSS, "MENU_SELECT" )
-	    return true
-	end, false )
-
-	self:AddButtonCallbackFunction( self, controller, Enum.LUIButton.LUI_KEY_XBY_PSTRIANGLE, "S", function ( element, event, controller, menu )
-	    if IsInGame() and not IsLobbyNetworkModeLAN() and not IsDemoPlaying() then
-	        OpenPopup( self, "Social_Main", controller, "", "" )
-	        return true
-	    end
-	end, function ( element, menu, controller )
-	    if IsInGame() and not IsLobbyNetworkModeLAN() and not IsDemoPlaying() then
-	        CoD.Menu.SetButtonLabel( menu, Enum.LUIButton.LUI_KEY_XBY_PSTRIANGLE, "MENU_SOCIAL" )
-	        return true
-	    else
-	        return false
-	    end
-	end, false )
-
-	self:AddButtonCallbackFunction( self, controller, Enum.LUIButton.LUI_KEY_NONE, "ESCAPE", function ( element, event, controller, menu )
-	    GoBack( event, controller )
-	    return true
-	end, function ( element, menu, controller )
-	    CoD.Menu.SetButtonLabel( menu, Enum.LUIButton.LUI_KEY_NONE, "" )
-	    return true
-	end, false, true )
-
-
 	self.TabFrame.id = "TabFrame"
 
-	self:processEvent( { name = "menu_loaded", controller = controller } )
-	self:processEvent( { name = "update_state", menu = self } )
-
-	if not self:restoreState() then
-		self.TabFrame:processEvent( { name = "gain_focus", controller = controller } )
-	end
+	
+	self:registerEventHandler( "gain_focus", function( element, event )
+		if element.m_focusable and element.TabList:processEvent( event ) then
+			return true
+		else
+			return LUI.UIElement.gainFocus( element, event )
+		end
+	end )
 
 	LUI.OverrideFunction_CallOriginalSecond( self, "close", function( element )
-		element.Background:close()
 		element.TabFrame:close()
 		element.TabList:close()
-		Engine.UnsubscribeAndFreeModel( Engine.GetModel( Engine.GetModelForController( controller ), "StartMenu_ApModSettings_Locations.buttonPrompts" ) )
 	end )
 
 	if PostLoadFunc then
-		PostLoadFunc( self, controller )
+		PostLoadFunc( self, controller, menu )
 	end
 	
 	return self

@@ -2,7 +2,7 @@ require( "ui.uieditor.widgets.Lobby.Common.List1ButtonLarge_PH" )
 require( "ui.uieditor.widgets.Utilities.ProgressBar_Rank" )
 require( "ui.uieditor.widgets.ZMPromotional.ZM_PromoIconList" )
 
-require( "ui.uieditor.menus.StartMenu.StartMenu_ApModSettings_Locations" )
+require( "ui.uieditor.menus.StartMenu.StartMenu_ApMod_Main" )
 
 DataSources.ModStartMenuGameOptions = ListHelper_SetupDataSource( "ModStartMenuGameOptions", function( controller )
 	local menuOptions = {}
@@ -132,12 +132,23 @@ DataSources.ModStartMenuGameOptions = ListHelper_SetupDataSource( "ModStartMenuG
 		if CoD.isHost() then
 			table.insert( menuOptions, {
 				models = {
-					displayText = "AP LOCATIONS",
+					displayText = "ARCHIPELAGO",
 					action = function( self, element, controller, actionParam, menu )
-						NavigateToMenu( menu, "StartMenu_ApModSettings_Locations", true, controller )
+						NavigateToMenu( menu, "StartMenu_ApMod_Main", true, controller )
 					end
 				}
 			} )
+		end
+
+		if CoD.isHost() then
+			table.insert( menuOptions, {
+				models = {
+					displayText = "CLEAR SAVE DATA",
+					action = function( self, element, controller, actionParam, menu )
+						CoD.OverlayUtility.CreateOverlay(controller, menu, "ClearSaveData")
+					end
+				}
+			})
 		end
 
 		if Engine.DvarString(nil,"mapname") == "zm_genesis" then
@@ -190,7 +201,7 @@ CoD.StartMenu_GameOptions_ZM.new = function( menu, controller )
 	self.buttonList:setLeftRight( true, false, 12, 292 )
 	self.buttonList:setTopBottom( true, false, 4.91, 172.91 )
 	self.buttonList:setWidgetType( CoD.List1ButtonLarge_PH )
-	self.buttonList:setVerticalCount( 5 )
+	self.buttonList:setVerticalCount( 6 )
 	self.buttonList:setDataSource( "ModStartMenuGameOptions" )
 	self.buttonList:registerEventHandler( "gain_focus", function( element, event )
 		local retval = nil
@@ -333,3 +344,40 @@ CoD.StartMenu_GameOptions_ZM.new = function( menu, controller )
 	
 	return self
 end
+
+CoD.OverlayUtility.Overlays.ClearSaveData = {
+    menuName = "SystemOverlay_Compact",
+    title = Engine.Localize("Clear Map Save Data"),
+    description = Engine.Localize(
+        "Are you sure you want to clear your map save data? This will restart the map at round 1."),
+    categoryType = CoD.OverlayUtility.OverlayTypes.Warning,
+    listDatasource = function()
+        DataSources.ClearSaveData = DataSourceHelpers.ListSetup("ClearSaveData",
+            function(controller)
+                return {
+                    {
+                        models = {
+                            displayText = Engine.Localize("Clear Data")
+                        },
+                        properties = {
+                            action = function(self, element, controller, actionParam, menu)
+								Engine.SetDvar("ARCHIPELAGO_LUA_CLEAR_DATA", "true");
+								menu:close()
+                            end
+                        }
+                    },
+                    {
+                        models = {
+                            displayText = Engine.Localize("MENU_CANCEL")
+                        },
+                        properties = {
+                            action = function(self, element, controller, actionParam, menu)
+                                GoBack(menu, controller)
+                            end
+                        }
+                    }
+                }
+            end, true, nil)
+        return "ClearSaveData"
+    end
+}

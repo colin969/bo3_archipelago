@@ -15,6 +15,8 @@ local goalCondInitialized = false
 local goalItems = {}
 local goalItemsRequired = 0
 local saveLoaded = false
+local dllInitDone = false
+local clientInitDone = false
 
 --
 ItemQueue = List.new()
@@ -61,34 +63,49 @@ Archi.DeathlinkRecv = function(timestamp)
   Engine.SetDvar("ARCHIPELAGO_DEATHNLINK_RECIEVED", "true")
 end
 
+Archi.ClearAndRestart = function (mapName)
+  if saveData[mapName] then
+    saveData[mapName] = nil
+  end
+
+  local saveDataStr = json.encode(saveData, { indent = true })
+  Archipelago.StoreSaveData(saveDataStr)
+  
+end
+
 Archi.FromGSC = function (model)
   if IsParamModelEqualToString(model, "ap_init_dll") then
-    --Send Log messages to GSC
-    Archi.LogMessageLoop()
+    if not dllInitDone then
+      dllInitDone = true
+      --Send Log messages to GSC
+      Archi.LogMessageLoop()
 
-    InitializeArchipelago({
-      modname  = "bo3_archipelago",
-      filespath = [[.\mods\bo3_archipelago\]],
-      workshopid = nil
-    })
+      InitializeArchipelago({
+        modname  = "bo3_archipelago",
+        filespath = [[.\mods\bo3_archipelago\]],
+        workshopid = nil
+      })
+    end
   end
   if IsParamModelEqualToString(model, "ap_init_goal_cond") then
-    Archi.LogMessage("Setting goal cond")
-    goalItemsRequired = Engine.DvarInt(-1,"ARCHIPELAGO_GOAL_ITEMS_REQUIRED")
+    if not goalCondInitialized then
+      goalCondInitialized = true
+      Archi.LogMessage("Setting goal cond")
+      goalItemsRequired = Engine.DvarInt(-1,"ARCHIPELAGO_GOAL_ITEMS_REQUIRED")
 
-    i = 0
-    while true do
-      local val = Engine.DvarString("","ARCHIPELAGO_GOAL_ITEM_" .. i)
-      if val ~= "" then
-        table.insert(goalItems, val)
-      else
-        break
+      i = 0
+      while true do
+        local val = Engine.DvarString("","ARCHIPELAGO_GOAL_ITEM_" .. i)
+        if val ~= "" then
+          table.insert(goalItems, val)
+        else
+          break
+        end
+        i = i + 1
       end
-      i = i + 1
-    end
 
-    goalCondInitialized = true
-    Archi.LogMessage("Goal cond initialized - Available: " .. #goalItems .. " - Required: " .. goalItemsRequired)
+      Archi.LogMessage("Goal cond initialized - Available: " .. #goalItems .. " - Required: " .. goalItemsRequired)
+    end
   end
   if IsParamModelEqualToString(model, "ap_debug_magicbox") then
     save_magicbox_list()
@@ -100,30 +117,53 @@ Archi.FromGSC = function (model)
     end
   end
   if IsParamModelEqualToString(model, "ap_init_state") then
-    seed = Engine.DvarString("","ARCHIPELAGO_SEED")
+    if not clientInitDone then
+      clientInitDone = true
+      seed = Engine.DvarString("","ARCHIPELAGO_SEED")
 
-    Archi.LoadData()
+      Archi.LoadData()
 
-    --When we recieve an Item, give it to the GSC
-    Archi.GiveItemsLoop()
-    Archi.LocationNotifyLoop()
+      --When we recieve an Item, give it to the GSC
+      Archi.GiveItemsLoop()
+      Archi.LocationNotifyLoop()
 
-    Archi.LogMessage("Lua apclient ready")
+      Archi.LogMessage("Lua apclient ready")
+    else
+      Archi.LoadData()
 
+      -- Re-queue all items from instanceItemState
+      for itemName, count in pairs(instanceItemState) do
+        for i = 1, count do
+          List.pushright(ItemQueue, {name = itemName, sender = "System", location = "Reinitialization"})
+        end
+      end
+      
+      instanceItemState = {}
+      connectionItemState = {}
+      Archi.LogMessage("Lua apclient ready")
+    end
     Engine.SetDvar( "ARCHIPELAGO_LOAD_READY", 1 )
   end
   if IsParamModelEqualToString(model, "ap_clear_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_CLEAR_DATA")
     if mapName ~= "NONE" then
+      local clearCheckpoints = Engine.DvarString(nil,"ARCHIPELAGO_CLEAR_DATA_CHECKPOINTS")
+      Engine.SetDvar("ARCHIPELAGO_CLEAR_DATA_CHECKPOINTS", "NONE")
+      if clearCheckpoints ~= "NONE" then
+        local checkpointName = "_checkpoint_" .. mapName
+        if saveData[checkpointName] then
+          saveData[checkpointName] = nil
+        end
+      end
+
       if saveData[mapName] then
         saveData[mapName] = nil
-    
-        -- We're done saving, let gsc know
-        Engine.SetDvar( "ARCHIPELAGO_CLEAR_DATA", "NONE" )
       end
 
       local saveDataStr = json.encode(saveData, { indent = true })
       Archipelago.StoreSaveData(saveDataStr)
+
+      Engine.SetDvar( "ARCHIPELAGO_CLEAR_DATA", "NONE" )
     end
   end
   if IsParamModelEqualToString(model, "ap_save_data_universal") then
@@ -229,9 +269,30 @@ Archi.FromGSC = function (model)
 
       -- Load attachment rando data
       sight_weight = Engine.DvarInt(0,"ARCHIPELAGO_ATTACHMENT_RANDO_SIGHT_SIZE_WEIGHT")
+
       attachment_data = attachment_rando.generate_weapon_attachments_for_seed(seed, sight_weight)
       attachment_rando.load_attachments_into_gsc(attachment_data)
-  
+      
+      -- Load camo data
+      camo_randomized = Engine.DvarInt(0, "ARCHIPELAGO_CAMO_RANDOMIZED")
+      camo_mixed = Engine.DvarInt(0, "ARCHIPELAGO_CAMO_MIXED")
+      camo_pap_randomized = Engine.DvarInt(0, "ARCHIPELAGO_CAMO_PAP_RANDOMIZED")
+      camo_pap_mixed = Engine.DvarInt(0, "ARCHIPELAGO_CAMO_PAP_MIXED")
+      camo_joined = Engine.DvarInt(0, "ARCHIPELAGO_CAMO_JOINED")
+
+      camo_data = attachment_rando.generate_weapon_camos_for_seed(seed, camo_randomized, camo_mixed, camo_pap_randomized, camo_pap_mixed, camo_joined)
+      attachment_rando.load_camos_into_gsc(camo_data)
+
+      -- Load reticle data
+      reticle_randomized = Engine.DvarInt(0, "ARCHIPELAGO_RETICLE_RANDOMIZED")
+      reticle_pap_randomized = Engine.DvarInt(0, "ARCHIPELAGO_RETICLE_PAP_RANDOMIZED")
+      reticle_joined = Engine.DvarInt(0, "ARCHIPELAGO_RETICLE_JOINED")
+
+      Archi.LogMessage("Reticle Settings - Base: " .. reticle_randomized .. ", PAP: " .. reticle_pap_randomized .. ", Joined: " .. reticle_joined)
+
+      reticle_data = attachment_rando.generate_weapon_reticles_for_seed(seed, reticle_randomized, reticle_pap_randomized, reticle_joined)
+      attachment_rando.load_reticles_into_gsc(reticle_data)
+        
       -- Pass values over expected dvars
       Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA", "NONE" )
       saveLoaded = true

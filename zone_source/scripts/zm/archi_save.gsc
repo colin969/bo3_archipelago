@@ -63,6 +63,8 @@ function save_player_stats_monitor_endgame()
 
 function save_player_stats_monitor()
 {
+    level endon("end_game");
+
     while (true)
     {
         level waittill("start_of_round");
@@ -211,11 +213,46 @@ function restore_round_number()
         SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_DOG_ROUND", "");
     }
 
+    spider_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_SPIDER_ROUND", 0);
+    if (spider_round_number > 0)
+    {
+        level.var_3013498 = spider_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_SPIDER_ROUND", "");
+    }
+
     wasp_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_WASP_ROUND", 0);
     if (wasp_round_number > 0)
     {
         level.next_wasp_round = wasp_round_number;
         SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_WASP_ROUND", "");
+    }
+
+    drone_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_DRONE_ROUND", 0);
+    if (drone_round_number > 0)
+    {
+        level.var_a78effc7 = drone_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_DRONE_ROUND", "");
+    }
+
+    raz_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_RAZ_ROUND", 0);
+    if (raz_round_number > 0)
+    {
+        level.var_51a5abd0 = raz_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_RAZ_ROUND", "");
+    }
+
+    miniboss_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_MINIBOSS_ROUND", 0);
+    if (miniboss_round_number > 0)
+    {
+        level.var_ba0d6d40 = miniboss_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_MINIBOSS_ROUND", "");
+    }
+
+    chaos_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_CHAOS_ROUND", 0);
+    if (chaos_round_number > 0)
+    {
+        level.var_783db6ab = chaos_round_number;
+        SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_CHAOS_ROUND", "");
     }
     
     mechz_round_number = GetDvarInt("ARCHIPELAGO_LOAD_DATA_NEXT_MECHZ_ROUND", 0);
@@ -472,6 +509,26 @@ function save_round_number()
     {
         SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_DOG_ROUND", level.next_dog_round);
     }
+    if (isdefined(level.var_3013498))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_SPIDER_ROUND", level.var_3013498);
+    }
+    if (isdefined(level.var_51a5abd0))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_RAZ_ROUND", level.var_51a5abd0);
+    }
+    if (isdefined(level.var_a78effc7))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_DRONE_ROUND", level.var_a78effc7);
+    }
+    if (isdefined(level.var_ba0d6d40))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_MINIBOSS_ROUND", level.var_ba0d6d40);
+    }
+    if (isdefined(level.var_783db6ab))
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_CHAOS_ROUND", level.var_783db6ab);
+    }
     if (isdefined(level.next_wasp_round))
     {
         SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_WASP_ROUND", level.next_wasp_round);
@@ -658,4 +715,19 @@ function restore_player_flag(flag, xuid)
     {
         self flag::set(flag);
     }
+}
+
+function state_dvar_monitor()
+{
+    while(true)
+    {
+        i = 0;
+        foreach (key in GetArrayKeys(level.archi.monitor_strings))
+        {
+            SetDvar("ARCHIPELAGO_MONITOR_" + i, key + " -> " + level flag::get(level.archi.monitor_strings[key]) );
+            i += 1;
+        }
+        wait(2);
+    }
+
 }

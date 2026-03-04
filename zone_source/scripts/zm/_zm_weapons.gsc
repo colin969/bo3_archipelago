@@ -2553,9 +2553,11 @@ function give_build_kit_weapon( weapon )
 {
 	upgraded = false;
 	camo = undefined;
+	reticle = 0;
 	base_weapon = weapon;
 	if ( is_weapon_upgraded( weapon ) )
 	{
+		base_weapon = get_base_weapon( weapon );
 		if( isdefined(weapon.pap_camo_to_use) )
 		{
 			camo = weapon.pap_camo_to_use;
@@ -2564,8 +2566,35 @@ function give_build_kit_weapon( weapon )
 		{	
 			camo = get_pack_a_punch_camo_index( undefined );
 		}
+
+		// Pap camo and reticle overrides
+		if (isdefined(level.zombie_weapons[base_weapon]) && isdefined(level.zombie_weapons[base_weapon].ap_pap_camo))
+		{
+			camo = level.zombie_weapons[base_weapon].ap_pap_camo;
+		}
+
+		if (isdefined(level.zombie_weapons[base_weapon]) && isdefined(level.zombie_weapons[base_weapon].ap_pap_reticle))
+		{
+			IPrintLn("Pap reticle");
+			reticle = level.zombie_weapons[base_weapon].ap_pap_reticle;
+		}
+		else
+		{
+			IPrintLn("No pap reticle");
+		}
+
 		upgraded = true;
-		base_weapon = get_base_weapon( weapon );
+	}
+	else
+	{
+		if (isdefined(level.zombie_weapons[base_weapon]) && isdefined(level.zombie_weapons[base_weapon].ap_camo))
+		{
+			camo = level.zombie_weapons[base_weapon].ap_camo;
+		}
+		if (isdefined(level.zombie_weapons[base_weapon]) && isdefined(level.zombie_weapons[base_weapon].ap_reticle))
+		{
+			reticle = level.zombie_weapons[base_weapon].ap_reticle;
+		}
 	}
 
 	if ( is_weapon_included( base_weapon ) )
@@ -2590,7 +2619,7 @@ function give_build_kit_weapon( weapon )
 			camo = 0;
 		}
 
-		weapon_options = self CalcWeaponOptions( camo, 0, 0 );
+		weapon_options = self CalcWeaponOptions( camo, 0, reticle );
 
 		acvi = 0;
 	}
@@ -2598,7 +2627,12 @@ function give_build_kit_weapon( weapon )
 	{
 		weapon = self GetBuildKitWeapon( weapon, upgraded );
 
-		weapon_options = self GetBuildKitWeaponOptions( weapon, camo );
+		if ( !IsDefined( camo ) )
+		{
+			camo = 0;
+		}
+
+		weapon_options = self CalcWeaponOptions( camo, 0, reticle );
 
 		acvi = self GetBuildKitAttachmentCosmeticVariantIndexes( weapon, upgraded );
 	}

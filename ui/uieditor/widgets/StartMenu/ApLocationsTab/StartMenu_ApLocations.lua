@@ -16,6 +16,7 @@ CoD.StartMenu_ApLocations.new = function( menu, controller )
 	self:setLeftRight( true, false, 0, 1150 )
 	self:setTopBottom( true, false, 0, 520 )
 	self:makeFocusable()
+	self.onlyChildrenFocusable = true
 
 	self.itemList = LUI.UIList.new( menu, controller, 2, 0, nil, true, false, 0, 0, false, false )
 	self.itemList:makeFocusable()

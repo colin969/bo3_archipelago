@@ -431,6 +431,26 @@ function restore_round_number(mapData)
   if mapData["next_dog_round"] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_DOG_ROUND", mapData["next_dog_round"])
   end
+
+  if mapData["next_spider_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_SPIDER_ROUND", mapData["next_spider_round"])
+  end
+
+  if mapData["next_drone_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_DRONE_ROUND", mapData["next_drone_round"])
+  end
+
+  if mapData["next_raz_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_RAZ_ROUND", mapData["next_raz_round"])
+  end
+
+  if mapData["next_miniboss_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_MINIBOSS_ROUND", mapData["next_miniboss_round"])
+  end
+
+  if mapData["next_chaos_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_CHAOS_ROUND", mapData["next_chaos_round"])
+  end
   
   if mapData["next_wasp_round"] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_WASP_ROUND", mapData["next_wasp_round"])
@@ -566,6 +586,36 @@ function save_round_number(mapData)
   if dogRound and dogRound > 0 then
     Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_DOG_ROUND", "")
     mapData.next_dog_round = dogRound
+  end
+
+  local spiderRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_SPIDER_ROUND")
+  if spiderRound and spiderRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_SPIDER_ROUND", "")
+    mapData.next_spider_round = spiderRound
+  end
+
+  local razRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_RAZ_ROUND")
+  if razRound and razRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_RAZ_ROUND", "")
+    mapData.next_raz_round = razRound
+  end
+
+  local droneRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_DRONE_ROUND")
+  if droneRound and droneRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_DRONE_ROUND", "")
+    mapData.next_drone_round = droneRound
+  end
+
+  local minibossRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_MINIBOSS_ROUND")
+  if minibossRound and minibossRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_MINIBOSS_ROUND", "")
+    mapData.next_miniboss_round = minibossRound
+  end
+
+  local chaosRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_CHAOS_ROUND")
+  if chaosRound and chaosRound > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_CHAOS_ROUND", "")
+    mapData.next_chaos_round = chaosRound
   end
   
   local waspRound = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_NEXT_WASP_ROUND")

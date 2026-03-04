@@ -13,6 +13,7 @@
 #using scripts\shared\clientfield_shared;
 #using scripts\shared\scene_shared;
 #using scripts\zm\_zm_unitrigger;
+#using scripts\zm\_zm_power;
 
 #using scripts\zm\archi_core;
 #using scripts\zm\archi_items;
@@ -24,8 +25,28 @@
 #insert scripts\zm\archi_core.gsh;
 
 
+function setup_monitor_strings()
+{
+    monitor = level.archi.monitor_strings;
+
+    monitor["Power On"] = "all_power_on";
+    monitor["Main EE - Gravestones"] = "character_stones_done";
+    monitor["Main EE - Audio Reel 1 Found (Keeper Protector)"] = "got_audio1";
+    monitor["Main EE - Audio Reel 1 Placed"] = "placed_audio1";
+    monitor["Main EE - Audio Reel 2 Found (Apothicon Stomach)"] = "got_audio2";
+    monitor["Main EE - Apothicon Stomach Done"] = "acm_done";
+    monitor["Main EE - Audio Reel 2 Placed"] = "placed_audio2";
+    monitor["Main EE - Audio Reel 3 Found (Bones)"] = "got_audio3";
+    monitor["Main EE - Audio Reel 3 Placed"] = "placed_audio3";
+    monitor["Main EE - S.O.P.H.I.A Materlized"] = "sophia_beam_locked";
+    monitor["Main EE - Kronorium Collected"] = "book_picked_up";
+    monitor["Main EE - Summoning Key Grand Tour Begun"] = "grand_tour";
+    monitor["Main EE - Summoning Key Grand Tour Finished"] = "toys_collected";
+}
+
 function save_state_manager()
 {
+    setup_monitor_strings();
     if (level.archi.difficulty_ee_checkpoints >= 3)
     {
         level thread easy_checkpoint_trigger();
@@ -213,6 +234,8 @@ function patch_sword_quest()
 // Before boss arena
 function hard_checkpoint_trigger()
 {
+    level endon("end_game");
+
     level flag::wait_till_clear("ap_prevent_checkpoints");
     if (level flag::get("book_runes_in_progress"))
     {
@@ -227,6 +250,8 @@ function hard_checkpoint_trigger()
 // After audio reel 2 (9 holes inside apothicon)
 function medium_checkpoint_trigger()
 {
+    level endon("end_game");
+
     level flag::wait_till_clear("ap_prevent_checkpoints");
     if (level flag::get("got_audio2"))
     {
@@ -240,6 +265,8 @@ function medium_checkpoint_trigger()
 
 function easy_checkpoint_trigger()
 {
+    level endon("end_game");
+
     level flag::wait_till_clear("ap_prevent_checkpoints");
     if (level flag::get("all_power_on"))
     {
@@ -253,6 +280,8 @@ function easy_checkpoint_trigger()
 
 function _track_music_thegift()
 {
+    level endon("end_game");
+
     bears = struct::get_array("side_ee_song_bear", "targetname");
 	while(true)
 	{
@@ -282,6 +311,8 @@ function _patch_genesis_player()
 
 function _apothicon_stomach_arnies()
 {
+    level endon("end_game");
+
     while(true)
     {
         level waittill("hash_ee91de1d");
@@ -303,12 +334,16 @@ function _apothicon_stomach_arnies()
 
 function _any_power_station(location)
 {
+    level endon("end_game");
+
     level flag::wait_till_any(array("power_on1", "power_on2", "power_on3", "power_on4"));
     archi_core::send_location(location);
 }
 
 function _all_power_stations(location)
 {
+    level endon("end_game");
+
     level flag::wait_till_all(array("power_on1", "power_on2", "power_on3", "power_on4"));
     archi_core::send_location(location);
 }
@@ -349,18 +384,24 @@ function _wearable_king(location)
 
 function _wearable_keeper_skull(location)
 {
+    level endon("end_game");
+
 	level flag::wait_till_all(array("keeper_skull_turret_flag", "keeper_skull_zombie_flag"));
     archi_core::send_location(location);
 }
 
 function _wearable_margwa(location)
 {
+    level endon("end_game");
+
     level flag::wait_till_all(array("margwa_head_wasps_flag", "margwa_head_fire_flag", "margwa_head_shadow_flag"));
     archi_core::send_location(location);
 }
 
 function _wearable_apothigod(location)
 {
+    level endon("end_game");
+
 	level flag::wait_till_all(array("apothicon_mask_all_zombies_killed", "apothicon_mask_all_wasps_killed", "apothicon_mask_all_spiders_killed", "apothicon_mask_all_margwas_killed", "apothicon_mask_all_fury_killed", "apothicon_mask_all_keepers_killed"));
     archi_core::send_location(location);
 }
@@ -444,7 +485,11 @@ function restore_map_state()
     archi_save::restore_flag("all_power_on");
     if (level flag::get("all_power_on"))
     {
-        level flag::set("power_on");
+        level thread zm_power::turn_power_on_and_open_doors();
+        level thread zm_power::turn_power_on_and_open_doors(1);
+        level thread zm_power::turn_power_on_and_open_doors(2);
+        level thread zm_power::turn_power_on_and_open_doors(3);
+        level thread zm_power::turn_power_on_and_open_doors(4);
     }
     archi_save::restore_flag("character_stones_done");
     wait(0.1);

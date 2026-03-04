@@ -137,7 +137,7 @@ function _all_teleporters_linked()
 function _flytrap_targets_shot()
 {
     level flag::wait_till_all(array("ee_perk_bear", "ee_bowie_bear", "ee_exp_monkey"));
-    archi_core::send_location(level.archi.mapString + " Link a Teleporter");
+    archi_core::send_location(level.archi.mapString + " Fly Trap Quest");
 }
 
 function _flag_to_location_thread(flag, location)
