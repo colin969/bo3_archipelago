@@ -28,6 +28,7 @@
 - Shadows of Evil
 - The Giant
 - Der Eisendrache
+- Zetsubou No Shima
 - Gorod Krovi
 - Revelations
 
