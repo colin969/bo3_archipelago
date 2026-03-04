@@ -317,8 +317,7 @@ function map_save_zm_genesis(mapData)
   save_flag(mapData, "fire_rq_done");
   save_flag(mapData, "light_rq_done");
   save_flag(mapData, "shadow_rq_done");
-
-
+  save_flag(mapData, "shards_done");
 
   save_player_func = function (xuid, playerData)
     save_player_score(xuid, playerData)
@@ -356,7 +355,7 @@ function map_restore_zm_genesis(mapData)
   restore_flag(mapData, "fire_rq_done");
   restore_flag(mapData, "light_rq_done");
   restore_flag(mapData, "shadow_rq_done");
-
+  restore_flag(mapData, "shards_done");
 
   restore_player_func = function (xuid, playerData)
     restore_player_score(xuid, playerData)

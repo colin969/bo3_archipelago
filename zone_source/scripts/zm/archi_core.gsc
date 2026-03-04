@@ -17,6 +17,8 @@
 #using scripts\zm\_zm_pack_a_punch_util;
 #using scripts\zm\_zm_perks;
 #using scripts\zm\_zm_weapons;
+#using scripts\zm\_zm_unitrigger;
+#using scripts\zm\_zm_utility;
 #using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_items;
@@ -593,6 +595,10 @@ function game_start()
         level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
         level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
 
+        //replace_piece_with_model("craft_shield_zm", "dolly", "archipelago_logo", level.archi.mapString + " Shield Part Pickup - Dolly");
+        //replace_piece_with_model("craft_shield_zm", "door", "archipelago_logo", level.archi.mapString + " Shield Part Pickup - Door");
+        //replace_piece_with_model("craft_shield_zm", "clamp", "archipelago_logo", level.archi.mapString + " Shield Part Pickup - Clamp");
+
         archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
         archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
         archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
@@ -984,6 +990,137 @@ function replace_craftable_onPickup( craftableName )
             {
                 IPrintLn("No pickup defined for piece?");
             }
+        }
+    }
+} 
+
+function replace_piece_with_model( str_craftable, str_piece, str_model, location )
+{
+    piecespawn = zm_craftables::get_craftable_piece(str_craftable, str_piece);
+    if (isdefined(piecespawn) && isdefined(piecespawn.model))
+    {
+        IPrintLn("Found model to replace");
+        part_pickup = SpawnStruct();
+        
+        // Create piece model
+        part_pickup.model = Spawn("script_model", piecespawn.model.origin);
+        part_pickup.model.angles = piecespawn.model.angles;
+
+        // Create piece unitrigger
+        unitrigger_offset = vectorscale((0, 0, 1), 12);
+        part_pickup.unitrigger = generate_part_pickup_unitrigger("trigger_radius_use", piecespawn.origin + unitrigger_offset, piecespawn.angles, 0, piecespawn.radius, piecespawn.height, "Take Archipelago Item", false);
+        part_pickup.unitrigger.location = location;
+        part_pickup.unitrigger.origin_parent = part_pickup.model;
+        part_pickup.unitrigger.piece = part_pickup;
+
+        piecespawn.model delete();
+        level thread zm_unitrigger::unregister_unitrigger(piecespawn.unitrigger);
+        piecespawn.model = undefined;
+        piecespawn.unitrigger = undefined;
+    }
+}
+
+function generate_part_pickup_unitrigger(classname, origin, angles, flags, radius = 64, script_height = 64, hint_string, moving, b_nolook)
+{
+	script_width = script_height;
+	script_length = script_height;
+	unitrigger_stub = spawnstruct();
+	unitrigger_stub.origin = origin;
+	if(isdefined(script_length))
+	{
+		unitrigger_stub.script_length = script_length;
+	}
+	else
+	{
+		unitrigger_stub.script_length = 13.5;
+	}
+	if(isdefined(script_width))
+	{
+		unitrigger_stub.script_width = script_width;
+	}
+	else
+	{
+		unitrigger_stub.script_width = 27.5;
+	}
+	if(isdefined(script_height))
+	{
+		unitrigger_stub.script_height = script_height;
+	}
+	else
+	{
+		unitrigger_stub.script_height = 24;
+	}
+	unitrigger_stub.radius = radius;
+	unitrigger_stub.cursor_hint = "HINT_NOICON";
+    unitrigger_stub.hint_string = hint_string;
+	unitrigger_stub.script_unitrigger_type = "unitrigger_box_use";
+	if(isdefined(b_nolook) && (isdefined(int(b_nolook)) && int(b_nolook)))
+	{
+		unitrigger_stub.require_look_toward = 0;
+	}
+	unitrigger_stub.require_look_at = 0;
+	switch(classname)
+	{
+		case "trigger_radius":
+		{
+			unitrigger_stub.script_unitrigger_type = "unitrigger_radius";
+			break;
+		}
+		case "trigger_radius_use":
+		{
+			unitrigger_stub.script_unitrigger_type = "unitrigger_radius_use";
+			break;
+		}
+		case "trigger_box":
+		{
+			unitrigger_stub.script_unitrigger_type = "unitrigger_box";
+			break;
+		}
+		case "trigger_box_use":
+		{
+			unitrigger_stub.script_unitrigger_type = "unitrigger_box_use";
+			break;
+		}
+	}
+	unitrigger_stub.originfunc = &zm_craftables::piecestub_get_unitrigger_origin;
+	if(isdefined(moving) && moving)
+	{
+		zm_unitrigger::register_unitrigger(unitrigger_stub, &part_pickup_think);
+	}
+	else
+	{
+		zm_unitrigger::register_static_unitrigger(unitrigger_stub, &part_pickup_think);
+	}
+	return unitrigger_stub;
+}
+
+function part_pickup_unspawn()
+{
+    self.model delete();
+    self.model = undefined;
+    thread zm_unitrigger::unregister_unitrigger(self.unitrigger);
+    self.unitrigger = undefined;
+}
+
+function part_pickup_think()
+{
+    self endon("kill_trigger");
+    location = self.stub.location;
+    flag = self.stub.flag;
+    piece = self.stub.piece;
+    while(true)
+    {
+        self waittill("trigger", player);
+        self.stub notify("trigger", player);
+        if (zm_utility::is_player_valid(player))
+        {
+            if (isdefined(flag))
+            {
+                level flag::set(flag);
+            }
+            send_location(location);
+            piece thread part_pickup_unspawn();
+            break;
         }
     }
 }

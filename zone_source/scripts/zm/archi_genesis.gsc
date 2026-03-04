@@ -111,9 +111,9 @@ function load_state()
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
 
-    archi_save::restore_players(&restore_player_data);
-
     restore_map_state();
+
+    archi_save::restore_players(&restore_player_data);
 
     wait(10);
     level flag::clear("ap_prevent_checkpoints");
@@ -464,6 +464,8 @@ function save_map_state()
     archi_save::save_flag("fire_rq_done");
     archi_save::save_flag("light_rq_done");
     archi_save::save_flag("shadow_rq_done");
+
+    archi_save::save_flag("shards_done");
     foreach (player in level.players)
     {
         player _save_map_state_player();
@@ -479,8 +481,10 @@ function restore_map_state()
         shards = struct::get_array("shard_piece", "targetname");
         foreach (shard in shards)
         {
-            shard delete();
+            shard_ent = getent(shard.target, "targetname");
+            shard_ent ghost();
         }
+
     }
     archi_save::restore_flag("all_power_on");
     if (level flag::get("all_power_on"))

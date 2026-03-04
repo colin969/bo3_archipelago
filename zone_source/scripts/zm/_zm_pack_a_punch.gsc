@@ -285,11 +285,11 @@ function private can_pack_weapon( weapon )
 		return true;
 	}
 
-	if( !IS_TRUE( level.b_allow_idgun_pap ) && isdefined( level.idgun_weapons ) )
-	{
-		if ( IsInArray( level.idgun_weapons, weapon ) )
-			return false; 
-	}
+	// if( !IS_TRUE( level.b_allow_idgun_pap ) && isdefined( level.idgun_weapons ) )
+	// {
+	// 	if ( IsInArray( level.idgun_weapons, weapon ) )
+	// 		return false; 
+	// }
 
 	weapon = self zm_weapons::get_nonalternate_weapon( weapon );
 	if ( !zm_weapons::is_weapon_or_base_included( weapon ) )

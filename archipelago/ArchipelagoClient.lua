@@ -93,6 +93,7 @@ Archi.FromGSC = function (model)
       Archi.LogMessage("Setting goal cond")
       goalItemsRequired = Engine.DvarInt(-1,"ARCHIPELAGO_GOAL_ITEMS_REQUIRED")
 
+
       i = 0
       while true do
         local val = Engine.DvarString("","ARCHIPELAGO_GOAL_ITEM_" .. i)
@@ -102,6 +103,10 @@ Archi.FromGSC = function (model)
           break
         end
         i = i + 1
+      end
+
+      if goalItemsRequired > #goalItems then
+        goalItemsRequired = #goalItems
       end
 
       Archi.LogMessage("Goal cond initialized - Available: " .. #goalItems .. " - Required: " .. goalItemsRequired)

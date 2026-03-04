@@ -2575,12 +2575,7 @@ function give_build_kit_weapon( weapon )
 
 		if (isdefined(level.zombie_weapons[base_weapon]) && isdefined(level.zombie_weapons[base_weapon].ap_pap_reticle))
 		{
-			IPrintLn("Pap reticle");
 			reticle = level.zombie_weapons[base_weapon].ap_pap_reticle;
-		}
-		else
-		{
-			IPrintLn("No pap reticle");
 		}
 
 		upgraded = true;

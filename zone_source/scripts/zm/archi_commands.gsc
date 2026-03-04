@@ -56,6 +56,7 @@ function init_commands()
     level thread _basic_trigger("ap_give_weapon", &_give_weapon);
     level thread _basic_trigger("ap_reticle", &_set_reticle);
     level thread _basic_trigger("ap_get_dvar", &_get_dvar);
+    level thread _basic_trigger("ap_spawn_model", &_spawn_model);
   }
 }
 
@@ -577,5 +578,15 @@ function _get_dvar(val)
   {
     dvar_value = GetDvarString(val, "");
     IPrintLn(dvar_value);
+  }
+}
+
+function _spawn_model(val)
+{
+  if (val != "")
+  {
+    player = level.players[0];
+    spawn_point = (player.origin[0], player.origin[1], player.origin[2] + 12);
+    util::spawn_model(val, spawn_point, player.angles);
   }
 }

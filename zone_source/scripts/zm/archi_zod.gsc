@@ -73,6 +73,14 @@ function save_player_data(xuid)
 
 function load_state()
 {
+    level.b_allow_idgun_pap = 1;
+    weapon = getweapon("idgun_0");
+    upgraded_weapon = getweapon("idgun_upgraded_0");
+    level.zombie_weapons[weapon].upgrade = upgraded_weapon;
+    level.zombie_weapons_upgraded[upgraded_weapon] = weapon;
+    level.aat_exemptions[upgraded_weapon] = 1;
+    level.limited_weapon[upgraded_weapon] = 0;
+
     level flag::init("ap_got_summoning_key");
 
     archi_save::wait_restore_ready("zm_zod");
