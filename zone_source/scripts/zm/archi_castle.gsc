@@ -10,14 +10,19 @@
 #using scripts\shared\hud_message_shared;
 #using scripts\shared\hud_util_shared;
 #using scripts\shared\lui_shared;
+#using scripts\shared\scene_shared;
+#using scripts\shared\scene_debug_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\zm\_zm_perks;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_weapons;
+#using scripts\zm\_zm_unitrigger;
+#using scripts\zm\_zm_zonemgr;
 #using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_core;
 #using scripts\zm\archi_save;
+#using scripts\zm\archi_commands;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
@@ -30,6 +35,7 @@
 
 function save_state_manager()
 {
+    level flag::init("ap_allow_player_restore");
     // Keep perk machine fx behaving
     callback::on_connect(&_player_connect);
 
@@ -146,7 +152,7 @@ function load_state()
     archi_save::restore_doors_and_debris();
     restore_landingpads();
 
-    archi_save::restore_players(&restore_player_data);
+    level flag::set("ap_allow_player_restore");
 
     restore_map_state();
 
@@ -155,9 +161,12 @@ function load_state()
 }
 
 // self is player
-function restore_player_data()
+function restore_player_data(xuid)
 {
-    xuid = self GetXuid();
+    level endon("end_game");
+    self endon("disconnect");
+
+    level flag::wait_till("ap_allow_player_restore");
 
     if (self archi_save::can_restore_player(xuid))
     {
@@ -339,8 +348,14 @@ function _demon_gate_take_broken_arrow()
 {
     level endon("end__game");
     
-    level waittill("hash_c8347a07");
-    archi_core::send_location(level.archi.mapString + " Demon Gate - Take Broken Arrow");
+    while(true)
+    {
+        level waittill("hash_c8347a07");
+        archi_core::send_location(level.archi.mapString + " Demon Gate - Take Broken Arrow");
+        wait(3);
+        xuid = level.var_6e68c0d8 GetXuid();
+        level.archi.void_owner = xuid;
+    }
 }
 
 function _demon_gate_collect_skulls()
@@ -364,8 +379,14 @@ function _wolf_howl_take_broken_arrow()
 {
     level endon("end_game");
 
-    level waittill("hash_44c83018");
-    archi_core::send_location(level.archi.mapString + " Wolf Howl - Take Broken Arrow");
+    while(true)
+    {
+        level waittill("hash_44c83018");
+        archi_core::send_location(level.archi.mapString + " Wolf Howl - Take Broken Arrow");
+        wait(3);
+        xuid = level.var_52978d72 GetXuid();
+        level.archi.wolf_owner = xuid;
+    }
 }
 
 function _wolf_howl_skull_collected()
@@ -373,6 +394,7 @@ function _wolf_howl_skull_collected()
     level endon("end_game");
     
     level waittill("hash_88b82583");
+    level.archi.wolf_skull_collected = true;
     archi_core::send_location(level.archi.mapString + " Wolf Howl - Collect the Skull");
 }
 
@@ -380,8 +402,14 @@ function _elemental_storm_take_broken_arrow()
 {
     level endon("end_game");
 
-    level waittill("hash_6d0730ef");
-    archi_core::send_location(level.archi.mapString + " Storm Bow - Take Broken Arrow");
+    while(true)
+    {
+        level waittill("hash_6d0730ef");
+        archi_core::send_location(level.archi.mapString + " Storm Bow - Take Broken Arrow");
+        wait(3);
+        xuid = level.var_f8d1dc16 GetXuid();
+        level.archi.storm_owner = xuid;
+    }
 }
 
 function _elemental_storm_beacons_thread()
@@ -391,6 +419,7 @@ function _elemental_storm_beacons_thread()
     beacons = getentarray("aq_es_beacon_trig", "script_noteworthy");
     array::wait_till(beacons, "beacon_activated");
     archi_core::send_location(level.archi.mapString + " Storm Bow - Light the Beacons");
+    level.archi.elemental_storm_beacons_lit = 1;
 }
 
 function _all_soul_catchers_filled_thread()
@@ -499,16 +528,33 @@ function save_map_state()
     archi_save::save_flag("ee_safe_open");
     archi_save::save_flag("tesla_connector_launch_platform");
     archi_save::save_flag("tesla_connector_lower_tower");
-    archi_save::save_flag("demon_gate_upgraded");
-    archi_save::save_flag("elemental_storm_upgraded");
-    archi_save::save_flag("rune_prison_upgraded");
-    archi_save::save_flag("wolf_howl_upgraded");
     archi_save::save_flag("ee_start_done");
     archi_save::save_flag("ee_golden_key");
     archi_save::save_flag("mpd_canister_replacement");
     archi_save::save_flag("channeling_stone_replacement");
     archi_save::save_flag("start_channeling_stone_step");
     archi_save::save_flag("boss_fight_ready");
+
+    archi_save::save_val("elemental_storm_beacons_lit", IS_TRUE(level.archi.elemental_storm_beacons_lit));
+    archi_save::save_flag("elemental_storm_wallrun");
+    archi_save::save_flag("elemental_storm_batteries");
+    archi_save::save_flag("elemental_storm_beacons_charged");
+    archi_save::save_flag("elemental_storm_repaired");
+
+    archi_save::save_flag("wolf_howl_paintings");
+    archi_save::save_val("wolf_howl_skull_collected", IS_TRUE(level.archi.wolf_skull_collected));
+	archi_save::save_flag("wolf_howl_escort");
+	archi_save::save_flag("wolf_howl_repaired");
+
+    archi_save::save_flag("demon_gate_seal");
+    archi_save::save_flag("demon_gate_crawlers");
+	archi_save::save_flag("demon_gate_runes");
+    archi_save::save_flag("demon_gate_repaired");
+
+    archi_save::save_val("storm_owner", level.archi.storm_owner);
+    archi_save::save_val("wolf_owner", level.archi.wolf_owner);
+    archi_save::save_val("fire_owner", level.archi.fire_owner);
+    archi_save::save_val("void_owner", level.archi.void_owner);
 }
 
 function restore_map_state()
@@ -550,16 +596,21 @@ function restore_map_state()
 		fuse_box showpart("j_chip02");
     }
     wait(0.1);
-    archi_save::restore_flag("demon_gate_upgraded");
-    archi_save::restore_flag("elemental_storm_upgraded");
-    archi_save::restore_flag("rune_prison_upgraded");
-    archi_save::restore_flag("wolf_howl_upgraded");
     archi_save::restore_flag("ee_start_done");
     archi_save::restore_flag("ee_golden_key");
     wait(0.1);
     archi_save::restore_flag("mpd_canister_replacement");
     archi_save::restore_flag("channeling_stone_replacement");
-    archi_save::restore_flag("start_channeling_stone_step");
+    level.archi.elemental_storm_beacons_lit = archi_save::restore_val("elemental_storm_beacons_lit");
+    if (isdefined(level.archi.elemental_storm_beacons_lit))
+    {
+        level.archi.elemental_storm_beacons_lit = Int(level.archi.elemental_storm_beacons_lit);
+    }
+    level.archi.storm_owner = archi_save::restore_val("storm_owner");
+    level.archi.wolf_owner = archi_save::restore_val("wolf_owner");
+    level.archi.fire_owner = archi_save::restore_val("fire_owner");
+    level.archi.void_owner = archi_save::restore_val("void_owner");
+    level thread setup_bow_restore();
     archi_save::restore_flag("boss_fight_ready");
     if (level flag::get("boss_fight_ready"))
     {
@@ -573,7 +624,349 @@ function restore_map_state()
             pyramid moveto(new_origin, 3);
         }
     }
+}
+
+function _restore_wolf_bow(e_player)
+{
+    elemental_bow = GetWeapon("elemental_bow");
+
+    archi_save::restore_flag("wolf_howl_paintings");
+    wait(0.1);
+
+    // Trigger player stepping near wall
+    arrow = struct::get("quest_start_wolf_howl");
+    all_uni = [];
+    foreach (zone in level.zones)
+    {
+        if (isdefined(zone.unitrigger_stubs))
+        {
+            all_uni = ArrayCombine(all_uni, zone.unitrigger_stubs, 1, 0);
+        }
+    }
+    trigger_origin = arrow.origin + (-12, -72, 0);
+    closest = zm_unitrigger::get_closest_unitriggers(trigger_origin, all_uni, 5);
+    foreach (s_untrigger_stub in closest)
+    {
+        s_untrigger_stub notify("trigger", e_player);
+    }
+    wait(3);
+    // Trigger arrow pickup
+    arrow.var_67b5dd94 notify("trigger", e_player);
+    wait(0.1);
+
+    level.archi.wolf_skull_collected = archi_save::restore_val("wolf_howl_skull_collected");
+    if (level.archi.wolf_skull_collected == "1")
+    {
+        falling_skull = getent("aq_wh_skull_shrine_trig", "targetname");
+        level.var_52978d72 notify("projectile_impact", elemental_bow, falling_skull.origin);
+        wait(0.1);
+        wait getanimlength( "p7_fxanim_zm_castle_quest_wolf_skull_roll_down_anim" );
+        fallen_skull = getent("wolf_skull_roll_down", "targetname");
+        fallen_skull.var_67b5dd94 notify("trigger", e_player);
+        wait(0.1);
+    }
+
+    archi_save::restore_flag("wolf_howl_escort");
+    if (level flag::get("wolf_howl_escort"))
+    {
+        wait(0.1);
+        dig_vols = getentarray("aq_wh_dig_volume", "script_noteworthy");
+        foreach(vol in dig_vols)
+        {
+            vol.var_252d000d = 15;
+            vol flag::set("dig_spot_complete");
+            skull_trigger = getent("aq_wh_skadi_skull", "targetname");
+            skull_trigger.var_67b5dd94 notify("trigger", e_player);
+        }
+    }
+}
+
+function _restore_storm_bow(e_player)
+{
+    elemental_bow = GetWeapon("elemental_bow");
+
+    // Damage weathervane so the broken arrow appears
+    e_vane = getent("aq_es_weather_vane_trig", "targetname");
+    e_vane notify("damage", 100, e_player, (0, 0, 0), e_vane.origin, undefined, "", "", "", elemental_bow);
+
+    wait(6);
+    // Pretend player is on roof volume
+    level.var_366df00d = 1;
+    level notify("hash_6d0730ef");
+    wait(0.5);
+    // Force pickup
+    arrow_pickup = struct::get("quest_start_elemental_storm");
+    arrow_pickup.var_67b5dd94 notify("trigger", e_player);
+    wait(0.5);
+
+    if (level.archi.elemental_storm_beacons_lit == 1)
+    {
+        beacons = getentarray("aq_es_beacon_trig", "script_noteworthy");
+        foreach (beacon in beacons)
+        {
+            level.var_f8d1dc16 notify("projectile_impact", elemental_bow, beacon.origin);
+            wait(0.1);
+        }
+        wait(0.5);
+    }
+
+    archi_save::restore_flag("elemental_storm_wallrun");
+
+    // Restore charged batteries
+    archi_save::restore_flag("elemental_storm_batteries");
+    batteries = getentarray("aq_es_battery_volume", "script_noteworthy");
+    if (level flag::get("elemental_storm_batteries"))
+    {
+        foreach (battery in batteries)
+        {
+            e_bat = struct::get(self.target, "targetname");
+            e_bat.var_bb487f65 = 10;
+            e_bat notify("killed");
+        }
+        wait(0.5);
+    }
+
+    // Restore charged beacons
+    archi_save::restore_flag("elemental_storm_beacons_charged");
+    if (level flag::get("elemental_storm_beacons_charged"))
+    {
+        for (i = 0; i < beacons.size; i++)
+        {
+            beacon = beacons[i];
+            battery = batteries[i];
+            e_sbat = getent(self.targetname + "_charged", "targetname");
+
+            fake_projectile = SpawnStruct();
+            fake_projectile.var_e4594d27 = 1;
+            fake_projectile.var_8f88d1fd = e_sbat;
+
+            level.var_f8d1dc16 notify("projectile_impact", elemental_bow, beacon.origin, 10, fake_projectile);
+            wait(0.1);
+        }
+        wait(2);
+    }
+    // archi_save::restore_flag("elemental_storm_repaired");
+    // if (level flag::get("elemental_storm_repaired"))
+    // {
+    //     t_forge = struct::get("quest_reforge_elemental_storm");
+    //     t_forge.var_67b5dd94 notify("trigger", e_player);
+    //     while (level scene::is_playing("p7_fxanim_zm_castle_pap_complete_reform_bundle")) {
+    //         wait(0.05);
+    //     }
+    //     wait(0.1);
+    //     while (level scene::is_playing("p7_fxanim_zm_castle_quest_storm_arrow_whole_bundle")) {
+    //         wait(0.05);
+    //     }
+    //     wait(0.1);
+    //     t_forge.var_67b5dd94 notify("trigger", e_player);
+    // }
+}
+
+function _prefill_pedestal(bow_name, e_target_player)
+{
+    pedestal = struct::get("upgraded_bow_struct_" + bow_name, "targetname");
+    pedestal.var_67b5dd94 waittill("trigger", e_who);
+    if (e_who === e_target_player)
+    {
+        wait(0.1);
+        while (level scene::is_playing("p7_fxanim_zm_castle_quest_pedestal_bundle_" + bow_name)) {
+            wait(0.05);
+        }
+        wait(0.1);
+        pedestal.var_ce58f456 = 20; // Prefill pedestal kills
+    }
+}
+
+function _restore_fire_bow(e_player)
+{
+    elemental_bow = GetWeapon("elemental_bow");
+
+    // Setting this flag early skips something later
+    archi_save::restore_flag("rune_prison_obelisk");
+
+    // Pick up broken arrow
+    e_clock = getent("aq_rp_clock_wall_trig", "targetname");
+    e_clock notify("damage", 100, e_player, (0, 0, 0), e_clock.origin, undefined, "", "", "", elemental_bow);
+    wait GetAnimLength("p7_fxanim_zm_castle_quest_rune_clock_wall_bundle");
+    wait(0.1);
+    arrow = struct::get("quest_start_rune_prison");
+    arrow.var_67b5dd94 notify("trigger", e_player);
+
+    wait(1);
+    level flag::wait_till("rune_prison_magma_ball");
+    wait(0.1);
+    runic_volumes = getentarray("aq_rp_runic_circle_volume", "script_noteworthy");
+    foreach(circle in runic_volumes)
+    {
+        circle_trigger = getent(circle.target + "_trig", "targetname");
+        circle_trigger notify("damage", 100, e_player, (0, 0, 0), circle_trigger.origin, undefined, "", "", "", elemental_bow);
+        wait(0.1);
+        for (i = 0; i < 9; i++)
+        {
+            circle notify("killed");
+            wait(0.05);
+        }
+    }
+
+    archi_save::restore_flag("rune_prison_golf");
+}
+
+function _restore_void_bow(e_player)
+{
+    elemental_bow = GetWeapon("elemental_bow");
+
+    // Pick up broken arrow
+    e_wall = getent("aq_dg_gatehouse_symbol_trig", "targetname");
+    e_wall notify("damage", 100, e_player, (0, 0, 0), e_wall.origin, undefined, "", "", "", elemental_bow);
+    wait(0.1);
+    level notify("hash_c8347a07");
+    wait(0.1);
+    arrow = struct::get("quest_start_demon_gate");
+    arrow.var_67b5dd94 notify("trigger", e_player);
+
+    archi_save::restore_flag("demon_gate_seal");
+    if (level flag::get("demon_gate_seal"))
+    {
+        wait(0.1);
+        s_urn = struct::get("aq_dg_urn_struct", "targetname");
+        s_urn.var_67b5dd94 notify("trigger", e_player);
+        
+        fossils = getentarray("aq_dg_fossil", "script_noteworthy");
+        foreach(fossil in fossils)
+        {
+            fossil.var_67b5dd94 notify("trigger", e_player);
+        }
+        wait(3);
+    }
+
+    archi_save::restore_flag("demon_gate_crawlers");
+    if (level flag::get("demon_gate_crawlers"))
+    {
+        align_fossils = getentarray("aq_dg_fossil_align", "script_noteworthy");
+        foreach (f in align_fossils)
+        {
+            f clientfield::set("fossil_reveal", 0);
+        }
+    }
+
+    archi_save::restore_flag("demon_gate_runes");
+}
+
+function _track_player_connection_bow()
+{
+    storm_bow = GetWeapon("elemental_bow_storm");
+    wolf_bow = GetWeapon("elemental_bow_wolf_howl");
+    fire_bow = GetWeapon("elemental_bow_rune_prison");
+    void_bow = GetWeapon("elemental_bow_demongate");
+
+    if (self hasweapon(storm_bow))
+    {
+        level flag::set("elemental_storm_upgraded");
+        // level thread _prefill_pedestal("elemental_storm", self);
+        level thread _restore_storm_bow(self);
+        return;
+    }
+    else if (self hasweapon(wolf_bow))
+    {
+        level flag::set("wolf_howl_upgraded");
+        level thread _restore_wolf_bow(self);
+        return;
+    }
+    else if (self hasweapon(fire_bow))
+    {
+        level flag::set("rune_prison_upgraded");
+        level thread _restore_fire_bow(self);
+        return;
+    }
+    else if (self hasweapon(void_bow))
+    {
+        level flag::set("demon_gate_upgraded");
+        level thread _restore_void_bow(self);
+        return;
+    }
+
+    xuid = self GetXuid();
+    if (level.archi.storm_owner == xuid)
+    {
+        level thread _restore_storm_bow(self);
+    }
+    else if (level.archi.wolf_owner == xuid)
+    {
+        level thread _restore_wolf_bow(self);
+    }
+    else if (level.archi.fire_owner == xuid)
+    {
+        level thread _restore_fire_bow(self);
+    }
+    else if (level.archi.void_owner == xuid)
+    {
+        level thread _restore_void_bow(self);
+    }
+}
+
+function _do_bow_steps(val)
+{
+    if (val != "")
+    {
+        parts = strtok(val, " ");
+        if (parts.size >= 2)
+        {
+            bow_name = parts[0];
+            player_name = parts[1];
+
+            foreach(player in level.players)
+            {
+                if (player.name == player_name)
+                {
+                    if (bow_name == "storm")
+                    {
+                        IPrintLn("Forcing player storm");
+                        level thread _restore_storm_bow(player);
+                    }
+                    if (bow_name == "wolf")
+                    {
+                        IPrintLn("Forcing player wolf");
+                        level thread _restore_wolf_bow(player);
+                    }
+                    if (bow_name == "void")
+                    {
+                        IPrintLn("Forcing player void");
+                        level thread _restore_void_bow(player);
+                    }
+                    if (bow_name == "fire")
+                    {
+                        IPrintLn("Forcing player fire");
+                        level thread _restore_fire_bow(player);
+                    }
+                }
+            }
+        }
+    }
+}
+
+function setup_bow_restore()
+{
+    level flag::wait_till("all_players_spawned");
+
+    // Add element if bow is owned by a player
+    foreach (player in level.players)
+    {
+        player thread _track_player_connection_bow();
+    }
+    callback::on_connect(&_track_player_connection_bow);
+
+    level thread archi_commands::_basic_trigger("ap_bow", &_do_bow_steps);
+    
+    wait(0.1);
+
+    // Wait until we have bows for the keeper ai to use
+    while(!isdefined(level.a_elements.size) || level.a_elements.size == 0)
+    {
+        wait(1);
+    }
+
     // Complete simons says sequence to trigger rocket scene
+    archi_save::restore_flag("start_channeling_stone_step");
     if (level flag::get("start_channeling_stone_step"))
     {
         wait(1);

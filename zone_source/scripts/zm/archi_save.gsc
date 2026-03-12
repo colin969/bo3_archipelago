@@ -29,6 +29,13 @@
 
 function setup_map_saving()
 {
+    level flag::init("ap_saving_player");
+    level flag::init("ap_restoring_player");
+    SetDvar( "ARCHIPELAGO_SAVE_PLAYER_DATA_XUID", "" );
+    SetDvar( "ARCHIPELAGO_SAVE_PLAYER_DATA", "" );
+    SetDvar( "ARCHIPELAGO_LOAD_PLAYER_DATA_XUID", "" );
+    SetDvar( "ARCHIPELAGO_LOAD_PLAYER_DATA", "" );
+
     level.archi.perk_whitelist = array(PERK_JUGGERNOG, PERK_QUICK_REVIVE,
         PERK_SLEIGHT_OF_HAND, PERK_DOUBLETAP2, PERK_STAMINUP, PERK_PHDFLOPPER,
         PERK_DEAD_SHOT, PERK_ADDITIONAL_PRIMARY_WEAPON, PERK_ELECTRIC_CHERRY,
@@ -51,7 +58,87 @@ function setup_map_saving()
 
     level thread save_player_stats_monitor_endgame();
     level thread save_player_stats_monitor();
+
+    array::thread_all(level.players, &restore_player);
+    callback::on_connect(&restore_player);
+
     restore_universal();
+}
+
+function player_save_monitor()
+{
+    level endon("end_game");
+
+    // self waittill("disconnect");
+    // if (isdefined(level.archi.save_player_data))
+    // {
+    //     while (level flag::get("ap_saving_player"))
+    //     {
+    //         wait(0.1);
+    //     }
+    //     level flag::set("ap_saving_player");
+
+    //     xuid = self GetXuid();
+    //     self [[level.archi.save_player_data]](xuid);
+    //     self save_universal_player(xuid);
+    //     SetDvar("ARCHIPELAGO_SAVE_PLAYER_DATA_XUID", xuid);
+    //     SetDvar("ARCHIPELAGO_SAVE_PLAYER_DATA", level.archi._mapName);
+    //     LUINotifyEvent(&"ap_save_player_data", 0);
+
+    //     WAIT_SERVER_FRAME
+    //     while (true)
+    //     {
+    //         dvar_value = GetDvarString("ARCHIPELAGO_SAVE_PLAYER_DATA", "?");
+    //         if (dvar_value == "")
+    //         {
+    //             break;
+    //         }
+    //         wait(0.1);
+    //     }
+        
+    //     level flag::clear("ap_saving_player");
+    // }    
+}
+
+function restore_player()
+{
+    level endon("end_game");
+    self endon("disconnect");
+
+    if (isdefined(level.archi.restore_player_data))
+    {
+        while (level flag::get("ap_restoring_player"))
+        {
+            wait(0.1);
+        }
+        level flag::set("ap_restoring_player");
+
+        xuid = self GetXuid();
+        SetDvar("ARCHIPELAGO_LOAD_PLAYER_DATA_XUID", xuid);
+        SetDvar("ARCHIPELAGO_LOAD_PLAYER_DATA", level.archi._mapName);
+        LUINotifyEvent(&"ap_restore_player_data", 0);
+
+        WAIT_SERVER_FRAME
+        while (true)
+        {
+            dvar_value = GetDvarString("ARCHIPELAGO_LOAD_PLAYER_DATA", "?");
+            if (dvar_value == "")
+            {
+                break;
+            }
+            wait(0.1);
+        }
+        level flag::clear("ap_restoring_player");
+
+        // Don't apply flags until the player actually exists
+        self restore_map_player(xuid);
+        self restore_universal_player(xuid);
+        while(!zm_utility::is_player_valid(self))
+        {
+            wait(0.1);
+        }
+        self thread [[level.archi.restore_player_data]](xuid);
+    }
 }
 
 function clear_checkpoint_thread()
@@ -114,11 +201,6 @@ function restore_universal()
         if (dvar_value == "NONE")
         {
             level flag::set("ap_universal_restored");
-            foreach (player in level.players)
-            {
-                player restore_universal_player();
-            }
-            callback::on_connect(&restore_universal_player);
             break;
         }
     }
@@ -126,15 +208,6 @@ function restore_universal()
 
 function save_universal()
 {
-    xuidString = "";
-    foreach (player in level.players)
-    {
-        xuid = player GetXuid();
-        xuidString += xuid + ";";
-        player save_universal_player(xuid);
-    }
-    SetDvar("ARCHIPELAGO_SAVE_DATA_XUIDS", xuidString);
-
     LUINotifyEvent(&"ap_save_data_universal", 0);
 }
 
@@ -143,14 +216,9 @@ function save_universal_player(xuid)
     self save_stats(xuid);
 }
 
-function restore_universal_player()
+function restore_universal_player(xuid)
 {
-    xuid = self GetXuid();
-
-    if (archi_save::can_restore_universal_player(xuid))
-    {
-        self archi_save::restore_stats(xuid);
-    }
+    self archi_save::restore_stats(xuid);
 }
 
 function restore_stats(xuid)
@@ -336,16 +404,60 @@ function restore_power_on()
     }
 }
 
-function restore_players(restore_player_data)
+function save_map_player(xuid)
 {
-    for(i = 0; i < level.players.size; i++)
+    save_player_val("progressive_starting_points", self.ap_starting_points, xuid);
+    save_player_val("spent_perk_tokens", self.ap_spent_perk_tokens, xuid);
+    save_player_val("spent_gum_tokens", self.ap_spent_gum_tokens, xuid);
+    save_player_val("spent_rare_gum_tokens", self.ap_spent_rare_gum_tokens, xuid);
+    save_player_val("spent_legendary_gum_tokens", self.ap_spent_legendary_gum_tokens, xuid);
+}
+
+function restore_map_player(xuid)
+{
+    self.ap_starting_points = 0;
+    starting_points = restore_player_val("progressive_starting_points", xuid);
+    if (starting_points != "")
     {
-        xuid = level.players[i] GetXuid();
-        level.players[i] [[restore_player_data]]();   
+        self.ap_starting_points = Int(starting_points);
+    }
+    if (self.ap_starting_points > 0)
+    {
+        diff = level.archi.progressive_starting_points - self.ap_starting_points;
+        if (diff > 0)
+        {
+            self zm_score::add_to_player_score(diff);
+            self.ap_starting_points = level.archi.progressive_starting_points;
+        }
+    }  
+
+    self.ap_spent_perk_tokens = 0;
+    tokens_spent = restore_player_val("spent_perk_tokens", xuid);
+    if (tokens_spent != "")
+    {
+        self.ap_spent_perk_tokens = Int(tokens_spent);
     }
 
-    // When a new player connects, read in their saved state
-    callback::on_connect(restore_player_data);
+    self.ap_spent_gum_tokens = 0;
+    tokens_spent = restore_player_val("spent_gum_tokens", xuid);
+    if (tokens_spent != "")
+    {
+        self.ap_spent_gum_tokens = Int(tokens_spent);
+    }
+
+    self.ap_spent_rare_gum_tokens = 0;
+    tokens_spent = restore_player_val("spent_rare_gum_tokens", xuid);
+    if (tokens_spent != "")
+    {
+        self.ap_spent_rare_gum_tokens = Int(tokens_spent);
+    }
+
+    self.ap_spent_legendary_gum_tokens = 0;
+    tokens_spent = restore_player_val("spent_legendary_gum_tokens", xuid);
+    if (tokens_spent != "")
+    {
+        self.ap_spent_legendary_gum_tokens = Int(tokens_spent);
+    }
 }
 
 function restore_doors_and_debris()
@@ -402,16 +514,6 @@ function can_restore_player(xuid)
     // No saved data, update the starting weapon
     self zm_weapons::weapon_take(level.start_weapon);
     self zm_weapons::weapon_give(level.start_weapon, 0, 0, 1);
-    return false;
-}
-
-function can_restore_universal_player(xuid)
-{
-    can_restore = GetDvarString("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" + xuid, "");
-    if (can_restore != "") {
-        return true;
-        SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" + xuid, "");
-    }
     return false;
 }
 
@@ -622,6 +724,20 @@ function save_players(save_player_data)
         e_player = level.players[i];
         xuid = e_player GetXuid();
         xuidString += xuid + ";";
+        // Disable saving in very specific circumstances
+        cur_weapon = e_player GetCurrentWeapon();
+
+        e_player save_universal_player(xuid);
+        e_player save_map_player(xuid);
+
+        // Conditions which would break the save state must prevent saving
+        if (cur_weapon == level.weaponrevivetool ||
+            isdefined(e_player.laststand) ||
+            ( isdefined(e_player.beast_mode) && e_player.beast_mode == 1))
+        {
+            IPrintLnBold("Skipped saving player due to dangerous state - " + e_player.name);
+            continue;
+        }
         e_player [[save_player_data]](xuid);
     }
     SetDvar("ARCHIPELAGO_SAVE_DATA_XUIDS", xuidString);
@@ -724,6 +840,26 @@ function save_player_flag(flag, xuid)
     {
         SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" + xuid + "_MAP_" + ToUpper(flag), 0);
     }
+}
+
+function save_player_val(key, value, xuid)
+{
+    SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" + xuid + "_KVAL_" + ToUpper(key), value);
+}
+
+function save_val(key, value)
+{
+    SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_KVAL_" + key, value);
+}
+
+function restore_val(key)
+{
+    return GetDvarString("ARCHIPELAGO_LOAD_DATA_MAP_KVAL_" + key, "");
+}
+
+function restore_player_val(key, xuid)
+{
+    return GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_" + xuid + "_KVAL_" + ToUpper(key));
 }
 
 // Self is player

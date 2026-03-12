@@ -1,4 +1,5 @@
-function map_save_zm_castle(mapData)
+-- Der Eisendrache
+function map_save_zm_castle(mapData, uniData)
   Archi.LogMessage("Saving map data for Der Eisendrache");
   save_zombie_count(mapData)
   save_round_number(mapData)
@@ -12,10 +13,6 @@ function map_save_zm_castle(mapData)
   save_flag(mapData, "switch_to_death_ray")
   save_flag(mapData, "tesla_connector_launch_platform")
   save_flag(mapData, "tesla_connector_lower_tower")
-  save_flag(mapData, "demon_gate_upgraded")
-  save_flag(mapData, "elemental_storm_upgraded")
-  save_flag(mapData, "rune_prison_upgraded")
-  save_flag(mapData, "wolf_howl_upgraded")
   save_flag(mapData, "ee_start_done")
   save_flag(mapData, "ee_golden_key")
   save_flag(mapData, "mpd_canister_replacement")
@@ -23,13 +20,33 @@ function map_save_zm_castle(mapData)
   save_flag(mapData, "start_channeling_stone_step")
   save_flag(mapData, "boss_fight_ready")
 
-  save_player_func = function (xuid, playerData)
-    save_player_score(xuid, playerData)
-    save_player_perks(xuid, playerData)
-    save_player_loadout(xuid, playerData)
-  end
+  save_flag(mapData, "elemental_storm_wallrun")
+  save_flag(mapData, "elemental_storm_batteries")
+  save_flag(mapData, "elemental_storm_beacons_charged")
+  save_flag(mapData, "elemental_storm_repaired")
 
-  save_players(mapData, save_player_func)
+  save_flag(mapData, "wolf_howl_paintings")
+  save_val(mapData, "wolf_howl_skull_collected")
+  save_flag(mapData, "wolf_howl_escort")
+  save_flag(mapData, "wolf_howl_repaired")
+
+  save_flag(mapData, "demon_gate_seal")
+  save_flag(mapData, "demon_gate_crawlers")
+  save_flag(mapData, "demon_gate_runes")
+  save_flag(mapData, "demon_gate_repaired")
+
+  save_val(mapData, "storm_owner")
+  save_val(mapData, "wolf_owner")
+  save_val(mapData, "fire_owner")
+  save_val(mapData, "void_owner")
+
+  save_players(mapData, uniData, player_save_zm_castle)
+end
+
+function player_save_zm_castle(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
 end
 
 function map_restore_zm_castle(mapData)
@@ -46,10 +63,6 @@ function map_restore_zm_castle(mapData)
   restore_flag(mapData, "switch_to_death_ray")
   restore_flag(mapData, "tesla_connector_launch_platform")
   restore_flag(mapData, "tesla_connector_lower_tower")
-  restore_flag(mapData, "demon_gate_upgraded")
-  restore_flag(mapData, "elemental_storm_upgraded")
-  restore_flag(mapData, "rune_prison_upgraded")
-  restore_flag(mapData, "wolf_howl_upgraded")
   restore_flag(mapData, "ee_start_done")
   restore_flag(mapData, "ee_golden_key")
   restore_flag(mapData, "mpd_canister_replacement")
@@ -57,16 +70,36 @@ function map_restore_zm_castle(mapData)
   restore_flag(mapData, "start_channeling_stone_step")
   restore_flag(mapData, "boss_fight_ready")
 
-  restore_player_func = function (xuid, playerData)
-    restore_player_score(xuid, playerData)
-    restore_player_perks(xuid, playerData)
-    restore_player_loadout(xuid, playerData)
-  end
+  restore_val(mapData, "elemental_storm_beacons_lit")
+  restore_flag(mapData, "elemental_storm_wallrun")
+  restore_flag(mapData, "elemental_storm_batteries")
+  restore_flag(mapData, "elemental_storm_beacons_charged")
+  restore_flag(mapData, "elemental_storm_repaired")
 
-  restore_players(mapData, restore_player_func)
+  restore_flag(mapData, "wolf_howl_paintings")
+  restore_val(mapData, "wolf_howl_skull_collected")
+  restore_flag(mapData, "wolf_howl_escort")
+  restore_flag(mapData, "wolf_howl_repaired")
+
+  restore_flag(mapData, "demon_gate_seal")
+  restore_flag(mapData, "demon_gate_crawlers")
+  restore_flag(mapData, "demon_gate_runes")
+  restore_flag(mapData, "demon_gate_repaired")
+
+  restore_val(mapData, "storm_owner")
+  restore_val(mapData, "wolf_owner")
+  restore_val(mapData, "fire_owner")
+  restore_val(mapData, "void_owner")
 end
 
-function map_save_zm_zod(mapData)
+function player_restore_zm_castle(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+end
+
+-- Shadows of Evil
+function map_save_zm_zod(mapData, uniData)
   Archi.LogMessage("Saving map data for Shadows of Evil");
   save_zombie_count(mapData)
   save_round_number(mapData)
@@ -84,13 +117,16 @@ function map_save_zm_zod(mapData)
     save_flag(mapData, "power_on" .. i)
   end
 
-  save_player_func = function (xuid, playerData)
-    save_player_score(xuid, playerData)
-    save_player_perks(xuid, playerData)
-    save_player_loadout(xuid, playerData)
-  end
+  save_val(mapData, "smashed")
 
-  save_players(mapData, save_player_func)
+  save_players(mapData, uniData, player_save_zm_zod)
+end
+
+function player_save_zm_zod(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
+  save_player_val(xuid, playerData, "fumigator")
 end
 
 function map_restore_zm_zod(mapData)
@@ -111,16 +147,18 @@ function map_restore_zm_zod(mapData)
     restore_flag(mapData, "power_on" .. i)
   end
 
-  restore_player_func = function (xuid, playerData)
-    restore_player_score(xuid, playerData)
-    restore_player_perks(xuid, playerData)
-    restore_player_loadout(xuid, playerData)
-  end
-
-  restore_players(mapData, restore_player_func)
+  restore_val(mapData, "smashed")
 end
 
-function map_save_zm_island(mapData)
+function player_restore_zm_zod(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+  restore_player_val(xuid, playerData, "fumigator")
+end
+
+-- Zetsubou No Shima
+function map_save_zm_island(mapData, uniData)
   Archi.LogMessage("Saving map data for Zetsubou No Shima");
   save_zombie_count(mapData)
   save_round_number(mapData)
@@ -143,20 +181,19 @@ function map_save_zm_island(mapData)
   save_flag(mapData, "valve3_found")
   save_flag(mapData, "a_player_got_skullgun")
 
-  save_player_func = function (xuid, playerData)
-    save_player_score(xuid, playerData)
-    save_player_perks(xuid, playerData)
-    save_player_loadout(xuid, playerData)
+  save_players(mapData, uniData, player_save_zm_island)
+end
 
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
-  end
-
-  save_players(mapData, save_player_func)
+function player_save_zm_island(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
 end
 
 function map_restore_zm_island(mapData)
@@ -181,23 +218,22 @@ function map_restore_zm_island(mapData)
   restore_flag(mapData, "valve2_found")
   restore_flag(mapData, "valve3_found")
   restore_flag(mapData, "a_player_got_skullgun")
-
-  restore_player_func = function (xuid, playerData)
-    restore_player_score(xuid, playerData)
-    restore_player_perks(xuid, playerData)
-    restore_player_loadout(xuid, playerData)
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
-  end
-
-  restore_players(mapData, restore_player_func)
 end
 
-function map_save_zm_stalingrad(mapData)
+function player_restore_zm_island(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
+end
+
+-- Gorod Krovi
+function map_save_zm_stalingrad(mapData, uniData)
   Archi.LogMessage("Saving map data for Gorod Krovi")
   save_zombie_count(mapData)
   save_round_number(mapData)
@@ -228,22 +264,22 @@ function map_save_zm_stalingrad(mapData)
   save_flag(mapData, "drshup_factory_rune_hit");
   save_flag(mapData, "drshup_rune_step_done");
 
-  save_player_func = function (xuid, playerData)
-    save_player_score(xuid, playerData)
-    save_player_perks(xuid, playerData)
-    save_player_loadout(xuid, playerData)
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_4")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_4")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_5")
-  end
+  save_players(mapData, uniData, player_save_zm_stalingrad)
+end
 
-  save_players(mapData, save_player_func)
+function player_save_zm_stalingrad(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_4")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_4")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_5")
 end
 
 function map_restore_zm_stalingrad(mapData)
@@ -276,27 +312,25 @@ function map_restore_zm_stalingrad(mapData)
   restore_flag(mapData, "drshup_judicial_rune_hit");
   restore_flag(mapData, "drshup_factory_rune_hit");
   restore_flag(mapData, "drshup_rune_step_done");
-
-
-  restore_player_func = function (xuid, playerData)
-    restore_player_score(xuid, playerData)
-    restore_player_perks(xuid, playerData)
-    restore_player_loadout(xuid, playerData)
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_4")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_4")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_5")
-  end
-
-  restore_players(mapData, restore_player_func)
 end
 
-function map_save_zm_genesis(mapData)
+function player_restore_zm_stalingrad(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_4")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_4")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_5")
+end
+
+-- Revelations
+function map_save_zm_genesis(mapData, uniData)
   Archi.LogMessage("Saving map data for Revelations")
   save_zombie_count(mapData)
   save_round_number(mapData)
@@ -319,19 +353,19 @@ function map_save_zm_genesis(mapData)
   save_flag(mapData, "shadow_rq_done");
   save_flag(mapData, "shards_done");
 
-  save_player_func = function (xuid, playerData)
-    save_player_score(xuid, playerData)
-    save_player_perks(xuid, playerData)
-    save_player_loadout(xuid, playerData)
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
-    save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
-    save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
-  end
+  save_players(mapData, uniData, player_save_zm_genesis)
+end
 
-  save_players(mapData, save_player_func)
+function player_save_zm_genesis(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+  save_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+  save_player_flag(xuid, playerData, "flag_player_collected_reward_3")
 end
 
 function map_restore_zm_genesis(mapData)
@@ -356,23 +390,22 @@ function map_restore_zm_genesis(mapData)
   restore_flag(mapData, "light_rq_done");
   restore_flag(mapData, "shadow_rq_done");
   restore_flag(mapData, "shards_done");
-
-  restore_player_func = function (xuid, playerData)
-    restore_player_score(xuid, playerData)
-    restore_player_perks(xuid, playerData)
-    restore_player_loadout(xuid, playerData)
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
-    restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
-    restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
-  end
-
-  restore_players(mapData, restore_player_func)
 end
 
-function map_save_zm_factory(mapData)
+function player_restore_zm_genesis(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_1")
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_2")
+  restore_player_flag(xuid, playerData, "flag_player_completed_challenge_3")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_1")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_2")
+  restore_player_flag(xuid, playerData, "flag_player_collected_reward_3")
+end
+
+-- The Giant
+function map_save_zm_factory(mapData, uniData)
   Archi.LogMessage("Saving map data for The Giant");
   save_zombie_count(mapData)
   save_round_number(mapData)
@@ -382,13 +415,13 @@ function map_save_zm_factory(mapData)
   save_flag(mapData, "teleporter_pad_link_2")
   save_flag(mapData, "teleporter_pad_link_3")
 
-  save_player_func = function (xuid, playerData)
-    save_player_score(xuid, playerData)
-    save_player_perks(xuid, playerData)
-    save_player_loadout(xuid, playerData)
-  end
+  save_players(mapData, uniData, player_save_zm_factory)
+end
 
-  save_players(mapData, save_player_func)
+function player_save_zm_factory(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
 end
 
 function map_restore_zm_factory(mapData)
@@ -400,16 +433,15 @@ function map_restore_zm_factory(mapData)
   restore_flag(mapData, "teleporter_pad_link_1")
   restore_flag(mapData, "teleporter_pad_link_2")
   restore_flag(mapData, "teleporter_pad_link_3")
-
-  restore_player_func = function (xuid, playerData)
-    restore_player_score(xuid, playerData)
-    restore_player_perks(xuid, playerData)
-    restore_player_loadout(xuid, playerData)
-  end
-
-  restore_players(mapData, restore_player_func)
 end
 
+function player_restore_zm_factory(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+end
+
+-- General Purpose
 function restore_flag(mapData, flag)
   if mapData["flags"] and mapData["flags"][flag] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_MAP_" .. string.upper(flag), 1)
@@ -419,6 +451,15 @@ end
 function restore_player_flag(xuid, playerData, flag)
   if playerData["flags"] and playerData["flags"][flag] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag), 1)
+  end
+end
+
+function restore_player_val(xuid, playerData, kval)
+  if playerData["kvals"] then
+    local val = playerData["kvals"][kval]
+    if val ~= nil then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_" .. xuid .. "_KVAL_" .. string.upper(kval), val)
+    end
   end
 end
 
@@ -494,29 +535,22 @@ function restore_zombie_count(mapData)
   end
 end
 
-function restore_players(mapData, cb)
-  if mapData["players"] then
-    for xuid, playerData in pairs(mapData.players) do
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_READY_" .. xuid, "true" )
-      cb(xuid, playerData)
-    end
-  end
-end
-
-function restore_player_ready(xuid)
-  Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_READY_" .. xuid, "true" )
-end
-
-function save_players(mapData, cb)
+function save_players(mapData, uniData, cb)
   if not mapData["players"] then
     mapData["players"] = {}
+  end
+  if not uniData["players"] then
+    uniData["players"] = {}
   end
   local xuidList = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA_XUIDS")
   for xuid in string.gmatch(xuidList, "[^;]+") do
     playerData = {
       flags = {},
+      kvals = {},
     }
     cb(xuid, playerData)
+    save_map_player(xuid, playerData)
+    save_universal_player(xuid, uniData)
     mapData["players"][xuid] = playerData
   end
 end
@@ -558,6 +592,24 @@ function restore_player_loadout(xuid, playerData)
   end
 end
 
+function save_val(mapData, key)
+  local val = Engine.DvarString("", "ARCHIPELAGO_SAVE_DATA_MAP_KVAL_" .. string.upper(key))
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_KVAL_" .. string.upper(key), "")
+  
+  if val and val ~= "" then
+    mapData["kvals"][key] = val
+  end
+end
+
+function restore_val(mapData, key)
+  if mapData["kvals"] and mapData["kvals"][key] then
+    local val = mapData["kvals"][key]
+    if val ~= nil then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_MAP_KVAL_" .. string.upper(key), tostring(val))
+    end
+  end
+end
+
 function save_flag(mapData, flag)
   local val = Engine.DvarInt(0, "ARCHIPELAGO_SAVE_DATA_MAP_" .. string.upper(flag))
   Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_" .. string.upper(flag), "")
@@ -568,9 +620,17 @@ end
 
 function save_player_flag(xuid, playerData, flag)
   local val = Engine.DvarInt(0, "ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag))
-  Engine.DvarInt("ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag), "")
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_MAP_" .. string.upper(flag), 0)
   if val ~= 0 then
     playerData["flags"][flag] = 1
+  end
+end
+
+function save_player_val(xuid, playerData, kval)
+  local val = Engine.DvarString("", "ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_KVAL_" .. string.upper(kval))
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" .. xuid .. "_KVAL_" .. string.upper(kval), "")
+  if val and val ~= "" then  -- Fixed: Check for empty string
+    playerData["kvals"][kval] = val
   end
 end
 
@@ -755,61 +815,74 @@ function restore_zm_castle_landingpads(mapData)
 end
 
 function save_universal(uniData)
-  if not uniData["players"] then
-    uniData["players"] = {}
-  end
-  local xuidList = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA_XUIDS")
-  for xuid in string.gmatch(xuidList, "[^;]+") do
-    uniData.players[xuid] = {}
 
-    local kills = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" .. xuid)
-    if kills and kills >= 0 then
-      uniData.players[xuid]["kills"] = kills
-    end
-    
-    local headshots = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid)
-    if headshots and headshots >= 0 then
-      uniData.players[xuid]["headshots"] = headshots
-    end
-    
-    local revives = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid)
-    if revives and revives >= 0 then
-      uniData.players[xuid]["revives"] = revives
-    end
-    
-    local downs = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid)
-    if downs and downs >= 0 then
-      uniData.players[xuid]["downs"] = downs
-    end
+end
+
+function save_universal_player(xuid, uniData)
+  uniData.players[xuid] = {}
+
+  local kills = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" .. xuid)
+  if kills and kills >= 0 then
+    uniData.players[xuid]["kills"] = kills
+  end
+  
+  local headshots = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid)
+  if headshots and headshots >= 0 then
+    uniData.players[xuid]["headshots"] = headshots
+  end
+  
+  local revives = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid)
+  if revives and revives >= 0 then
+    uniData.players[xuid]["revives"] = revives
+  end
+  
+  local downs = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid)
+  if downs and downs >= 0 then
+    uniData.players[xuid]["downs"] = downs
   end
 end
 
 function restore_universal(uniData)
-  if not uniData["players"] then
-    uniData["players"] = {}
-  end
-  if uniData["players"] then
-    for xuid, playerData in pairs(uniData.players) do
-      Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" .. xuid, "true" )
-
-      if playerData["kills"] then
-        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" .. xuid, playerData["kills"])
-      end
-      if playerData["headshots"] then
-        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid, playerData["headshots"])
-      end
-      if playerData["revives"] then
-        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid, playerData["revives"])
-      end
-      if playerData["downs"] then
-        Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid, playerData["downs"])
-      end
-    end
-  end
-
   if uniData["mapItems"] then
     Engine.SetDvar("ARCHIPELAGO_INIT_MAP_ITEMS", table.concat(uniData["mapItems"], ";"))
   end
+end
+
+function restore_universal_player(xuid, uniData)
+  playerData = uniData["players"][xuid]
+  
+  if playerData then
+    Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" .. xuid, "true" )
+
+    if playerData["kills"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" .. xuid, playerData["kills"])
+    end
+    if playerData["headshots"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid, playerData["headshots"])
+    end
+    if playerData["revives"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid, playerData["revives"])
+    end
+    if playerData["downs"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid, playerData["downs"])
+    end
+  end
+end
+
+function save_map_player(xuid, playerData)
+  save_player_val(xuid, playerData, "progressive_starting_points")
+  save_player_val(xuid, playerData, "spent_perk_tokens")
+  save_player_val(xuid, playerData, "spent_gum_tokens")
+  save_player_val(xuid, playerData, "spent_rare_gum_tokens")
+  save_player_val(xuid, playerData, "spent_legendary_gum_tokens")
+end
+
+function restore_map_player(xuid, playerData)
+  restore_player_val(xuid, playerData, "progressive_starting_points")
+  restore_player_val(xuid, playerData, "spent_perk_tokens")
+  restore_player_val(xuid, playerData, "spent_gum_tokens")
+  restore_player_val(xuid, playerData, "spent_rare_gum_tokens")
+  restore_player_val(xuid, playerData, "spent_legendary_gum_tokens")
 end
 
 map_saves = {
@@ -821,6 +894,15 @@ map_saves = {
   zm_factory = map_save_zm_factory,
 }
 
+player_saves = {
+  zm_zod = player_save_zm_zod,
+  zm_castle = player_save_zm_castle,
+  zm_island = player_save_zm_island,
+  zm_stalingrad = player_save_zm_stalingrad,
+  zm_genesis = player_save_zm_genesis,
+  zm_factory = player_save_zm_factory,
+}
+
 map_restores = {
   zm_zod = map_restore_zm_zod,
   zm_castle = map_restore_zm_castle,
@@ -830,9 +912,24 @@ map_restores = {
   zm_factory = map_restore_zm_factory,
 }
 
+player_restores = {
+  zm_zod = player_restore_zm_zod,
+  zm_castle = player_restore_zm_castle,
+  zm_island = player_restore_zm_island,
+  zm_stalingrad = player_restore_zm_stalingrad,
+  zm_genesis = player_restore_zm_genesis,
+  zm_factory = player_restore_zm_factory,
+}
+
 return {
   map_saves = map_saves,
   map_restores = map_restores,
+  player_saves = player_saves,
+  player_restores = player_restores,
   save_universal = save_universal,
   restore_universal = restore_universal,
+  save_universal_player = save_universal_player,
+  restore_universal_player = restore_universal_player,
+  save_map_player = save_map_player,
+  restore_map_player = restore_map_player,
 }

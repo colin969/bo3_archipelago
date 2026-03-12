@@ -231,13 +231,20 @@ Archi.FromGSC = function (model)
         saveData = {}
       end
 
+      if not saveData["universal"] then
+        saveData["universal"] = {
+          players = {},
+          mapItems = {}
+        }
+      end
+
       local mapSave = save_system.map_saves[mapName]
       if mapSave then
         saveData[checkpointName] = {
           players = {},
           flags = {},
         }
-        mapSave(saveData[checkpointName])
+        mapSave(saveData[checkpointName], saveData["universal"])
       end
 
       local saveDataStr = json.encode(saveData, { indent = true })
@@ -247,6 +254,80 @@ Archi.FromGSC = function (model)
       Engine.SetDvar( "ARCHIPELAGO_SAVE_DATA", "NONE" )
     end
   end
+  if IsParamModelEqualToString(model, "ap_save_player_data") then
+    local mapName = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_PLAYER_DATA")
+    local xuid = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_PLAYER_DATA_XUID")
+
+    if mapName and xuid and mapName ~= "" and xuid ~= "" then
+      if not saveData["universal"] then
+        saveData["universal"] = {
+          players = {},
+          mapItems = {}
+        }
+      end
+
+      save_system.save_universal_player(xuid, saveData["universal"])
+
+      local playerSave = save_system.player_saves[mapName]
+      if playerSave then
+        Archi.LogMessage("Saving player data for " .. xuid)
+        if not saveData[mapName] then
+          saveData[mapName] = {
+            players = {},
+            flags = {},
+          }
+        end
+        playerData = {
+          flags = {},
+          kvals = {},
+        }
+        save_system.save_map_player(xuid, playerData)
+        playerSave(xuid, playerData)
+        saveData[mapName]["players"][xuid] = playerData
+      else
+        Archi.LogMessage("No player save func found?")
+      end
+
+      local saveDataStr = json.encode(saveData, { indent = true })
+      Archipelago.StoreSaveData(saveDataStr)
+    end
+
+    Engine.SetDvar( "ARCHIPELAGO_SAVE_PLAYER_DATA_XUID", "" )
+    Engine.SetDvar( "ARCHIPELAGO_SAVE_PLAYER_DATA", "" )
+  end
+  if IsParamModelEqualToString(model, "ap_restore_player_data") then
+    local mapName = Engine.DvarString(nil,"ARCHIPELAGO_LOAD_PLAYER_DATA")
+    local xuid = Engine.DvarString(nil,"ARCHIPELAGO_LOAD_PLAYER_DATA_XUID")
+
+    if mapName and xuid and mapName ~= "" and xuid ~= "" then
+      if not saveData["universal"] then
+        saveData["universal"] = {
+          players = {},
+          mapItems = {}
+        }
+      end
+
+      save_system.restore_universal_player(xuid, saveData["universal"])
+
+      local playerRestore = save_system.player_restores[mapName]
+      if playerRestore then
+        Archi.LogMessage("Restoring player data for " .. xuid .. " on " .. mapName)
+        if saveData[mapName] and saveData[mapName]["players"] then
+          playerData = saveData[mapName]["players"][xuid]
+          if playerData then
+            save_system.restore_map_player(xuid, playerData)
+            playerRestore(xuid, playerData)
+            Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_READY_" .. xuid, "true" )
+          end
+        end
+      else
+        Archi.LogMessage("No player restore func found?")
+      end
+    end
+
+    Engine.SetDvar( "ARCHIPELAGO_LOAD_PLAYER_DATA_XUID", "" )
+    Engine.SetDvar( "ARCHIPELAGO_LOAD_PLAYER_DATA", "" )
+  end
   if IsParamModelEqualToString(model, "ap_save_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA")
     if mapName ~= "NONE" then
@@ -254,13 +335,26 @@ Archi.FromGSC = function (model)
         saveData = {}
       end
 
+      if not saveData["universal"] then
+        saveData["universal"] = {
+          players = {},
+          mapItems = {}
+        }
+      end
+
       local mapSave = save_system.map_saves[mapName]
       if mapSave then
+        players = {}
+        -- Copy old player data
+        if saveData[mapName] and saveData[mapName]["players"] then
+          players = saveData[mapName]["players"]
+        end
         saveData[mapName] = {
-          players = {},
+          players = players,
           flags = {},
+          kvals = {},
         }
-        mapSave(saveData[mapName])
+        mapSave(saveData[mapName], saveData["universal"])
       end
 
       local saveDataStr = json.encode(saveData, { indent = true })

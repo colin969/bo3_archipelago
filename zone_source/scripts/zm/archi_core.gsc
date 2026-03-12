@@ -30,6 +30,7 @@
 #using scripts\zm\archi_zod;
 #using scripts\zm\archi_factory;
 #using scripts\zm\archi_save;
+#using scripts\zm\archi_shop;
 
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\shared\shared.gsh;
@@ -53,6 +54,8 @@
 #precache( "eventstring", "ap_init_state" );
 #precache( "eventstring", "ap_init_goal_cond" );
 #precache( "eventstring", "ap_deathlink_triggered" );
+#precache( "eventstring", "ap_save_player_data" );
+#precache( "eventstring", "ap_restore_player_data" );
 
 REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
@@ -63,6 +66,9 @@ function __init__()
     level flag::init("ap_attachment_rando_ready");
     level flag::init("ap_loaded_save_data");
     level flag::init("ap_universal_restored");
+
+    // Prevent oob deaths just incase
+    level.player_out_of_playable_area_monitor = false;
 
     // Some maps make requirements harder if not in a ranked match
     level.rankedmatch = 1;
@@ -218,6 +224,7 @@ function game_start()
     //Collection of Locations that are checked, 
     level.archi.locationQueue = array();
 
+    level.archi.shops = [];
     level.archi.monitor_strings = [];
     level.archi.save_checkpoint = false;
     level.archi.save_zombie_count = true;
@@ -247,11 +254,18 @@ function game_start()
     // Get Map Name String
     mapName = GetDvarString( "mapname" );
 
+    level.archi._mapName = mapName;
     level.archi.wallbuy_mappings = [];
     level.archi.wallbuys = [];
     level.archi.craftable_piece_to_location = [];
     level.archi.check_override_wallbuy_purchase = &check_override_wallbuy_purchase;
     level.archi.boarded_windows = 0;
+
+    level.archi.progressive_starting_points = 0;
+    level.archi.perk_tokens = 0;
+    level.archi.gum_tokens = 0;
+    level.archi.rare_gum_tokens = 0;
+    level.archi.legendary_gum_tokens = 0;
 
     // Map State
     level.archi.progressive_perk_limit = 0;
@@ -260,6 +274,13 @@ function game_start()
     archi_items::RegisterUniversalItem("200 Points",&archi_items::give_200Points);
     archi_items::RegisterUniversalItem("1500 Points",&archi_items::give_1500Points);
     archi_items::RegisterUniversalItem("50000 Points",&archi_items::give_50000Points);
+
+    archi_items::RegisterUniversalItem("Progressive - 500 Starting Points",&archi_items::give_ProgressiveStartingPoints500);
+    archi_items::RegisterUniversalItem("Shop - Perk Token",&archi_items::give_PerkToken);
+    archi_items::RegisterUniversalItem("Shop - Mega Gobblegum Token",&archi_items::give_GumToken);
+    archi_items::RegisterUniversalItem("Shop - Rare Mega Gobblegum Token",&archi_items::give_RareGumToken);
+    archi_items::RegisterUniversalItem("Shop - Legendary Mega Gobblegum Token",&archi_items::give_LegendaryGumToken);
+
 
     // Traps
     archi_items::RegisterUniversalItem("Trap - Third Person Mode",&archi_items::give_Trap_ThirdPerson);
@@ -350,8 +371,12 @@ function game_start()
 
         level thread setup_spare_change_trackers(7);
 
+        spawn_shop((2267, -5513, 128), (0, 90, 0));
+
         level.archi.save_state_manager = &archi_zod::save_state_manager;
+        level.archi.save_player_data = &archi_zod::save_player_data;
         level.archi.load_state_manager = &archi_zod::load_state;
+        level.archi.restore_player_data = &archi_zod::restore_player_data;
     }
 
     if (mapName == "zm_castle")
@@ -417,8 +442,12 @@ function game_start()
         archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
         archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
+        spawn_shop((895, 684, -48), (0, -170, 0));
+
         level.archi.save_state_manager = &archi_castle::save_state_manager;
+        level.archi.save_player_data = &archi_castle::save_player_data;
         level.archi.load_state_manager = &archi_castle::load_state;
+        level.archi.restore_player_data = &archi_castle::restore_player_data;
     }
 
     if (mapName == "zm_island")
@@ -488,8 +517,12 @@ function game_start()
         archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
         archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
         
+        spawn_shop((-411, -2048, -426), (0, 6, 0));
+
         level.archi.save_state_manager = &archi_island::save_state_manager;
+        level.archi.save_player_data = &archi_island::save_player_data;
         level.archi.load_state_manager = &archi_island::load_state;
+        level.archi.restore_player_data = &archi_island::restore_player_data;
     }
 
     if (mapName == "zm_stalingrad")
@@ -561,8 +594,12 @@ function game_start()
         archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
         archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
+        spawn_shop((-174, 1903, 176), (0, -138, 0));
+
         level.archi.save_state_manager = &archi_stalingrad::save_state_manager;
+        level.archi.save_player_data = &archi_stalingrad::save_player_data;
         level.archi.load_state_manager = &archi_stalingrad::load_state;
+        level.archi.restore_player_data = &archi_stalingrad::restore_player_data;
     }
 
     if (mapName == "zm_genesis")
@@ -633,8 +670,12 @@ function game_start()
         archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
         archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
+        spawn_shop((-4757, -264, -448), (0, 87, 0));
+
         level.archi.save_state_manager = &archi_genesis::save_state_manager;
+        level.archi.save_player_data = &archi_genesis::save_player_data;
         level.archi.load_state_manager = &archi_genesis::load_state;
+        level.archi.restore_player_data = &archi_genesis::restore_player_data;
     }
 
     if (mapName == "zm_factory")
@@ -677,8 +718,12 @@ function game_start()
         archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
         archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
+        spawn_shop((-254, 608, 7), (0, -90, 0));
+
         level.archi.save_state_manager = &archi_factory::save_state_manager;
+        level.archi.save_player_data = &archi_factory::save_player_data;
         level.archi.load_state_manager = &archi_factory::load_state;
+        level.archi.restore_player_data = &archi_factory::restore_player_data;
     }
 
     level thread map_lock();
@@ -1172,15 +1217,18 @@ function patch_wunderfizz()
     level._random_zombie_perk_cost = 2000;
     // Store original perk list
     level.archi.original_random_perk_list = [];
-    foreach (perk in level._random_perk_machine_perk_list)
+    if (isdefined(level._random_perk_machine_perk_list))
     {
-        level.archi.original_random_perk_list[level.archi.original_random_perk_list.size] = perk;
-    }
+        foreach (perk in level._random_perk_machine_perk_list)
+        {
+            level.archi.original_random_perk_list[level.archi.original_random_perk_list.size] = perk;
+        }
 
-    // Add monitor to update wunderfizz when contents changes
-    level thread update_wunderfizz();
-    WAIT_SERVER_FRAME
-    level notify("ap_update_wunderfizz");
+        // Add monitor to update wunderfizz when contents changes
+        level thread update_wunderfizz();
+        WAIT_SERVER_FRAME
+        level notify("ap_update_wunderfizz");
+    }
 
     level.archi.original_custom_random_perk_weights = level.custom_random_perk_weights;
     level.custom_random_perk_weights = &custom_random_perk_weights;
@@ -1536,7 +1584,7 @@ function deathlink_send_monitor()
     // Check if game ended from a player disconnecting while all others players are on the ground, they'll all be in last stand
     foreach (player in level.players)
     {
-        if (!player.sessionstate != "spectator" && !player laststand::player_is_in_laststand())
+        if (!(isdefined(player.sessionstate) && player.sessionstate != "spectator") && !player laststand::player_is_in_laststand())
         {
             return;
         }
@@ -1676,3 +1724,12 @@ function map_lock_player()
     }
 }
 
+function spawn_shop(origin, angles)
+{
+    shop = SpawnStruct();
+    shop.model = "archipelago_shop";
+    shop.origin = origin;
+    shop.angles = angles;
+    shop thread archi_shop::shop_spawn_init();
+    level.archi.shops[level.archi.shops.size] = shop;
+}

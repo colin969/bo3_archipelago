@@ -60,6 +60,7 @@ function init_commands()
     level thread _basic_trigger("ap_get_dvar", &_get_dvar);
     level thread _basic_trigger("ap_spawn_model", &_spawn_model);
     level thread _basic_trigger("ap_spawn_shop", &_spawn_shop);
+    level thread _basic_triggeR("ap_shop_print", &_shop_print);
   }
 }
 
@@ -650,10 +651,26 @@ function _spawn_shop(val)
   if (val != "")
   {
     player = level.players[0];
-    shop = SpawnStruct();
-    shop.origin = player.origin;
-    shop.angles = (0, 0, 0);
-    shop.model = "archipelago_shop";
-    shop thread archi_shop::shop_spawn_init();
+    if(!isdefined(level.archi.test_shop))
+    {
+      level.archi.test_shop = SpawnStruct();
+      level.archi.test_shop.model = "archipelago_shop";
+      level.archi.test_shop.origin = player.origin;
+      level.archi.test_shop.angles = player.angles;
+      level.archi.test_shop thread archi_shop::shop_spawn_init();
+    }
+    else
+    {
+      level.archi.test_shop.origin = player.origin;
+      level.archi.test_shop.angles = player.angles;
+      level.archi.test_shop.machine.origin = level.archi.test_shop.origin;
+      level.archi.test_shop.machine.angles = player.angles;
+    }
   }
+}
+
+function _shop_print(val)
+{
+  IPrintLn(level.archi.test_shop.origin);
+  IPrintLn(level.archi.test_shop.angles);
 }

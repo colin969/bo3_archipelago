@@ -27,6 +27,8 @@
 
 function save_state_manager()
 {
+    level flag::init("ap_allow_player_restore");
+
     level.archi.save_state = &save_state;
     level thread archi_save::save_on_round_change();
     level thread archi_save::round_checkpoints();
@@ -78,24 +80,48 @@ function load_state()
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
 
-    archi_save::restore_players(&restore_player_data);
-
     restore_map_state();
+
+    level flag::set("ap_allow_player_restore");
 
     wait(10);
     level flag::clear("ap_prevent_checkpoints");
 }
 
 // self is player
-function restore_player_data()
+function restore_player_data(xuid)
 {
-    xuid = self GetXuid();
+    level endon("end_game");
+    self endon("disconnect");
+
+    IPrintLn(self.name);
+
+    IPrintLn("Waiting for ready");
+
+    level flag::wait_till("ap_allow_player_restore");
 
     if (self archi_save::can_restore_player(xuid))
     {
+        IPrintLn("Restoring gorod " + xuid);
         self archi_save::restore_player_score(xuid);
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
+
+        wait(0.1);
+        self archi_save::restore_player_flag("flag_player_completed_challenge_1", xuid);
+        self archi_save::restore_player_flag("flag_player_completed_challenge_2", xuid);
+        self archi_save::restore_player_flag("flag_player_completed_challenge_3", xuid);
+        self archi_save::restore_player_flag("flag_player_completed_challenge_4", xuid);  
+        wait(0.1);
+        self archi_save::restore_player_flag("flag_player_collected_reward_1", xuid);
+        self archi_save::restore_player_flag("flag_player_collected_reward_2", xuid);
+        self archi_save::restore_player_flag("flag_player_collected_reward_3", xuid);
+        self archi_save::restore_player_flag("flag_player_collected_reward_4", xuid);
+        self archi_save::restore_player_flag("flag_player_collected_reward_5", xuid);  
+    }
+    else
+    {
+        IPrintLn("Cannot restore " + xuid);
     }
 }
 
@@ -501,12 +527,6 @@ function restore_map_state()
     archi_save::restore_flag("drshup_judicial_rune_hit");
     archi_save::restore_flag("drshup_library_rune_hit");
     archi_save::restore_flag("drshup_rune_step_done");
-
-    foreach (player in level.players)
-    {
-        player thread _restore_map_state_player();
-    }
-    callback::on_spawned(&_restore_map_state_player);
 }
 
 function _delete_egg_trigger()
@@ -531,23 +551,6 @@ function _save_map_state_player()
     self archi_save::save_player_flag("flag_player_collected_reward_3", xuid);
     self archi_save::save_player_flag("flag_player_collected_reward_4", xuid);
     self archi_save::save_player_flag("flag_player_collected_reward_5", xuid);  
-}
-
-// Self is player
-function _restore_map_state_player()
-{
-    xuid = self GetXuid();
-    wait(0.1);
-    self archi_save::restore_player_flag("flag_player_completed_challenge_1", xuid);
-    self archi_save::restore_player_flag("flag_player_completed_challenge_2", xuid);
-    self archi_save::restore_player_flag("flag_player_completed_challenge_3", xuid);
-    self archi_save::restore_player_flag("flag_player_completed_challenge_4", xuid);  
-    wait(0.1);
-    self archi_save::restore_player_flag("flag_player_collected_reward_1", xuid);
-    self archi_save::restore_player_flag("flag_player_collected_reward_2", xuid);
-    self archi_save::restore_player_flag("flag_player_collected_reward_3", xuid);
-    self archi_save::restore_player_flag("flag_player_collected_reward_4", xuid);
-    self archi_save::restore_player_flag("flag_player_collected_reward_5", xuid);  
 }
 
 // Before boss arena

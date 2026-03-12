@@ -13,25 +13,33 @@ local GetFormattedCost = function ( cost, tokens )
 end
 
 local SetHeaderLabels = function ( self, controller )
-	local controllerModel = Engine.GetModelForController( controller )
 	local clientNum = Engine.GetClientNum( controller )
 	local buttonListModel = self.buttonList:getModel()
 
 	local nameModel = Engine.GetModel( buttonListModel, "name" )
 	local costModel = Engine.GetModel( buttonListModel, "cost" )
+	local currencyFieldModel = Engine.GetModel( buttonListModel, "currencyField" )
 	local descriptionModel = Engine.GetModel( buttonListModel, "description" )
 
 	local name = Engine.GetModelValue( nameModel )
 	local cost = Engine.GetModelValue( costModel )
+	local currencyField = Engine.GetModelValue( currencyFieldModel )
 	local description = Engine.GetModelValue( descriptionModel )
 
-    local tokens = 10000
+	if currencyField ~= nil then
+		local tokenModel = Engine.GetModel( Engine.GetModelForController( controller ), currencyField )
+		local tokensLeft = Engine.GetModelValue( tokenModel )
 
-	if name ~= nil and cost ~= nil and description ~= nil then
-		if self.ItemInfo ~= nil and self.Description ~= nil then
-            self.ItemInfo:setText( Engine.Localize( "BUY - " .. name .. "^7 - ^3$^7" .. GetFormattedCost( cost, tokens ) ) )
+		if tokensLeft == nil then
+			tokensLeft = "???"
+		end
 
-			self.Description:setText( Engine.Localize( "[ i ] " .. description ) )
+		if name ~= nil and description ~= nil then
+			if self.ItemInfo ~= nil and self.Description ~= nil then
+				self.ItemInfo:setText( Engine.Localize( "BUY - " .. name .. "^7 - ^3^7x" .. tokensLeft .. " Available"  ) )
+
+				self.Description:setText( Engine.Localize( description ) )
+			end
 		end
 	end
 end
@@ -58,7 +66,8 @@ end, true )
 CoD.ApShopItems = {
     {
         name = "^2Random Mega Gobblegum",
-        cost = 0,
+        cost = 1,
+		currencyField = "GumTokens",
         description = "Pop a random Mega Gobblegum",
         image = "i_ap_gum_mega",
         type = "gum",
@@ -66,7 +75,8 @@ CoD.ApShopItems = {
     },
     {
         name = "^2Random Rare Mega Gobblegum",
-        cost = 0,
+        cost = 1,
+		currencyField = "RareGumTokens",
         description = "Pop a random Rare Mega Gobblegum",
         image = "i_ap_gum_rare",
         type = "gum",
@@ -74,7 +84,8 @@ CoD.ApShopItems = {
     },
     {
         name = "^2Random Legendary Mega Gobblegum",
-        cost = 0,
+        cost = 1,
+		currencyField = "LegendaryGumTokens",
         description = "Pop a random Legendary Mega Gobblegum",
         image = "i_ap_gum_legendary",
         type = "gum",
@@ -129,6 +140,10 @@ local PostLoadFunc = function ( self, controller )
 		end
 	end )
 
+	self:subscribeToModel( Engine.GetModel( Engine.GetModelForController( controller ), "PerkTokens" ), function ( model )
+		SetHeaderLabels( self, controller )
+	end )
+ 
 	self:linkToElementModel( self.buttonList, "name", true, function ( model )
 		SetHeaderLabels( self, controller )
 	end )
@@ -138,6 +153,10 @@ local PostLoadFunc = function ( self, controller )
 	end )
 
 	self:linkToElementModel( self.buttonList, "description", true, function ( model )
+		SetHeaderLabels( self, controller )
+	end )
+
+	self:linkToElementModel( self.buttonList, "currencyField", true, function ( model )
 		SetHeaderLabels( self, controller )
 	end )
 
@@ -165,6 +184,7 @@ DataSources.ApShop_Items = ListHelper_SetupDataSource( "ApShop_Items", function 
 				models = {
 					name = CoD.ApShopItems[index].name,
 					cost = CoD.ApShopItems[index].cost,
+					currencyField = CoD.ApShopItems[index].currencyField,
 					description = CoD.ApShopItems[index].description,
 					image = CoD.ApShopItems[index].image,
 					action = function ( self, element, controller, actionParam, menu )

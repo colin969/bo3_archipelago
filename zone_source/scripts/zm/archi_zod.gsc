@@ -27,6 +27,7 @@
 
 function save_state_manager()
 {
+    level flag::init("ap_allow_player_restore");
     callback::on_connect(&_player_connect);
 
     level.archi.save_state = &save_state;
@@ -69,6 +70,12 @@ function save_player_data(xuid)
     self archi_save::save_player_score(xuid);
     self archi_save::save_player_perks(xuid);
     self archi_save::save_player_loadout(xuid);
+    self archi_save::save_player_val("fumigator", self.var_abe77dc0, xuid);
+    if (isdefined(self.sword_quest))
+    {
+        self archi_save::save_player_val("sword_upgrade_stage", self.sword_quest.upgrade_stage);
+    }
+    // self save_player_sword_quest(xuid);
 }
 
 function load_state()
@@ -92,22 +99,37 @@ function load_state()
 
     restore_map_state();
 
-    archi_save::restore_players(&restore_player_data);
+    level flag::set("ap_allow_player_restore");
 
     wait(10);
     level flag::clear("ap_prevent_checkpoints");
 }
 
 // self is player
-function restore_player_data()
+function restore_player_data(xuid)
 {
-    xuid = self GetXuid();
+    level endon("end_game");
+    self endon("disconnect");
+
+    level flag::wait_till("ap_allow_player_restore");
 
     if (self archi_save::can_restore_player(xuid))
     {
         self archi_save::restore_player_score(xuid);
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
+        fumigator = self archi_save::restore_player_val("fumigator", xuid);
+        if (fumigator == "1")
+        {
+            self.var_abe77dc0 = 1;
+        }
+
+        if (isdefined(self.var_abe77dc0) && self.var_abe77dc0 == 1)
+        {
+            self clientfield::set_to_player("pod_sprayer_held", 1);
+            level flag::set("any_player_has_pod_sprayer");
+        }
+        // self restore_player_sword_quest(xuid);
     }
 }
 
@@ -364,6 +386,29 @@ function save_map_state()
     {
         archi_save::save_flag("power_on" + i);
     }
+
+    smashables_str = "";
+    smash_keys = GetArrayKeys(level.zod_smashables);
+    foreach (key in smash_keys)
+    {
+        smashable = level.zod_smashables[key];
+        if (smashable.m_b_shader_on == 0)
+        {
+            // Shader off, is broken
+            if (smashables_str == "")
+            {
+                smashables_str = key;
+            }
+            else
+            {
+                smashables_str += ";" + key;
+            }
+        }
+    }
+    if (smashables_str != "")
+    {
+        archi_save::save_val("smashed", smashables_str);
+    }
 }
 
 function restore_map_state()
@@ -383,6 +428,7 @@ function restore_map_state()
     player_idx = level.players[0].characterindex + 1;
     ritual_array = array("boxer", "detective", "magician", "femme");
 
+    // If any ritual was completed, start with the summoning key
     if (level flag::get("ritual_boxer_complete") || level flag::get("ritual_magician_complete") || level flag::get("ritual_detective_complete") || level flag::get("ritual_femme_complete"))
     {
         mdl_key = getent("quest_key_pickup", "targetname");
@@ -397,7 +443,26 @@ function restore_map_state()
         {
             player clientfield::set_to_player("used_quest_key", 0);
         }
-        mdl_key.unitrigger_stub zm_unitrigger::run_visibility_function_for_all_triggers();
+        zm_unitrigger::unregister_unitrigger(mdl_key.unitrigger_stub);
+    }
+
+	if(!isdefined(level.mementos_picked_up))
+	{
+		level.mementos_picked_up = 0;
+		level.relics_picked_up = 0;
+		level.sndritualmementos = 1;
+	}
+
+    foreach (key in ritual_array)
+    {
+        defend_area = level.a_o_defend_areas[key];
+        if (level flag::get("ritual_" + key + "_complete"))
+        {
+            level thread kill_memento_pickup(key);
+            level.relics_picked_up++;
+            level thread exploder::stop_exploder(("ritual_light_" + key) + "_fin");
+            defend_area thread kill_defend_area();
+        }
     }
 
     held_state = 3;
@@ -506,6 +571,144 @@ function restore_map_state()
         enter_subway_trigger = getent("keeper_subway_welcome", "targetname");
         enter_subway_trigger delete();
     }
+
+    smashables_str = archi_save::restore_val("smashed");
+    smashable_keys = strtok(smashables_str, ";");
+    foreach (key in smashable_keys)
+    {
+        smashable = level.zod_smashables[key];
+        if (isdefined(smashable))
+        {
+            // Force open
+            smashable.m_e_trigger notify("trigger", level.players[0]);
+        }
+        else
+        {
+            IPrintLn("Could not find smashable " + key);
+        }
+    }
+}
+
+function restore_player_sword_quest()
+{
+    xuid = self GetXuid();
+
+    while (!isdefined(self.sword_quest)) {
+        wait(0.1);
+    }
+
+    upgrade_stage = archi_save::restore_player_val("sword_upgrade_stage", xuid);
+    s_loc = struct::get("keeper_spirit_" + self.characterindex, "targetname");
+    
+    if (upgrade_stage > 0)
+    {
+        // Pre-complete the stage 1 steps for sword
+        foreach (e_statue in level.sword_quest.statues)
+        {
+            if (e_statue.script_noteworthy != "initial_egg_statue")
+            {
+                continue;
+            }
+            if (isdefined(e_statue.trigger))
+            {
+                // Set up needed quest state vars
+                self.var_b170d6d6 = 1;
+                self.sword_quest.all_kills_completed = 1;
+                self.sword_quest.egg_placement = e_statue.statue_id;
+                self.sword_quest.kills[e_statue.statue_id] = 12;
+                // Allow statue trigger to push forward quest state
+                e_statue.trigger notify("trigger", self);
+                wait(0.1);
+            }
+        }
+    }
+
+    if (upgrade_stage > 1)
+    {
+        level flag::wait_till("ritual_pap_complete");
+        wait(1);
+
+        circle_locs = struct::get_array("sword_quest_magic_circle_place", "targetname");
+        all_uni = [];
+        foreach (zone in level.zones)
+        {
+            if (isdefined(zone.unitrigger_stubs))
+            {
+                all_uni = ArrayCombine(all_uni, zone.unitrigger_stubs, 1, 0);
+            }
+        }
+        
+        // Precomplete requirements for magic circles
+        for (i = 0; i < 4; i++)
+        {
+            self.sword_quest_2.var_db999762[i] = 2;
+        }
+        self.sword_quest_2.all_kills_completed = 1;
+
+        // Find a magic circle stub so we can use it
+        foreach(circle_loc in circle_locs)
+        {
+            char_idx = circle_loc.script_int;
+            foreach (trig_stub in all_uni)
+            {
+                if (trig_stub.origin == circle_loc.origin)
+                {
+                    // Found a magic circle stub
+                    while(trig_stub.activated != 0)
+                    {
+                        // In progress, wait our turn
+                        wait(0.5);
+                    }
+                    trig_stub notify("trigger", self);
+
+                    while(!isdefined(trig_stub.ai_defender) || trig_stub.ai_defender.size == 0)
+                    {
+                        weapon = level.sword_quest.weapons[self.characterindex][1];
+                        // Margwas take damage 3 seconds after spawning, so just offset now
+                        wait(3.5);
+                        for(i = 0; i < 2; i++)
+                        {
+                            // Kill defenders as they spawn
+                            if (trig_stub.ai_defender.size >= i)
+                            {
+                                trig_stub.ai_defender[i] notify("death", self, undefined, weapon);
+                            }
+                            // 4 seconds between spawns
+                            wait(4);
+                        }
+                    }
+                }
+            }
+        }
+        trigger = trig_stub.n_char_index;
+
+    }
+}
+
+function kill_memento_pickup(key)
+{
+    while(true)
+    {
+        piece = zm_craftables::get_craftable_piece( "ritual_" + key, "memento_" + key );
+        if (isdefined(piece) && isdefined(piece.unitrigger))
+        {
+            zm_craftables::piece_unspawn();
+            level thread exploder::stop_exploder(("ritual_light_" + key) + "_fin");
+            break;
+        }
+        wait(0.1);
+    }
+}
+
+function kill_defend_area()
+{
+    while(self.m_b_started != 1)
+    {
+        wait(0.1);
+    }
+    wait(0.1);
+    zm_unitrigger::unregister_unitrigger(self.m_t_use);
+    self notify("defend_area_completed");
 }
 
 function get_worm_basin(str_flag)

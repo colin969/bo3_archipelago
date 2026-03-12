@@ -26,6 +26,7 @@
 #insert scripts\zm\_zm_perks.gsh;
 
 #precache( "menu", "ApShop_Main" );
+#precache( "model", "archipelago_shop" );
 
 REGISTER_SYSTEM_EX( "archi_shop", &__init__, &__main__, undefined )
 
@@ -37,17 +38,25 @@ function __init__()
 		return;
 
 	array::thread_all( structs, &shop_spawn_init );
+
+
 }
 
 function __main__()
 {
 	setup_bgb_bags();
+
 	callback::on_connect( &on_player_connect );
 	callback::on_laststand( &on_player_laststand );
 }
 
 function on_player_connect()
 {
+	util::registerClientSys("PerkTokens");
+	util::registerClientSys("GumTokens");
+	util::registerClientSys("RareGumTokens");
+	util::registerClientSys("LegendaryGumTokens");
+
 	self thread shop_menu_handler();
 }
 
@@ -98,10 +107,12 @@ function shop_spawn_init()
 	self.script_unitrigger_type = "unitrigger_box_use";
 	self.cursor_hint = "HINT_NOICON";
 	self.require_look_at = true;
-    self.radius = 64;
+    self.radius = 82;
 	zm_unitrigger::unitrigger_force_per_player_triggers( self, true );
 	self.prompt_and_visibility_func = &shop_update_prompt;
 	zm_unitrigger::register_static_unitrigger( self, &shop_trigger_think );
+
+	playfx(level._effect["teleport_splash"], self.origin);
 }
 
 function shop_update_prompt( player )
@@ -119,7 +130,12 @@ function shop_close_menu()
 function shop_open_menu()
 {
 	self shop_close_menu();
-	IPrintLn("Opening shop menu");
+
+	util::setClientSysState("PerkTokens", level.archi.perk_tokens - self.ap_spent_perk_tokens, self);
+	util::setClientSysState("GumTokens", level.archi.gum_tokens - self.ap_spent_gum_tokens, self);
+	util::setClientSysState("RareGumTokens", level.archi.rare_gum_tokens - self.ap_spent_rare_gum_tokens, self);
+	util::setClientSysState("LegendaryGumTokens", level.archi.legendary_gum_tokens - self.ap_spent_legendary_gum_tokens, self);
+
     self OpenMenu( "ApShop_Main" );
 }
 
@@ -148,29 +164,83 @@ function shop_menu_handler()
 		item_type = split[0];
 		item_value = split[1];
 
+
         if (item_type == "gum")
         {
-			rarity = int(item_value);
-			bag = level.archi_shop_bgb_bags[rarity];
-			if (isdefined(bag))
-			{
-				if (bag.size == 0)
-				{
-					refill_bgb_bag(rarity);
-				}
-
-				selected_bgb = array::pop(level.archi_shop_bgb_bags[rarity]);
-				self shop_gum_give(selected_bgb);
-				self playsound( "zmb_cha_ching" );
-			}
-			else
-			{
-				IPrintLnBold("No gobblegum bag for rarity - " + item_value);
-			}
-
 			self shop_close_menu();
+			rarity = int(item_value);
+			if (rarity == 1)
+			{
+				if (self.ap_spent_gum_tokens < level.archi.gum_tokens)
+				{
+					selected_bgb = get_random_gum(1);
+					self playsound( "zmb_cha_ching" );
+					succeeded = self shop_gum_give(selected_bgb);
+					if (succeeded == 1)
+					{
+						self.ap_spent_gum_tokens++;
+					}
+				}
+				else
+				{
+					self playsound( "zmb_no_cha_ching" );
+				}
+			}
+			if (rarity == 2)
+			{
+				if (self.ap_spent_rare_gum_tokens < level.archi.rare_gum_tokens)
+				{
+					selected_bgb = get_random_gum(2);
+					self playsound( "zmb_cha_ching" );
+					succeeded = self shop_gum_give(selected_bgb);
+					if (succeeded == 1)
+					{
+						self.ap_spent_rare_gum_tokens++;
+					}
+				}
+				else
+				{
+					self playsound( "zmb_no_cha_ching" );
+				}
+			}
+			if (rarity == 3)
+			{
+				if (self.ap_spent_legendary_gum_tokens < level.archi.legendary_gum_tokens)
+				{
+					selected_bgb = get_random_gum(3);
+					self playsound( "zmb_cha_ching" );
+					succeeded = self shop_gum_give(selected_bgb);
+					if (succeeded == 1)
+					{
+						self.ap_spent_legendary_gum_tokens++;
+					}
+				}
+				else
+				{
+					self playsound( "zmb_no_cha_ching" );
+				}
+			}
         }
 	}
+}
+
+function get_random_gum(rarity)
+{
+	bag = get_gum_bag(rarity);
+	return array::pop(level.archi_shop_bgb_bags[rarity]);
+}
+
+function get_gum_bag(rarity)
+{
+	bag = level.archi_shop_bgb_bags[rarity];
+	if (isdefined(bag))
+	{
+		if (bag.size == 0)
+		{
+			refill_bgb_bag(rarity);
+		}
+	}
+	return bag;
 }
 
 function shop_trigger_think()

@@ -130,6 +130,45 @@ function RegisterPerk(itemName, getFunc, specialtyName) {
     level.archi.items[globalItem.name] = globalItem;
 }
 
+function give_ProgressiveStartingPoints500()
+{
+    level.archi.progressive_starting_points += 500;
+    foreach (player in level.players)
+    {
+        if (!isdefined(player.ap_starting_points))
+        {
+            // Make sure player has restored first
+            wait(0.05);
+        }
+        diff = level.archi.progressive_starting_points - player.ap_starting_points;
+        if (diff > 0)
+        {
+            player.ap_starting_points = level.archi.progressive_starting_points;
+            player zm_score::add_to_player_score(diff);
+        }
+    }
+}
+
+function give_PerkToken()
+{
+    level.archi.perk_tokens++;
+}
+
+function give_GumToken()
+{
+    level.archi.gum_tokens++;
+}
+
+function give_RareGumToken()
+{
+    level.archi.rare_gum_tokens++;
+}
+
+function give_LegendaryGumToken()
+{
+    level.archi.legendary_gum_tokens++;
+}
+
 //General/Universal gives
 function give_1500Points()
 {

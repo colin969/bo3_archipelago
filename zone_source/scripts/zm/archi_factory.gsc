@@ -78,8 +78,6 @@ function load_state()
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
 
-    archi_save::restore_players(&restore_player_data);
-
     restore_map_state();
 
     wait(10);
@@ -87,9 +85,10 @@ function load_state()
 }
 
 // self is player
-function restore_player_data()
+function restore_player_data(xuid)
 {
-    xuid = self GetXuid();
+    level endon("end_game");
+    self endon("disconnect");
 
     if (self archi_save::can_restore_player(xuid))
     {

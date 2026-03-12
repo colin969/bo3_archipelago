@@ -46,6 +46,8 @@ function setup_monitor_strings()
 
 function save_state_manager()
 {
+    level flag::init("ap_allow_player_restore");
+
     setup_monitor_strings();
     if (level.archi.difficulty_ee_checkpoints >= 3)
     {
@@ -113,16 +115,19 @@ function load_state()
 
     restore_map_state();
 
-    archi_save::restore_players(&restore_player_data);
+    level flag::set("ap_allow_player_restore");
 
     wait(10);
     level flag::clear("ap_prevent_checkpoints");
 }
 
 // self is player
-function restore_player_data()
+function restore_player_data(xuid)
 {
-    xuid = self GetXuid();
+    level endon("end_game");
+    self endon("disconnect");
+
+    level flag::wait_till("ap_allow_player_restore");
 
     if (self archi_save::can_restore_player(xuid))
     {
