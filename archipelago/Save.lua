@@ -572,6 +572,9 @@ function restore_player_perks(xuid, playerData)
 end
 
 function restore_player_loadout(xuid, playerData)
+  if playerData["bgb"] then
+    Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_BGB_" .. xuid, playerData["bgb"])
+  end
   if playerData["heroWeapon"] then
     Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" .. xuid .. "_HEROWEAPON", playerData["heroWeapon"] )
     if playerData["heroPower"] then
@@ -764,6 +767,12 @@ function save_player_perks(xuid, playerData)
 end
 
 function save_player_loadout(xuid, playerData)
+  local bgb = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_XUID_BGB_" .. xuid)
+  if bgb ~= nil then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_BGB_" .. xuid, nil)
+    playerData.bgb = bgb
+  end
+
   local heroWeaponName = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_HEROWEAPON")
   if heroWeaponName and heroWeaponName ~= "" then
     Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_WEAPON_" .. xuid .. "_HEROWEAPON", nil)

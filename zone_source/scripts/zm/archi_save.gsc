@@ -13,6 +13,7 @@
 #using scripts\shared\math_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\zm\_zm_perks;
+#using scripts\zm\_zm_bgb;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_weapons;
 #using scripts\zm\_zm_utility;
@@ -546,6 +547,13 @@ function restore_player_perks(xuid)
 
 function restore_player_loadout(xuid)
 {
+    bgb_key = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_BGB_" + xuid + "", "");
+    SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_BGB_" + xuid + "_HEROWEAPON", "");
+    if (bgb_key != "")
+    {
+        self thread bgb::give(bgb_key);
+    }
+
     // Restore Hero Weapon
     hero_weapon_name = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON", "");
     SetDvar("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_HEROWEAPON", "");
@@ -763,7 +771,13 @@ function save_player_perks(xuid)
 }
 
 function save_player_loadout(xuid)
-{
+{ 
+    if (isdefined(self.bgb) && self.bgb != "none")
+    {
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_BGB_" + xuid + "", self.bgb);
+        // TODO: Save activation / round / time limits
+    }
+
     hero_weapon = self zm_utility::get_player_hero_weapon();
     if (hero_weapon != level.weaponnone && hero_weapon.name != "ball") 
     {
