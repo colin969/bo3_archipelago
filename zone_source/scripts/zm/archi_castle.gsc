@@ -875,13 +875,13 @@ function _track_player_connection_bow()
     else if (self hasweapon(fire_bow))
     {
         level flag::set("rune_prison_upgraded");
-        level thread _restore_fire_bow(self);
+        //level thread _restore_fire_bow(self);
         return;
     }
     else if (self hasweapon(void_bow))
     {
         level flag::set("demon_gate_upgraded");
-        level thread _restore_void_bow(self);
+        //level thread _restore_void_bow(self);
         return;
     }
 
@@ -896,11 +896,11 @@ function _track_player_connection_bow()
     }
     else if (level.archi.fire_owner == xuid)
     {
-        level thread _restore_fire_bow(self);
+        //level thread _restore_fire_bow(self);
     }
     else if (level.archi.void_owner == xuid)
     {
-        level thread _restore_void_bow(self);
+        //level thread _restore_void_bow(self);
     }
 }
 

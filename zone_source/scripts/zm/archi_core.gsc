@@ -547,10 +547,6 @@ function game_start()
         level.archi.craftable_piece_to_location["dragonride_part_codes"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Codes";
         level.archi.craftable_piece_to_location["dragonride_part_map"] = level.archi.mapString + " Main Quest - Dragonride Part Pickup - Map";
 
-        level.archi.excluded_craftable_items["dragonride_part_transmitter"] = 1;
-        level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
-        level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
-
         if (level.archi.mystery_box_special_items == 1) {
             archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
             archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
