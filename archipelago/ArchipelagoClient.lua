@@ -240,9 +240,15 @@ Archi.FromGSC = function (model)
 
       local mapSave = save_system.map_saves[mapName]
       if mapSave then
+        players = {}
+        -- Copy old player data
+        if saveData[mapName] and saveData[mapName]["players"] then
+          players = saveData[mapName]["players"]
+        end
         saveData[checkpointName] = {
-          players = {},
+          players = players,
           flags = {},
+          kvals = {},
         }
         mapSave(saveData[checkpointName], saveData["universal"])
       end

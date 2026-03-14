@@ -268,6 +268,12 @@ function player_challenges()
 
 function adjust_bgb_pack()
 {
+    while(!isdefined(self.bgb_pack))
+    {
+        wait(0.05);
+    }
+    wait(0.05);
+
     foreach(gum in self.bgb_pack)
     {
         if (gum == "zm_bgb_anywhere_but_here")

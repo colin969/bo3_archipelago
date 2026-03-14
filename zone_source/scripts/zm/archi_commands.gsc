@@ -60,7 +60,8 @@ function init_commands()
     level thread _basic_trigger("ap_get_dvar", &_get_dvar);
     level thread _basic_trigger("ap_spawn_model", &_spawn_model);
     level thread _basic_trigger("ap_spawn_shop", &_spawn_shop);
-    level thread _basic_triggeR("ap_shop_print", &_shop_print);
+    level thread _basic_trigger("ap_shop_print", &_shop_print);
+    level thread _basic_trigger("ap_test", &_testtt);
   }
 }
 
@@ -673,4 +674,11 @@ function _shop_print(val)
 {
   IPrintLn(level.archi.test_shop.origin);
   IPrintLn(level.archi.test_shop.angles);
+}
+
+function _testtt(val)
+{
+  level notify("elemental_bow_storm_stop_tracking");
+  level.var_7df95fd1["elemental_bow_storm"] = 70;
+  level.var_67616e8e["elemental_bow_storm"] = 70;
 }

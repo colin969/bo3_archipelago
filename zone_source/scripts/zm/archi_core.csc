@@ -38,6 +38,7 @@ function __init__()
             add_universal_box_bits();
             break;
         case "zm_island":
+            self.bgb_pack[4] = "zm_bgb_anywhere_but_here";
             level._ap_weapons_table = "gamedata/weapons/zm/zm_island_weapons.csv";
             level._ap_weapon_bits["cymbal_monkey"] = 0;
             level._ap_weapon_bits["ray_gun"] = 1;

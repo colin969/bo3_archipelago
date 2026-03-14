@@ -733,7 +733,6 @@ function save_players(save_player_data)
     {
         e_player = level.players[i];
         xuid = e_player GetXuid();
-        xuidString += xuid + ";";
         // Disable saving in very specific circumstances
         cur_weapon = e_player GetCurrentWeapon();
 
@@ -748,6 +747,7 @@ function save_players(save_player_data)
             IPrintLnBold("Skipped saving player due to dangerous state - " + e_player.name);
             continue;
         }
+        xuidString += xuid + ";";
         e_player [[save_player_data]](xuid);
     }
     SetDvar("ARCHIPELAGO_SAVE_DATA_XUIDS", xuidString);

@@ -31,7 +31,6 @@ scriptparsetree,scripts/zm/archi_commands.gsc
 scriptparsetree,scripts/zm/_zm_pack_a_punch.gsc
 scriptparsetree,scripts/zm/_zm_perks.gsc
 scriptparsetree,scripts/zm/_zm_weapons.gsc
-scriptparsetree,scripts/zm/craftables/_zm_craftables.gsc
 
 //The point our UI injects its widget
 rawfile,ui/archipelago/hudInject.lua
