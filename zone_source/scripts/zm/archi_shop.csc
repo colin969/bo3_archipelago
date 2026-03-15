@@ -17,7 +17,10 @@ REGISTER_SYSTEM_EX( "archi_shop", &__init__, &__main__, undefined )
 
 function __init__()
 {
-    level.ap_models = [];
+    if(!isdefined(level.ap_models))
+    {
+        level.ap_models = [];
+    }
 
     callback::on_localclient_connect(&on_player_connected);
 

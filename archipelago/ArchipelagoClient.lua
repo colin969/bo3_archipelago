@@ -48,6 +48,30 @@ connectionItemState = {}
 saveData = nil
 local seed = nil
 
+local function locationsToArray(locationsTable)
+  local arr = {}
+  for code, _ in pairs(locationsTable) do
+    table.insert(arr, tonumber(code))
+  end
+  return arr
+end
+
+local function arrayToLocations(arr)
+  local tbl = {}
+  for _, code in ipairs(arr) do
+    tbl[code] = true
+  end
+  return tbl
+end
+
+local function shallowCopy(orig)
+  local copy = {}
+  for k, v in pairs(orig) do
+    copy[k] = v
+  end
+  return copy
+end
+
 function startsWith(String,Start)
   return string.sub(String,1,#Start)==Start
 end
@@ -82,9 +106,7 @@ Archi.ClearAndRestart = function (mapName)
     saveData[mapName] = nil
   end
 
-  local saveDataStr = json.encode(saveData, { indent = true })
-  Archipelago.StoreSaveData(saveDataStr)
-  
+  Archi.SaveData()
 end
 
 Archi.FromGSC = function (model)
@@ -179,8 +201,7 @@ Archi.FromGSC = function (model)
         saveData[mapName] = nil
       end
 
-      local saveDataStr = json.encode(saveData, { indent = true })
-      Archipelago.StoreSaveData(saveDataStr)
+      Archi.SaveData()
 
       Engine.SetDvar( "ARCHIPELAGO_CLEAR_DATA", "NONE" )
     end
@@ -199,8 +220,7 @@ Archi.FromGSC = function (model)
 
     save_system.save_universal(saveData["universal"])
 
-    local saveDataStr = json.encode(saveData, { indent = true })
-    Archipelago.StoreSaveData(saveDataStr)
+    Archi.SaveData()
 
     -- We're done saving, let gsc know
     Engine.SetDvar( "ARCHIPELAGO_SAVE_DATA_UNIVERSAL", "NONE" )
@@ -253,8 +273,7 @@ Archi.FromGSC = function (model)
         mapSave(saveData[checkpointName], saveData["universal"])
       end
 
-      local saveDataStr = json.encode(saveData, { indent = true })
-      Archipelago.StoreSaveData(saveDataStr)
+      Archi.SaveData()
 
       -- We're done saving, let gsc know
       Engine.SetDvar( "ARCHIPELAGO_SAVE_DATA", "NONE" )
@@ -294,8 +313,7 @@ Archi.FromGSC = function (model)
         Archi.LogMessage("No player save func found?")
       end
 
-      local saveDataStr = json.encode(saveData, { indent = true })
-      Archipelago.StoreSaveData(saveDataStr)
+      Archi.SaveData()
     end
 
     Engine.SetDvar( "ARCHIPELAGO_SAVE_PLAYER_DATA_XUID", "" )
@@ -303,6 +321,7 @@ Archi.FromGSC = function (model)
   end
   if IsParamModelEqualToString(model, "ap_restore_player_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_LOAD_PLAYER_DATA")
+    local checkpointName = "_checkpoint_" .. mapName
     local xuid = Engine.DvarString(nil,"ARCHIPELAGO_LOAD_PLAYER_DATA_XUID")
 
     if mapName and xuid and mapName ~= "" and xuid ~= "" then
@@ -318,6 +337,7 @@ Archi.FromGSC = function (model)
       local playerRestore = save_system.player_restores[mapName]
       if playerRestore then
         Archi.LogMessage("Restoring player data for " .. xuid .. " on " .. mapName)
+        
         if saveData[mapName] and saveData[mapName]["players"] then
           playerData = saveData[mapName]["players"][xuid]
           if playerData then
@@ -336,6 +356,7 @@ Archi.FromGSC = function (model)
   end
   if IsParamModelEqualToString(model, "ap_save_data") then
     local mapName = Engine.DvarString(nil,"ARCHIPELAGO_SAVE_DATA")
+
     if mapName ~= "NONE" then
       if saveData == nil then
         saveData = {}
@@ -363,8 +384,7 @@ Archi.FromGSC = function (model)
         mapSave(saveData[mapName], saveData["universal"])
       end
 
-      local saveDataStr = json.encode(saveData, { indent = true })
-      Archipelago.StoreSaveData(saveDataStr)
+      Archi.SaveData()
 
       -- We're done saving, let gsc know
       Engine.SetDvar( "ARCHIPELAGO_SAVE_DATA", "NONE" )
@@ -381,6 +401,7 @@ Archi.FromGSC = function (model)
           mapRestore(saveData[mapName])
         elseif saveData[checkpointName] then
           mapRestore(saveData[checkpointName])
+          saveData[mapName] = saveData[checkpointName]
         end
       else
         Archi.LogMessage("No restore func found for '" .. mapName .. "'")
@@ -446,8 +467,7 @@ end
 
 Archi.LocationCheckedEvent = function (code)
   if code then
-    List.pushright(LocationQueue,code)
-    Archi.CheckedLocations[code] = true
+    List.pushright(LocationQueue,tonumber(code))
   end
 end
 
@@ -496,9 +516,13 @@ end
 
 Archi.LocationNotifyLoop = function()
   local UIRootFull = LUI.roots.UIRootFull;
-	UIRootFull.LocHUDRefreshTimer = LUI.UITimer.newElementTimer(200, false, function()
-    if not List.isEmpty(LocationQueue) and goalCondInitialized and saveLoaded then
+	UIRootFull.LocHUDRefreshTimer = LUI.UITimer.newElementTimer(250, false, function()
+    while not List.isEmpty(LocationQueue) and goalCondInitialized and saveLoaded do
       local code = List.popleft(LocationQueue)
+      if not Archi.CheckedLocations[code] then
+        Archi.CheckedLocations[code] = true
+      end
+      code_str = tostring(code)
       if not saveData["universal"]["locationsFound"][code] then
         saveData["universal"]["locationsFound"][code] = true
         local name = locations.IDToLocation[code] or "Unknown Location"
@@ -515,74 +539,83 @@ end
 
 Archi.GiveItemsLoop = function()
   local UIRootFull = LUI.roots.UIRootFull;
-	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(200, false, function()
+	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(250, false, function()
     local item = Engine.DvarString(nil,"ARCHIPELAGO_ITEM_GET")
     if (not List.isEmpty(ItemQueue)) and item == "NONE" and goalCondInitialized and saveLoaded then
-      local networkItem = List.popleft(ItemQueue)
-      local toSend = networkItem.name
+      -- Batch them in groups of 10
+      local batch = {}
+      local batchSize = 10
 
-      if startsWith(toSend, "Map Unlock") then
-        if not Archi.MapUnlocks[toSend] then
-          Archi.MapUnlocks[toSend] = true
-        end
-        local alreadyExists = false
-        for _, item in ipairs(saveData["universal"]["mapItems"]) do
-          if item == toSend then
-            alreadyExists = true
-            break
+      while not List.isEmpty(ItemQueue) and #batch < batchSize do
+        local networkItem = List.popleft(ItemQueue)
+        local toSend = networkItem.name
+  
+        if startsWith(toSend, "Map Unlock") then
+          if not Archi.MapUnlocks[toSend] then
+            Archi.MapUnlocks[toSend] = true
+          end
+          local alreadyExists = false
+          for _, item in ipairs(saveData["universal"]["mapItems"]) do
+            if item == toSend then
+              alreadyExists = true
+              break
+            end
+          end
+  
+          if not alreadyExists then
+            table.insert(saveData["universal"]["mapItems"], toSend)
           end
         end
-
-        if not alreadyExists then
-          table.insert(saveData["universal"]["mapItems"], toSend)
+  
+        -- How many times awarded this current game
+        instanceItemState[toSend] = instanceItemState[toSend] or 0
+        -- How many times given on this AP connection (resets if disconnected and all items are reprocessed)
+        connectionItemState[toSend] = connectionItemState[toSend] or 0
+        -- How many times given on this AP seed
+        saveData["universal"]["itemsReceived"][toSend] = saveData["universal"]["itemsReceived"][toSend] or 0
+  
+        -- Add item to connection counter
+        connectionItemState[toSend] = connectionItemState[toSend] + 1
+  
+        local shouldAward = connectionItemState[toSend] > instanceItemState[toSend]
+        local isNewItem = connectionItemState[toSend] > saveData["universal"]["itemsReceived"][toSend]
+  
+        -- Don't send one time items to GSC if not new
+        if oneTimeItems[toSend] then
+          if not isNewItem then
+            shouldAward = false
+          end
+        end
+  
+        if connectionItemState[toSend] > instanceItemState[toSend] then
+          instanceItemState[toSend] = connectionItemState[toSend]
+        end
+        if connectionItemState[toSend] > saveData["universal"]["itemsReceived"][toSend] then
+          saveData["universal"]["itemsReceived"][toSend] = connectionItemState[toSend]
+        end
+  
+        -- GSC award item
+        if shouldAward then
+          table.insert(batch, toSend)
+        end
+  
+        -- UI notification for map unlocks
+        if isNewItem and notifyFunc then
+          if startsWith(toSend, "Map Unlock - ") then
+            local mapName = string.sub(toSend, 13)
+            Engine.SetDvar("ARCHIPELAGO_MAP_UNLOCK_NOTIFY", mapName)
+          end
+          notifyFunc("GET", networkItem)
         end
       end
 
-      -- How many times awarded this current game
-      instanceItemState[toSend] = instanceItemState[toSend] or 0
-      -- How many times given on this AP connection (resets if disconnected and all items are reprocessed)
-      connectionItemState[toSend] = connectionItemState[toSend] or 0
-      -- How many times given on this AP seed
-      saveData["universal"]["itemsReceived"][toSend] = saveData["universal"]["itemsReceived"][toSend] or 0
-
-      -- Add item to connection counter
-      connectionItemState[toSend] = connectionItemState[toSend] + 1
-
-      local shouldAward = connectionItemState[toSend] > instanceItemState[toSend]
-      local isNewItem = connectionItemState[toSend] > saveData["universal"]["itemsReceived"][toSend]
-
-      -- Don't send one time items to GSC if not new
-      if oneTimeItems[toSend] then
-        if not isNewItem then
-          shouldAward = false
-        end
-      end
-
-      if connectionItemState[toSend] > instanceItemState[toSend] then
-        instanceItemState[toSend] = connectionItemState[toSend]
-      end
-      if connectionItemState[toSend] > saveData["universal"]["itemsReceived"][toSend] then
-        saveData["universal"]["itemsReceived"][toSend] = connectionItemState[toSend]
-      end
-
-      -- GSC award item
-      if shouldAward then
-        Engine.SetDvar( "ARCHIPELAGO_ITEM_GET", toSend )
-      end
-
-      -- UI notification
-      if isNewItem and notifyFunc then
-        if startsWith(toSend, "Map Unlock - ") then
-          local mapName = string.sub(toSend, 13)
-          Engine.SetDvar("ARCHIPELAGO_MAP_UNLOCK_NOTIFY", mapName)
-        end
-        notifyFunc("GET", networkItem)
+      if #batch > 0 then
+        local batchedString = table.concat(batch, ";")
+        Engine.SetDvar("ARCHIPELAGO_ITEM_GET", batchedString)
       end
 
       -- Check goal cond
       Archi.CheckGoalCond()
-
-      -- Let the one time items just save whenever we actually save
     end
 	end);
 	UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
@@ -618,6 +651,23 @@ Archi.KeepConnected = function ()
   end
 end
 
+Archi.SaveData = function ()
+  if saveData then
+    -- Make a copy to save
+    local tempSave = shallowCopy(saveData)
+
+    if saveData["universal"] and saveData["universal"]["locationsFound"] then
+      -- Need to mutate the universal area, so copy that as well
+      tempSave["universal"] = shallowCopy(saveData["universal"])
+      tempSave["universal"]["locationsFoundArray"] = locationsToArray(saveData["universal"]["locationsFound"])
+      tempSave["universal"]["locationsFound"] = nil
+    end
+
+    local saveDataStr = json.encode(tempSave, { indent = true })
+    Archipelago.StoreSaveData(saveDataStr)
+  end
+end
+
 Archi.LoadData = function ()
   local saveDataStr = Archipelago.LoadSaveData()
   if saveDataStr and saveDataStr ~= "" then
@@ -628,6 +678,28 @@ Archi.LoadData = function ()
     else
       Archi.LogMessage("Loaded save data successfully")
       saveData = obj
+
+      if not saveData["universal"] then
+        saveData["universal"] = {
+          players = {},
+          mapItems = {},
+          itemsReceived = {},
+          locationsFound = {}
+        }
+      end
+
+      -- Load array into table for faster lookup
+      if saveData["universal"]["locationsFoundArray"] then
+        saveData["universal"]["locationsFound"] = arrayToLocations(saveData["universal"]["locationsFoundArray"])
+        saveData["universal"]["locationsFoundArray"] = nil
+      elseif not saveData["universal"]["locationsFound"] then
+        saveData["universal"]["locationsFound"] = {}
+      end
+
+      -- Restore LUA side table
+      for code, _ in pairs(saveData["universal"]["locationsFound"]) do
+        Archi.CheckedLocations[code] = true
+      end
     end
   else
     saveData = {}
@@ -636,7 +708,9 @@ Archi.LoadData = function ()
   if not saveData["universal"] then
     saveData["universal"] = {
       players = {},
-      mapItems = {}
+      mapItems = {},
+      itemsReceived = {},
+      locationsFound = {}
     }
   end
 

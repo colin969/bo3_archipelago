@@ -106,6 +106,8 @@ function restore_player()
     level endon("end_game");
     self endon("disconnect");
 
+    level flag::wait_till("ap_loaded_save_data");
+
     if (isdefined(self.ap_restored) && self.ap_restored == 1)
     {
         return;
@@ -226,9 +228,13 @@ function restore_universal_player(xuid)
 function restore_stats(xuid)
 {
     self.kills += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" + xuid, 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" + xuid, 0);
     self.headshots += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" + xuid, 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" + xuid, 0);
     self.revives += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" + xuid, 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" + xuid, 0);
     self.downs += GetDvarInt("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" + xuid, 0);
+    SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" + xuid, 0);
 }
 
 function save_stats(xuid)

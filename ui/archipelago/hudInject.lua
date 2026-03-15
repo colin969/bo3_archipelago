@@ -1,6 +1,7 @@
 require( "ui.archipelago.ingame.widgets.ArchipelagoDisplay")
 require( "ui.archipelago.ingame.widgets.ArchipelagoDisplayClient")
 require( "ui.archipelago.ingame.widgets.ArchipelagoMessageContainer")
+require( "ui.archipelago.ingame.widgets.ArchipelagoLoadSpinner")
 
 local hudList = {
     "T7Hud_zm_factory",
@@ -32,7 +33,11 @@ for _, hudName in ipairs(hudList) do
             end
             self:addElement(ArchiDisp)
 
+            -- local LoadSpinner = CoD.ArchipelagoLoadSpinner.new(self, controller)
+            -- self:addElement(LoadSpinner)
+
             LUI.OverrideFunction_CallOriginalSecond(self, "close", function(element)
+                
             end)
 
             return self

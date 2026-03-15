@@ -846,21 +846,25 @@ function save_universal_player(xuid, uniData)
   uniData.players[xuid] = {}
 
   local kills = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" .. xuid)
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" .. xuid, -1)
   if kills and kills >= 0 then
     uniData.players[xuid]["kills"] = kills
   end
   
   local headshots = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid)
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid, -1)
   if headshots and headshots >= 0 then
     uniData.players[xuid]["headshots"] = headshots
   end
   
   local revives = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid)
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid, -1)
   if revives and revives >= 0 then
     uniData.players[xuid]["revives"] = revives
   end
   
   local downs = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid)
+  Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid, -1)
   if downs and downs >= 0 then
     uniData.players[xuid]["downs"] = downs
   end

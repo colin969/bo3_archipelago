@@ -927,11 +927,15 @@ function item_get_from_lua()
         item = GetDvarString("ARCHIPELAGO_ITEM_GET");
         if ( item != "NONE" )
         {
-            award_item(item);
             SetDvar("ARCHIPELAGO_ITEM_GET","NONE");
-            
+            items = StrTok(item, ";");
+            foreach(item_str in items)
+            {
+                award_item(item_str);
+                WAIT_SERVER_FRAME
+            }   
         }
-        wait (0.1);
+        wait (0.2);
     }
 }
 
