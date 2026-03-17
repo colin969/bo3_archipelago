@@ -31,7 +31,7 @@ For official maps, you'll want the decompiled official scripts to reference. htt
 You can usually fit a check into a few different places:
 - Level flags
   - Flag names aren't obfuscated, which makes them really good candidates where possible
-  - You can find `level flag::init` blocks at the top of most scripts. Following for `level flag::set` will give you a better idea of when it's set
+  - You can find `level flag::init` blocks at the top of most scripts. Following for `level flag::set` or `level flag::wait_till` will give you a better idea of when it's set
   - You can catch single flags - E.G `level flag::wait_till("snow_ee_completed")` for The Giant's secret perk
   - You can catch multiple flags
     - E.G `level flag::wait_till_any(array("teleporter_pad_link_1", "teleporter_pad_link_2", "teleporter_pad_link_3"))` for any of the 3 The Giant teleporter pads being linked
@@ -48,3 +48,7 @@ You can also create threads attached to players, to track things like player spe
 The lua (UI driven) scripts are responsible for passing save data to and from the game, so needs to match your save/load from gsc. Lua is how we can exploit loading a dll and making filesystem and networking changes. As usual, refer to The Giant (zm_factory)
 
 The only file you'll usually need to touch is `archipelago/Save.lua`. Refer to the very bottom for the 4 functions to add.
+
+# General Notes
+
+Decompiled scripts preface strings with `#`, e.g `level flag::get(#"ee_step_complete")`. You do not need the hash if using the same names in your own script, infact it will break if you do.
