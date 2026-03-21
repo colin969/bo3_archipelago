@@ -15,6 +15,7 @@
 #using scripts\zm\craftables\_zm_craftables;
 #using scripts\zm\_zm_unitrigger;
 #using scripts\zm\_zm_utility;
+#using scripts\zm\_zm_weapons;
 
 #using scripts\zm\archi_core;
 #using scripts\zm\archi_save;
@@ -185,6 +186,8 @@ function load_state()
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
+
+    level thread patch_callboxes();
 
     restore_map_state();
 
@@ -582,7 +585,7 @@ function restore_map_state()
         worms_held++;
     }
 
-    level thread restore_pap_ritual(worms_held);
+    // level thread restore_pap_ritual(worms_held);
 
 	if(!isdefined(level.mementos_picked_up))
 	{
@@ -712,19 +715,16 @@ function restore_map_state()
 
 function restore_pap_ritual(worms_held)
 {
-    // wait(25);
-    // IPrintLn("Restoring pap ritual for " + worms_held);
-    // for (i = 0; i < worms_held; i++)
-    // {
-    //     basin_number = i + 1;
-    //     str_flag = "pap_basin_" + basin_number;
-    
-    //     if(isdefined(level.var_f86952c7) && isdefined(level.var_f86952c7[str_flag]))
-    //     {
-    //         unitrigger_stub = level.var_f86952c7[str_flag];
-    //         unitrigger_stub notify("trigger", level.players[0]);
-    //     }
-    // }
+    wait(20);
+    IPrintLn("Restoring pap ritual for " + worms_held);
+    for (i = 0; i < worms_held; i++)
+    {
+        basin_number = i + 1;
+        str_flag = "pap_basin_" + basin_number;
+        s_basin = struct::get(str_flag, "script_noteworthy");
+        s_basin.unitrigger_stub notify("trigger", level.players[0]);
+        wait(0.1);
+    }
 }
 
 function _restore_boss_ready()
@@ -824,6 +824,11 @@ function restore_player_sword_quest(xuid)
         self notify("hash_1867e603");
         self clientfield::set_player_uimodel("zmInventory.player_sword_quest_egg_state", 5); 
         wait(0.1);
+        self zm_weapons::weapon_give(level.sword_quest.weapons[self.characterindex][1], 0, 0, 1);
+    	self.sword_power = 1;
+        self.current_sword = self.current_hero_weapon;
+	    self gadgetpowerset(0, 100);
+        self clientfield::set_player_uimodel("zmhud.swordEnergy", self.sword_power);
     }
 
     if (upgrade_stage > 1)
@@ -871,6 +876,14 @@ function restore_player_sword_quest(xuid)
 				break;
 			}
 		}
+        cur_hero_weapon = self zm_utility::get_player_hero_weapon();
+	    self zm_weapons::weapon_take(cur_hero_weapon);
+        WAIT_SERVER_FRAME
+        self zm_weapons::weapon_give(level.sword_quest.weapons[self.characterindex][2], 0, 0, 1);
+        self.sword_power = 1;
+        self.current_sword = self.current_hero_weapon;
+	    self gadgetpowerset(0, 100);
+        self clientfield::set_player_uimodel("zmhud.swordEnergy", self.sword_power);
     }
 }
 
@@ -978,5 +991,46 @@ function get_all_unitriggers()
             all_uni = ArrayCombine(all_uni, zone.unitrigger_stubs, 1, 0);
         }
     }
+    if (isdefined(level._unitriggers.dynamic_stubs))
+    {
+        all_uni = ArrayCombine(all_uni, level._unitriggers.dynamic_stubs, 1, 0);
+    }
     return all_uni;
+}
+
+function patch_callboxes()
+{
+    wait(5);
+    triggers = get_all_unitriggers();
+    train = level.o_zod_train;
+
+    a_callboxes = getentarray("train_call_lever", "targetname");
+    foreach(e_callbox in a_callboxes)
+    {
+        e_lever = train.m_a_s_stations[e_callbox.script_string].callbox;
+        // Find trigger next to it
+        closest = zm_unitrigger::get_closest_unitriggers(e_lever.origin, triggers, 2);
+        foreach(stub in closest)
+        {
+            stub thread monitor_callbox();
+        }
+    }
+}
+
+function monitor_callbox()
+{
+    self.allow_beastmode = 1;
+
+    while(true)
+    {
+        if (isdefined(self.trigger))
+        {
+            if (!isdefined(self.trigger.allow_beastmode) || self.trigger.allow_beastmode != 1)
+            {
+                self.trigger.allow_beastmode = 1;
+                self zm_unitrigger::run_visibility_function_for_all_triggers();
+            }
+        }
+        wait(0.5);
+    }
 }

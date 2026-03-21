@@ -14,6 +14,8 @@
 #using scripts\zm\_zm_perks;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_weapons;
+#using scripts\zm\_zm_spawner;
+#using scripts\zm\_zm_unitrigger;
 #using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_core;
@@ -27,6 +29,9 @@
 
 function save_state_manager()
 {
+    level.archi.skulls_collected = 0;
+    level.archi.barn_open = 0;
+
     level.archi.save_state = &save_state;
     level thread archi_save::save_on_round_change();
     level thread archi_save::round_checkpoints();
@@ -48,6 +53,7 @@ function save_state()
     archi_save::save_zombie_count();
     archi_save::save_power_on();
     archi_save::save_doors_and_debris();
+    archi_save::save_modded_floating_debris();
 
     archi_save::save_players(&save_player_data);
 
@@ -67,7 +73,6 @@ function save_player_data(xuid)
     self archi_save::save_player_score(xuid);
     self archi_save::save_player_perks(xuid);
     self archi_save::save_player_loadout(xuid);
-    
 }
 
 function load_state()
@@ -79,6 +84,7 @@ function load_state()
     archi_save::restore_round_number();
     archi_save::restore_power_on();
     archi_save::restore_doors_and_debris();
+    archi_save::restore_modded_floating_debris();
 
     restore_map_state();
 
@@ -114,9 +120,7 @@ function setup_locations()
     level flag::wait_till("initial_blackscreen_passed");
 
     level thread find_the_skulls(level.archi.mapString + " Collect the Skulls");
-    zm_spawner::register_zombie_death_event_callback(&_track_werewolf_death);
-    level thread _notify_to_location_thread("exploderdelorean_lights", level.archi.mapString + " Kill a Werewolf");
-    level thread _flag_to_location_thread("nixie_puzzle_solved", level.archi.mapString + " Open the Weapon Safe");
+    level thread nixie_puzzle_solved(level.archi.mapString + " Open the Barn");
 
     foreach(player in level.players)
     {
@@ -163,11 +167,6 @@ function _cf_to_location_thread(fieldName, location, timer)
     archi_core::send_location(location);
 }
 
-function _track_werewolf_death(e_attacker)
-{
-    IPrintLn(self.archetype);
-}
-
 function _player_magmagat()
 {
     self thread _player_weapon_to_thread("t8_shotgun_magmagat", level.archi.mapString + " Build the Magmagat");
@@ -209,7 +208,15 @@ function find_the_skulls(location)
             break;
         }
     }
+    level.archi.skulls_collected = 1;
 
+    archi_core::send_location(location);
+}
+
+function nixie_puzzle_solved(location)
+{
+    level flag::wait_till("nixie_puzzle_solved");
+    level.archi.barn_open = 1;
     archi_core::send_location(location);
 }
 
@@ -246,10 +253,51 @@ function give_BlundergatPart_Acid()
 
 function save_map_state()
 {
-
+    archi_save::save_val("skulls_collected", level.archi.skulls_collected);
+    archi_save::save_val("barn_open", level.archi.barn_open);
 }
 
 function restore_map_state()
 {
+    level.archi.skulls_collected = archi_save::restore_val_bool("skulls_collected");
+    level.archi.barn_open = archi_save::restore_val_bool("barn_open");
 
+    if (level.archi.skulls_collected)
+    {
+        level clientfield::set("skull_1", 1);
+        level clientfield::set("skull_2", 1);
+        level.var_7c391e2b = 2;
+
+        wait(2);
+    }
+
+    if (level.archi.barn_open)
+    {
+        coffin = GetEnt("coffin_lid", "targetname");
+        zm_unitrigger::unregister_unitrigger(coffin);
+        wait(1);
+
+        level clientfield::set("ee_item_1", 1);
+        level.var_7e37dd51 = 1;
+	    level flag::set("key_obtained");
+
+        // wait(0.6);
+
+        // level thread solve_puzzle();
+    }
+
+    if (level.archi.restored_round_number >= 12)
+    {
+        level.var_4a1fc1df = 1;
+    }
 }
+
+// function solve_puzzle()
+// {
+//     nixie_lock = GetEnt("lock_trig", "targetname");
+//     nixie_lock waittill("trigger");
+
+//     wait(2);
+//     code = (level.a_nixie_tube_solution[1] * 100) + (level.a_nixie_tube_solution[2] * 10) + level.a_nixie_tube_solution[3];
+//     level notify("nixie_" + code);
+// }

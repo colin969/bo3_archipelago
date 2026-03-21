@@ -372,6 +372,7 @@ function restore_round_number()
         }
         SetDvar("ARCHIPELAGO_LOAD_DATA_ROUND", 0);        
     }
+    level.archi.restored_round_number = round_number;
 }
 
 function _restore_zombie_max()
@@ -507,6 +508,31 @@ function restore_doors_and_debris()
             }
         }
         SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_DEBRIS", "");
+    }
+    level thread _unset_unlock_all();
+}
+
+function restore_modded_floating_debris()
+{
+    SetDvar("zombie_unlock_all", 1);
+    zombie_debris = GetEntArray("floating_debris", "targetname");
+    debris_str = GetDvarString("ARCHIPELAGO_LOAD_DATA_OPENED_MODDED_FLOATING_DEBRIS", "");
+    if (debris_str != "")
+    {
+        debris_ids = strtok(debris_str, ";");
+        foreach (debris_id_str in debris_ids)
+        {
+            debris_id = int(debris_id_str);
+            for (i = 0; i < zombie_debris.size; i++)
+            {
+                if (zombie_debris[i].id === debris_id)
+                {
+                    zombie_debris[i] notify("trigger", level.players[0], true);
+                    break;
+                }
+            }
+        }
+        SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_MODDED_FLOATING_DEBRIS", "");
     }
     level thread _unset_unlock_all();
 }
@@ -708,6 +734,17 @@ function save_doors_and_debris()
     SetDvar("ARCHIPELAGO_SAVE_DATA_OPENED_DEBRIS", debris_str);
 }
 
+function save_modded_floating_debris()
+{
+    debris_str = "";
+    foreach (debris_id in level.archi.opened_modded_floating_debris)
+    {
+        debris_str += debris_id + ";";
+    }
+
+    SetDvar("ARCHIPELAGO_SAVE_DATA_OPENED_MODDED_FLOATING_DEBRIS", debris_str);
+}
+
 function save_zombie_count()
 {
     if (level.archi.save_zombie_count)
@@ -893,6 +930,13 @@ function restore_val(key)
     return val;
 }
 
+function restore_val_bool(key)
+{
+    val = GetDvarString("ARCHIPELAGO_LOAD_DATA_MAP_KVAL_" + ToUpper(key), "");
+    SetDvar("ARCHIPELAGO_LOAD_DATA_MAP_KVAL_" + ToUpper(key), "");
+    return Int(val);
+}
+
 function restore_player_val(key, xuid)
 {
     val = GetDvarString("ARCHIPELAGO_LOAD_DATA_XUID_" + xuid + "_KVAL_" + ToUpper(key), "");
@@ -908,22 +952,6 @@ function restore_player_flag(flag, xuid)
     if (dvar_value > 0)
     {
         self flag::set(flag);
-    }
-}
-
-function state_dvar_monitor()
-{
-    level endon("end_game");
-
-    while(true)
-    {
-        i = 0;
-        foreach (key in GetArrayKeys(level.archi.monitor_strings))
-        {
-            SetDvar("ARCHIPELAGO_MONITOR_" + i, key + " -> " + level flag::get(level.archi.monitor_strings[key]) );
-            i += 1;
-        }
-        wait(2);
     }
 }
 

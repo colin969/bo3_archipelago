@@ -219,6 +219,12 @@ function wait_for_start()
     level thread game_start();
 }
 
+function test_box(keys)
+{
+    IPrintLn(keys[0].name);
+    return keys;
+}
+
 function game_start()
 {
     // Hold server-wide Archipelago Information
@@ -242,6 +248,8 @@ function game_start()
     level flag::init("ap_map_locked");
     level.archi.map_key_item = undefined;
 
+    level.customrandomweaponweights = &test_box;
+
     zombie_doors = GetEntArray("zombie_door", "targetname");
     for (i = 0; i < zombie_doors.size; i++)
     {
@@ -255,6 +263,13 @@ function game_start()
         zombie_debris[i].id = i;
     }
     array::thread_all(zombie_debris, &track_debris_open);
+
+    modded_floating_debris = GetEntArray("floating_debris", "targetname");
+    for (i = 0; i < modded_floating_debris.size; i++)
+    {
+        modded_floating_debris[i].id = i;
+    }
+    level thread track_modded_floating_debris_open();
 
     // Get Map Name String
     mapName = GetDvarString( "mapname" );
@@ -837,7 +852,6 @@ function game_start()
     //Setup default map changes
     default_map_changes();
 
-    level thread archi_save::state_dvar_monitor();
     level thread archi_save::state_other_monitor();
 }
 
@@ -1204,6 +1218,17 @@ function track_debris_open()
     level.archi.opened_debris[level.archi.opened_debris.size] = self.id;
 }
 
+function track_modded_floating_debris_open()
+{
+    level endon("end_game");
+
+    while (true)
+    {
+        level waittill("ap_modded_floating_debris_opened", id);
+        level.archi.opened_modded_floating_debris[level.archi.opened_modded_floating_debris.size] = id;
+    }
+}
+
 // self is something pap related
 function custom_pap_validation(player)
 {
@@ -1245,13 +1270,25 @@ function custom_perk_validation(player)
 function wrapper_func_override_wallbuy_prompt(player)
 {
     weapon = self.weapon;
+    IPrintLn(weapon.name);
     apItem = level.archi.wallbuy_mappings[weapon.name];
-    if ((!isdefined(apItem)) || isdefined(level.archi.wallbuys[weapon.name]) && IS_TRUE(level.archi.wallbuys[weapon.name])) 
+    if ((!isdefined(apItem)) || (isdefined(level.archi.wallbuys[weapon.name]) && IS_TRUE(level.archi.wallbuys[weapon.name]))) 
     {
         if (isdefined(level.archi.original_func_override_wallbuy_prompt))
         {
             return self [[level.archi.original_func_override_wallbuy_prompt]](player);
         }
+        return true;
+    }
+}
+
+// self is weapon spawn
+function func_override_wallbuy_prompt(player)
+{
+    weapon = self.weapon;
+    apItem = level.archi.wallbuy_mappings[weapon.name];
+    if ((!isdefined(apItem)) || (isdefined(level.archi.wallbuys[weapon.name]) && IS_TRUE(level.archi.wallbuys[weapon.name]))) 
+    {
         return true;
     } 
     else
@@ -1263,30 +1300,6 @@ function wrapper_func_override_wallbuy_prompt(player)
         }
         self SetHintString(hint_string);
         return false;
-    }
-}
-
-// self is weapon spawn
-function func_override_wallbuy_prompt(player)
-{
-    weapon = self.weapon;
-    if (isdefined(level.archi.wallbuys[weapon.name]) && IS_TRUE(level.archi.wallbuys[weapon.name])) 
-    {
-        return true;
-    } 
-    else
-    {
-        apItem = level.archi.wallbuy_mappings[weapon.name];
-        if (isdefined(apItem))
-        {
-            hint_string = "'" + apItem + "' is required";
-            if (level.archi.map_specific_wallbuys)
-            {
-                hint_string = "'" + level.archi.mapString + " " + apItem + "' is required";
-            }
-            self SetHintString(hint_string);
-            return false;
-        }
     }
     return true;
 }

@@ -24,31 +24,10 @@
 
 #insert scripts\zm\archi_core.gsh;
 
-
-function setup_monitor_strings()
-{
-    monitor = level.archi.monitor_strings;
-
-    monitor["Power On"] = "all_power_on";
-    monitor["Main EE - Gravestones"] = "character_stones_done";
-    monitor["Main EE - Audio Reel 1 Found (Keeper Protector)"] = "got_audio1";
-    monitor["Main EE - Audio Reel 1 Placed"] = "placed_audio1";
-    monitor["Main EE - Audio Reel 2 Found (Apothicon Stomach)"] = "got_audio2";
-    monitor["Main EE - Apothicon Stomach Done"] = "acm_done";
-    monitor["Main EE - Audio Reel 2 Placed"] = "placed_audio2";
-    monitor["Main EE - Audio Reel 3 Found (Bones)"] = "got_audio3";
-    monitor["Main EE - Audio Reel 3 Placed"] = "placed_audio3";
-    monitor["Main EE - S.O.P.H.I.A Materlized"] = "sophia_beam_locked";
-    monitor["Main EE - Kronorium Collected"] = "book_picked_up";
-    monitor["Main EE - Summoning Key Grand Tour Begun"] = "grand_tour";
-    monitor["Main EE - Summoning Key Grand Tour Finished"] = "toys_collected";
-}
-
 function save_state_manager()
 {
     level flag::init("ap_allow_player_restore");
 
-    setup_monitor_strings();
     if (level.archi.difficulty_ee_checkpoints >= 3)
     {
         level thread easy_checkpoint_trigger();
@@ -540,10 +519,11 @@ function restore_map_state()
                 recorder notify ("trigger_activated", level.players[0]);
             }
         }
+        wait(0.1);
+        // phased_sophia_start should flag auto
+        level flag::wait_till("phased_sophia_start");
     }
-    wait(0.1);
-    // phased_sophia_start should flag auto
-    level flag::wait_till("phased_sophia_start");
+
     wait(0.1);
     archi_save::restore_flag("sophia_beam_locked");
     wait(0.1);

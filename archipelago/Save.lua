@@ -462,6 +462,10 @@ function map_save_zm_westernz(mapData, uniData)
   save_round_number(mapData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
+  save_modded_floating_debris(mapData)
+  
+  save_val(mapData, "skulls_collected")
+  save_val(mapData, "barn_open")
 
   save_players(mapData, uniData, player_save_zm_westernz)
 end
@@ -478,6 +482,10 @@ function map_restore_zm_westernz(mapData)
   restore_round_number(mapData)
   restore_power_on(mapData)
   restore_doors_and_debris(mapData)
+  restore_modded_floating_debris(mapData)
+
+  restore_val(mapData, "skulls_collected")
+  restore_val(mapData, "barn_open")
 end
 
 function player_restore_zm_westernz(xuid, playerData)
@@ -563,6 +571,13 @@ function restore_doors_and_debris(mapData)
   if mapData["debris_opened"] then
     local debrisOpened = mapData["debris_opened"]
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_DEBRIS", table.concat(debrisOpened, ";"))
+  end
+end
+
+function restore_modded_floating_debris(mapData)
+  if mapData["modded_floating_debris_opened"] then
+    local debrisOpened = mapData["modded_floating_debris_opened"]
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_OPENED_MODDED_FLOATING_DEBRIS", table.concat(debrisOpened, ";"))
   end
 end
 
@@ -771,6 +786,20 @@ function save_doors_and_debris(mapData)
 
   mapData.doors_opened = doorsOpened
   mapData.debris_opened = debrisOpened
+end
+
+function save_modded_floating_debris(mapData)
+  local debrisStr = Engine.DvarString(nil, "ARCHIPELAGO_SAVE_DATA_OPENED_MODDED_FLOATING_DEBRIS");
+  if debrisStr then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_OPENED_MODDED_FLOATING_DEBRIS", "");
+  end
+  local debrisOpened = {}
+
+  for debrisId in string.gmatch(debrisStr, "[^;]+") do
+    table.insert(debrisOpened, debrisId);
+  end
+
+  mapData.modded_floating_debris_opened = debrisOpened
 end
 
 function save_power_on(mapData)

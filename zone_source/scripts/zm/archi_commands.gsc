@@ -1,6 +1,7 @@
 #using scripts\codescripts\struct;
 #using scripts\shared\flag_shared;
 #using scripts\shared\system_shared;
+#using scripts\shared\exploder_shared;
 #using scripts\shared\array_shared;
 #using scripts\shared\util_shared;
 #using scripts\shared\laststand_shared;
@@ -62,6 +63,7 @@ function init_commands()
     level thread _basic_trigger("ap_spawn_shop", &_spawn_shop);
     level thread _basic_trigger("ap_shop_print", &_shop_print);
     level thread _basic_trigger("ap_test", &_testtt);
+    level thread _basic_trigger("ap_exploder", &_set_exploder);
   }
 }
 
@@ -323,7 +325,7 @@ function _basic_trigger(name, cb)
 
   while(true)
   {
-    WAIT_SERVER_FRAME
+    wait(0.2);
 
     dvar_value = GetDvarString(name, "");
 
@@ -681,4 +683,25 @@ function _testtt(val)
   level notify("elemental_bow_storm_stop_tracking");
   level.var_7df95fd1["elemental_bow_storm"] = 70;
   level.var_67616e8e["elemental_bow_storm"] = 70;
+}
+
+function _set_exploder(val)
+{
+  if (val != "")
+  {
+    vals = StrTok(val, " ");
+    if (vals.size > 1)
+    {
+      exploder_str = Int(vals[0]);
+      enabled = Int(vals[1]);
+      if (enabled == 0)
+      {
+        exploder::stop_exploder(exploder_str);
+      }
+      else
+      {
+        exploder::exploder(exploder_str);
+      }
+    }
+  }
 }
