@@ -11,13 +11,13 @@ EnableGlobals();
 local settings_file = require("Archipelago.SettingsFile")
 local savedServer
 local savedSlot
--- local savedPassword
+local savedPassword
 
 UpdateConnectionStatus = function(update)
 	Engine.SetModelValue(Engine.GetModel(Engine.GetModel( Engine.GetGlobalModel(), "archipelago" ), "connectionValidated"),"Connection: "..update)
 end
 
-local ConnectArchi = function(savedServer, savedSlot)
+local ConnectArchi = function(savedServer, savedSlot, savedPassword)
 	if Archipelago == nil then 
 		local modname = bo3_archipelago
 		local filespath = [[.\mods\bo3_archipelago\]]
@@ -39,7 +39,7 @@ local ConnectArchi = function(savedServer, savedSlot)
 		end)
 	end
 
-	Archipelago.CheckConnection(savedServer,savedSlot,"zone\\")
+	Archipelago.CheckConnection(savedServer,savedSlot,"zone\\",savedPassword)
 	--
 	
 end
@@ -92,7 +92,7 @@ APActiveField = 1
 
 LUI.createMenu.ArchipelagoSettings = function ( controller )
     local self = CoD.Menu.NewForUIEditor( "ArchipelagoSettings" )
-	savedServer, savedSlot = settings_file.load_settings()
+	savedServer, savedSlot, savedPassword = settings_file.load_settings()
 	if PreLoadFunc then
 		PreLoadFunc( self, controller )
 	end
@@ -328,7 +328,7 @@ LUI.createMenu.ArchipelagoSettings = function ( controller )
 		} )
 	end
     LUI.OverrideFunction_CallOriginalSecond( self, "close", function ( element )
-		settings_file.save_settings(savedServer, savedSlot)
+		settings_file.save_settings(savedServer, savedSlot, savedPassword)
 		element.StartMenuBackground0:close()
 		element.FEButtonPanelShaderContainer0:close()
 		element.MenuFrame:close()

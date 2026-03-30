@@ -9,20 +9,22 @@ function load_settings()
         if settings then
             local server = settings.server or "archipelago.gg"
             local slot = settings.slot or "Player"
-            
-            return server, slot
+			local password = settings.password or ""
+
+            return server, slot, password
         end 
     end
 
-	return "archipelago.gg", "Player"
+	return "archipelago.gg", "Player", ""
 end
 
-function save_settings(server, slot)
+function save_settings(server, slot, password)
 	local json = require("Archipelago.Json")
 	
 	local settings = {
 		server = server or "archipelago.gg",
 		slot = slot or "Player",
+		password = password or ""
 	}
 	
 	local content = json.encode(settings)
