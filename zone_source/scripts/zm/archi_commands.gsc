@@ -64,6 +64,8 @@ function init_commands()
     level thread _basic_trigger("ap_shop_print", &_shop_print);
     level thread _basic_trigger("ap_test", &_testtt);
     level thread _basic_trigger("ap_exploder", &_set_exploder);
+    level thread _basic_trigger("ap_weapon_bits", &_print_weapon_bits);
+    level thread _basic_trigger("ap_weapon_box", &_print_weapon_box_states);
   }
 }
 
@@ -704,5 +706,42 @@ function _set_exploder(val)
         exploder::exploder(exploder_str);
       }
     }
+  }
+}
+
+function _print_weapon_bits()
+{
+  if (isdefined(level.archi.ap_weapon_bits))
+  {
+    IPrintLn("Weapon bits:");
+    keys = GetArrayKeys(level.archi.ap_weapon_bits);
+    foreach(key in keys)
+    {
+      IPrintLn(key + " - " + level.archi.ap_weapon_bits[key]);
+      wait(0.3);
+    }
+  }
+  else
+  {
+    IPrintLn("No weapon bits defined");
+  }
+}
+
+
+function _print_weapon_box_states()
+{
+  if (isdefined(level.archi.ap_box_states))
+  {
+    IPrintLn("Weapon bits:");
+    keys = GetArrayKeys(level.archi.ap_box_states);
+    foreach(key in keys)
+    {
+      IPrintLn(key + " - " + level.archi.ap_box_states[key]);
+      wait(0.3);
+    }
+  }
+  else
+  {
+    IPrintLn("No weapon bits defined");
   }
 }

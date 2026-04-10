@@ -14,6 +14,7 @@
 #using scripts\zm\_zm_weapons;
 #using scripts\zm\_zm_pack_a_punch_util;
 #using scripts\zm\craftables\_zm_craftables;
+#using scripts\zm\archi_mappings;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\zm\_zm_perks.gsh;
@@ -22,36 +23,78 @@
 
 #namespace archi_items;
 
-function RegisterBoxWeapon(itemName, weapon_name, weapon_bit)
+function get_weapon_table_name(mapName)
+{
+    switch (mapName) {
+        case "zm_westernz":
+            return "zm_westernz";
+        default:
+            return "vanilla";
+    }
+}
+
+function RegisterMapWeapons(mapName)
+{
+    map_data = get_map_weapon_lists(mapName);
+    table = get_weapon_table_name(mapName);
+
+    if (isdefined(map_data))
+    {
+        foreach(weapon in map_data.vanilla)
+        {
+            item_name = archi_mappings::get_weapon_item_name(weapon, table);
+            RegisterWeapon(item_name, weapon);
+        }
+
+        foreach(weapon in map_data.expanded)
+        {
+            item_name = archi_mappings::get_weapon_item_name(weapon, table);
+            RegisterWeapon(item_name, weapon);
+        }
+
+        foreach(weapon in map_data.special)
+        {
+            item_name = archi_mappings::get_weapon_item_name(weapon, table);
+            RegisterWeapon(item_name, weapon);
+        }
+    }
+}
+
+function RegisterWeapon(itemName, weapon_name)
 {
     item = SpawnStruct();
-    item.type = "box_weapon";
+    item.type = "weapon";
     item.name = level.archi.mapString + " " + itemName;
     item.weapon_name = weapon_name;
     item.count = 0;
 
-    weapon = GetWeapon(weapon_name);
-    if (isdefined(weapon))
+    level.archi.wallbuy_mappings[weapon_name] = itemName;
+    level.archi.wallbuys[weapon_name] = 0;
+
+    if (isdefined(level.archi.ap_weapon_bits[weapon_name]))
     {
-        z_weapon = level.zombie_weapons[weapon];
-        if (isdefined(z_weapon))
+        weapon = GetWeapon(weapon_name);
+        if (isdefined(weapon))
         {
-            z_weapon.is_in_box = 0;
-            level.archi.ap_weapon_bits[weapon_name] = weapon_bit;
-            level.archi.ap_box_states[weapon_name] = 1;
+            z_weapon = level.zombie_weapons[weapon];
+            if (isdefined(z_weapon))
+            {
+                z_weapon.is_in_box = 0;
+                level.archi.ap_box_states[weapon_name] = 0;
+            }
+            else
+            {
+                IPrintLn("Weapon found but not in zombie_weapons: " + weapon_name);
+            }
         }
         else
         {
-            IPrintLn("Weapon found but not in zombie_weapons: " + weapon_name);
+            IPrintLn("Weapon not found: " + weapon_name);
         }
-    }
-    else
-    {
-        IPrintLn("Weapon not found: " + weapon_name);
     }
 
     globalItem = SpawnStruct();
-    globalItem.type = "box_weapon";
+    globalItem.type = "weapon";
     globalItem.name = itemName;
     globalItem.weapon_name = weapon_name;
     globalItem.count = 0;
@@ -88,28 +131,6 @@ function RegisterUniversalItem(itemName, getFunc, clientField) {
     item.count = 0;
 
     level.archi.items[itemName] = item;
-}
-
-
-function RegisterWeapon(itemName, getFunc, consoleName) {
-    level.archi.wallbuy_mappings[consoleName] = itemName;
-    level.archi.wallbuys[consoleName] = false;
-
-    item = SpawnStruct();
-    item.name = itemName;
-    item.getFunc = getFunc;
-    //item.clientfield = "ap_weapon_" + consoleName;
-    item.count = 0;
-
-    globalItem = SpawnStruct();
-    globalItem.name = level.archi.mapString + " " + itemName;
-    globalItem.getFunc = getFunc;
-    //globalItem.clientfield = "ap_weapon_" + consoleName;
-    globalItem.count = 0;
-
-    level.archi.weapons[consoleName] = false;
-    level.archi.items[item.name] = item;
-    level.archi.items[globalItem.name] = globalItem;
 }
 
 function RegisterPerk(itemName, getFunc, specialtyName) {
@@ -297,279 +318,6 @@ function give_ElectricCherry()
 function give_PhDFlopper()
 {
     give_Perk(PERK_PHDFLOPPER);
-}
-
-// Weapons
-// Assault Rifles
-function give_Weapon_ICR()
-{
-    enableWallbuy("ar_accurate");
-}
-
-function give_Weapon_HVK()
-{
-    enableWallbuy("ar_cqb");
-}
-
-function give_Weapon_ManOWar()
-{
-    enableWallbuy("ar_damage");
-}
-
-function give_Weapon_M8A7()
-{
-    enableWallbuy("ar_longburst");
-}
-
-function give_Weapon_Sheiva()
-{
-    enableWallbuy("ar_marksman");
-}
-
-function give_Weapon_KN44()
-{
-    enableWallbuy("ar_standard");
-}
-
-function give_Weapon_FFAR()
-{
-    enableWallbuy("ar_famas");
-}
-
-function give_Weapon_Garand()
-{
-    enableWallbuy("ar_garand");
-}
-
-function give_Weapon_Peacekeeper()
-{
-    enableWallbuy("ar_peacekeeper");
-}
-
-function give_Weapon_AN94()
-{
-    enableWallbuy("ar_an94");
-}
-
-function give_Weapon_Galil()
-{
-    enableWallbuy("ar_galil");
-}
-
-function give_Weapon_M14()
-{
-    enableWallbuy("ar_m14");
-}
-
-function give_Weapon_M16()
-{
-    enableWallbuy("ar_m16");
-}
-
-function give_Weapon_Basilisk()
-{
-    enableWallbuy("ar_pulse");
-}
-
-function give_Weapon_XR2()
-{
-    enableWallbuy("ar_fastburst");
-}
-
-function give_Weapon_STG44()
-{
-    enableWallbuy("ar_stg44");
-}
-
-// Light Machine Guns
-function give_Weapon_Dingo()
-{
-    enableWallbuy("lmg_cqb");
-}
-
-function give_Weapon_Dredge()
-{
-    enableWallbuy("lmg_heavy");
-}
-
-function give_Weapon_BRM()
-{
-    enableWallbuy("lmg_light");
-}
-
-function give_Weapon_Gorgon()
-{
-    enableWallbuy("lmg_slowfire");
-}
-
-function give_Weapon_R70Ajax()
-{
-    enableWallbuy("lmg_infinite");
-}
-
-function give_Weapon_RPK()
-{
-    enableWallbuy("lmg_rpk");
-}
-
-function give_Weapon_MG08()
-{
-    enableWallbuy("lmg_mg08");
-}
-
-// Sub Machine Guns
-function give_Weapon_Pharo()
-{
-    enableWallbuy("smg_burst");
-}
-
-function give_Weapon_Weevil()
-{
-    enableWallbuy("smg_capacity");
-}
-
-function give_Weapon_Vesper()
-{
-    enableWallbuy("smg_fastfire");
-}
-
-function give_Weapon_Kuda()
-{
-    enableWallbuy("smg_standard");
-}
-
-function give_Weapon_VMP()
-{
-    enableWallbuy("smg_versatile");
-}
-
-function give_Weapon_Bootlegger()
-{
-    enableWallbuy("smg_sten");
-}
-
-function give_Weapon_HG40()
-{
-    enableWallbuy("smg_mp40");
-}
-
-function give_Weapon_PPSH()
-{
-    enableWallbuy("smg_ppsh");
-}
-
-function give_Weapon_Razorback()
-{
-    enableWallbuy("smg_thompson");
-}
-
-function give_Weapon_AK47u()
-{
-    enableWallbuy("smg_ak47u");
-}
-
-function give_Weapon_MSMC()
-{
-    enableWallbuy("smg_msmc");
-}
-
-function give_Weapon_Nailgun()
-{
-    enableWallbuy("smg_nailgun");
-}
-
-function give_Weapon_HLX4()
-{
-    enableWallbuy("smg_rechamber");
-}
-
-function give_Weapon_Sten()
-{
-    enableWallbuy("smg_sten2");
-}
-
-function give_Weapon_MP40()
-{
-    enableWallbuy("smg_mp40_1940");
-}
-
-// Shotguns
-function give_Weapon_Haymaker()
-{
-    enableWallbuy("shotgun_fullauto");
-}
-
-function give_Weapon_Argus()
-{
-    enableWallbuy("shotgun_precision");
-}
-
-function give_Weapon_KRM()
-{
-    enableWallbuy("shotgun_pump");
-}
-
-function give_Weapon_Brecci()
-{
-    enableWallbuy("shotgun_semiauto");
-}
-
-function give_Weapon_Banshii()
-{
-    enableWallbuy("shotgun_energy");
-}
-
-function give_Weapon_Olympia()
-{
-    enableWallbuy("shotgun_olympia");
-}
-
-// Pistols
-function give_Weapon_Bloodhound()
-{
-    enableWallbuy("pistol_revolver38");
-}
-
-function give_Weapon_MR6()
-{
-    enableWallbuy("pistol_standard");
-}
-
-function give_Weapon_RK5()
-{
-    enableWallbuy("pistol_burst");
-}
-
-function give_Weapon_LCAR()
-{
-    enableWallbuy("pistol_fullauto");
-}
-
-function give_Weapon_RiftE9()
-{
-    enableWallbuy("pistol_energy");
-}
-
-function give_Weapon_M1911()
-{
-    enableWallbuy("pistol_m1911");
-}
-
-function give_Weapon_Marshal()
-{
-    enableWallbuy("pistol_shotgun_dw");
-}
-
-function give_Weapon_Mauser()
-{
-    enableWallbuy("pistol_c96");
-}
-
-// Melee
-
-function give_Weapon_BowieKnife()
-{
-    enableWallbuy("melee_bowie");
 }
 
 // Shield Parts
@@ -787,4 +535,426 @@ function enableWallbuy(itemName)
 function checkItem(itemName)
 {
     return (isdefined(level.archi.items[itemName]) && level.archi.items[itemName].count>0);
+}
+
+function get_map_weapon_lists(map_name)
+{
+    lists = SpawnStruct();
+    
+    switch(map_name)
+    {
+        case "zm_zod":
+            lists.vanilla = array(
+                "ar_accurate",
+                "ar_cqb",
+                "ar_damage",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_slowfire",
+                "shotgun_fullauto",
+                "shotgun_precision",
+                "shotgun_semiauto",
+                "launcher_standard",
+                "smg_burst",
+                "smg_capacity",
+                "smg_sten",
+                "sniper_fastbolt",
+                "sniper_fastsemi",
+                "sniper_powerbolt"
+            );
+            lists.expanded = array(
+                "pistol_revolver38",
+                "bouncingbetty",
+                "bowie_knife",
+                "ar_longburst",
+                "ar_marksman",
+                "ar_standard",
+                "pistol_burst",
+                "pistol_fullauto",
+                "shotgun_pump",
+                "smg_fastfire",
+                "smg_standard",
+                "smg_versatile"
+            );
+            lists.special = array(
+                "octobomb",
+                "ray_gun",
+                "idgun_0"
+            );
+            break;
+            
+        case "zm_castle":
+            lists.vanilla = array(
+                "bouncingbetty",
+                "ar_accurate",
+                "ar_cqb",
+                "ar_damage",
+                "ar_marksman",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_slowfire",
+                "shotgun_fullauto",
+                "shotgun_precision",
+                "shotgun_semiauto",
+                "launcher_standard",
+                "smg_burst",
+                "smg_capacity",
+                "smg_versatile",
+                "sniper_fastbolt",
+                "sniper_fastsemi",
+                "sniper_powerbolt",
+                "lmg_rpk"
+            );
+            lists.expanded = array(
+                "pistol_standard",
+                "bowie_knife",
+                "ar_longburst",
+                "ar_standard",
+                "pistol_burst",
+                "pistol_fullauto",
+                "shotgun_pump",
+                "smg_fastfire",
+                "smg_standard"
+            );
+            lists.special = array(
+                "ray_gun",
+                "cymbal_monkey"
+            );
+            break;
+            
+        case "zm_island":
+            lists.vanilla = array(
+                "ar_accurate",
+                "ar_cqb",
+                "ar_damage",
+                "ar_garand",
+                "ar_longburst",
+                "ar_marksman",
+                "ar_standard",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_slowfire",
+                "pistol_shotgun_dw",
+                "shotgun_fullauto",
+                "shotgun_precision",
+                "shotgun_semiauto",
+                "launcher_standard",
+                "smg_capacity",
+                "smg_fastfire",
+                "smg_longrange",
+                "smg_mp40",
+                "smg_standard",
+                "smg_versatile",
+                "sniper_fastbolt",
+                "sniper_fastsemi",
+                "sniper_powerbolt"
+            );
+            lists.expanded = array(
+                "pistol_standard",
+                "bouncingbetty",
+                "bowie_knife",
+                "pistol_burst",
+                "pistol_fullauto",
+                "shotgun_pump",
+                "smg_burst"
+            );
+            lists.special = array(
+                "cymbal_monkey",
+                "ray_gun"
+            );
+            break;
+            
+        case "zm_stalingrad":
+            lists.vanilla = array(
+                "ar_damage",
+                "ar_famas",
+                "ar_garand",
+                "ar_marksman",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_slowfire",
+                "shotgun_fullauto",
+                "shotgun_semiauto",
+                "launcher_multi",
+                "launcher_standard",
+                "smg_capacity",
+                "smg_mp40",
+                "smg_ppsh",
+                "sniper_fastbolt",
+                "sniper_fastsemi",
+                "sniper_powerbolt",
+                "special_crossbow_dw",
+                "lmg_rpk"
+            );
+            lists.expanded = array(
+                "bouncingbetty",
+                "bowie_knife",
+                "ar_accurate",
+                "ar_cqb",
+                "ar_longburst",
+                "ar_standard",
+                "pistol_standard",
+                "pistol_burst",
+                "pistol_fullauto",
+                "shotgun_precision",
+                "shotgun_pump",
+                "smg_burst",
+                "smg_fastfire",
+                "smg_standard",
+                "smg_versatile",
+                "melee_dagger",
+                "melee_fireaxe",
+                "melee_sword",
+                "melee_wrench"
+            );
+            lists.special = array(
+                "cymbal_monkey",
+                "ray_gun",
+                "raygun_mark3"
+            );
+            break;
+            
+        case "zm_genesis":
+            lists.vanilla = array(
+                "bouncingbetty",
+                "ar_accurate",
+                "ar_cqb",
+                "ar_damage",
+                "ar_longburst",
+                "ar_marksman",
+                "ar_standard",
+                "ar_peacekeeper",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_slowfire",
+                "pistol_energy",
+                "shotgun_energy",
+                "shotgun_fullauto",
+                "shotgun_precision",
+                "shotgun_semiauto",
+                "launcher_standard",
+                "smg_capacity",
+                "smg_fastfire",
+                "smg_standard",
+                "smg_thompson",
+                "smg_versatile",
+                "sniper_fastbolt",
+                "sniper_fastsemi",
+                "sniper_powerbolt"
+            );
+            lists.expanded = array(
+                "pistol_standard",
+                "bowie_knife",
+                "pistol_burst",
+                "pistol_fullauto",
+                "shotgun_pump",
+                "smg_burst",
+                "melee_boneglass",
+                "melee_improvise",
+                "melee_nunchuks",
+                "melee_mace",
+                "melee_katana"
+            );
+            lists.special = array(
+                "ray_gun",
+                "thundergun",
+                "hero_gravityspikes_melee",
+                "octobomb",
+                "idgun_genesis_0"
+            );
+            break;
+            
+        case "zm_factory":
+            lists.vanilla = array(
+                "ar_accurate",
+                "ar_cqb",
+                "ar_damage",
+                "ar_marksman",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_slowfire",
+                "shotgun_fullauto",
+                "shotgun_precision",
+                "shotgun_semiauto",
+                "launcher_standard",
+                "smg_burst",
+                "smg_capacity",
+                "smg_versatile",
+                "sniper_fastbolt",
+                "sniper_fastsemi",
+                "sniper_powerbolt",
+                "lmg_rpk"
+            );
+            lists.expanded = array(
+                "pistol_standard",
+                "bouncingbetty",
+                "bowie_knife",
+                "ar_longburst",
+                "ar_standard",
+                "pistol_burst",
+                "pistol_fullauto",
+                "shotgun_pump",
+                "smg_fastfire",
+                "smg_standard"
+            );
+            lists.special = array(
+                "cymbal_monkey",
+                "ray_gun",
+                "tesla_gun"
+            );
+            break;
+            
+        case "zm_theater":
+            lists.vanilla = array(
+                "ar_accurate",
+                "ar_cqb",
+                "ar_damage",
+                "ar_famas",
+                "ar_galil",
+                "ar_longburst",
+                "ar_m16",
+                "ar_marksman",
+                "ar_standard",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_slowfire",
+                "pistol_fullauto",
+                "shotgun_fullauto",
+                "shotgun_precision",
+                "shotgun_pump",
+                "shotgun_semiauto",
+                "launcher_standard",
+                "smg_burst",
+                "smg_capacity",
+                "smg_fastfire",
+                "smg_standard",
+                "smg_versatile",
+                "smg_mp40_1940",
+                "smg_ak74u",
+                "sniper_fastsemi",
+                "sniper_powerbolt",
+                "lmg_rpk",
+                "ar_m14"
+            );
+            lists.expanded = array(
+                "pistol_standard",
+                "pistol_m1911",
+                "bouncingbetty",
+                "bowie_knife",
+                "pistol_burst"
+            );
+            lists.special = array(
+                "cymbal_monkey",
+                "thundergun",
+                "ray_gun",
+                "raygun_mark2",
+                "tesla_gun",
+                "hero_annihilator"
+            );
+            break;
+            
+        case "zm_westernz":
+            lists.vanilla = array(
+                "t8_crossbow",
+                "bo3_boneglass",
+                "t8_allistair_annihalator",
+                "m1831",
+                "bo3_olympia",
+                "henry_m1840",
+                "w1887",
+                "t8_m1897",
+                "ww2_model21",
+                "ww2_winchester94",
+                "w1892",
+                "fc4_m1887_long",
+                "lebel_m1811",
+                "ww2_lewis",
+                "ww2_fliegerfaust",
+                "wes_jag42",
+                "m1827_exp"
+            );
+            lists.expanded = array(
+                "frag_ww2_dynamite",
+                "frag_ww2_molotov",
+                "ww2_raven",
+                "ww2_iceaxe",
+                "bowie_knife",
+                "t8_welling",
+                "ww2_reichsrevolver",
+                "ww2_colt45saa",
+                "ww2_enfield2",
+                "ww2_enfield2_gold",
+                "ww2_m712",
+                "m1889",
+                "mwr_ranger",
+                "m1903_epic",
+                "ww2_mosin",
+                "m1896_essex",
+                "doc_w1866",
+                "aw_winchester",
+                "ww2_crossbow",
+                "ww2_ribeyrolles",
+                "bo4_escargot"
+            );
+            lists.special = array(
+                "grenade_homunculus",
+                "thundergun",
+                "t8_shotgun_blundergat",
+                "t8_raygun",
+                "tesla_gun"
+            );
+            break;
+        default:
+            return undefined;
+    }
+    
+    return lists;
+}
+
+function get_box_bit_table(map_name, basic, special, expanded)
+{
+    ap_weapon_bits = [];
+    bit_index = 0;
+    lists = get_map_weapon_lists(map_name);
+
+    if(!isdefined(lists))
+    {
+        return ap_weapon_bits;
+    }
+    
+    if(special && isdefined(lists.special))
+    {
+        foreach(weapon in lists.special)
+        {
+            ap_weapon_bits[weapon] = bit_index;
+            bit_index++;
+        }
+    }
+
+    if(expanded && isdefined(lists.expanded))
+    {
+        foreach(weapon in lists.expanded)
+        {
+            ap_weapon_bits[weapon] = bit_index;
+            bit_index++;
+        }
+    }
+    
+    if(basic && isdefined(lists.vanilla))
+    {
+        foreach(weapon in lists.vanilla)
+        {
+            ap_weapon_bits[weapon] = bit_index;
+            bit_index++;
+        }
+    }
+    
+    return ap_weapon_bits;
 }

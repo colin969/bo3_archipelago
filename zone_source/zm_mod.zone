@@ -22,9 +22,11 @@ scriptparsetree,scripts/zm/archi_genesis.gsc
 scriptparsetree,scripts/zm/archi_factory.gsc
 scriptparsetree,scripts/zm/archi_theater.gsc
 scriptparsetree,scripts/zm/archi_westernz.gsc
+scriptparsetree,scripts/zm/archi_items.csc
 scriptparsetree,scripts/zm/archi_items.gsc
 scriptparsetree,scripts/zm/archi_save.gsc
 scriptparsetree,scripts/zm/archi_staminup.gsc
+scriptparsetree,scripts/zm/archi_mappings.gsc
 
 //Commands
 scriptparsetree,scripts/zm/archi_commands.gsc
@@ -33,9 +35,6 @@ scriptparsetree,scripts/zm/archi_commands.gsc
 scriptparsetree,scripts/zm/_zm_pack_a_punch.gsc
 scriptparsetree,scripts/zm/_zm_perks.gsc
 scriptparsetree,scripts/zm/_zm_weapons.gsc
-
-// Mod Overrides
-scriptparsetree,scripts/zm/_zm_floating_debris.gsc
 
 //The point our UI injects its widget
 rawfile,ui/archipelago/hudInject.lua

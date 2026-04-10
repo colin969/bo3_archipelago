@@ -34,6 +34,7 @@
 #using scripts\zm\archi_commands;
 #using scripts\zm\archi_save;
 #using scripts\zm\archi_shop;
+#using scripts\zm\archi_mappings;
 
 #insert scripts\zm\_zm_perks.gsh;
 #insert scripts\shared\shared.gsh;
@@ -64,7 +65,8 @@ REGISTER_SYSTEM_EX("archipelago_core", &__init__, &__main__, undefined)
 
 function __init__()
 {
-    clientfield::register("world", "ap_mystery_box_changes", 1, 28, "int");
+    clientfield::register("world", "ap_mystery_box_changes", 1, 31, "int");
+    clientfield::register("world", "ap_box_contents", 1, 3, "int");
     level flag::init("ap_prevent_checkpoints", 1);
     level flag::init("ap_attachment_rando_ready");
     level flag::init("ap_loaded_save_data");
@@ -182,10 +184,10 @@ function init_string_mappings()
 function on_archi_connect_settings()
 {
     level.archi.perk_limit_default_modifier = GetDvarInt("ARCHIPELAGO_PERK_LIMIT_DEFAULT_MODIFIER", 0);
-    level.archi.map_specific_wallbuys = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_WALLBUYS", 0);
     level.archi.map_specific_machines = GetDvarInt("ARCHIPELAGO_MAP_SPECIFIC_MACHINES", 0);
     level.archi.mystery_box_special_items = GetDvarInt("ARCHIPELAGO_MYSTERY_BOX_SPECIAL", 0);
     level.archi.mystery_box_regular_items = GetDvarInt("ARCHIPELAGO_MYSTERY_BOX_REGULAR", 0);
+    level.archi.mystery_box_expanded = GetDvarInt("ARCHIPELAGO_MYSTERY_BOX_EXPANDED", 0);
     level.archi.difficulty_gorod_egg_cooldown = GetDvarInt("ARCHIPELAGO_DIFFICULTY_GOROD_EGG_COOLDOWN", 0);
     level.archi.difficulty_gorod_dragon_wings = GetDvarInt("ARCHIPELAGO_DIFFICULTY_GOROD_DRAGON_WINGS", 0);
     level.archi.difficulty_ee_checkpoints = GetDvarInt("ARCHIPELAGO_DIFFICULTY_EE_CHECKPOINTS", 0);
@@ -240,7 +242,6 @@ function game_start()
     level.archi.excluded_craftable_items = [];
     level.archi.ap_box_keys = [];
     level.archi.ap_box_states = [];
-    level.archi.ap_weapon_bits = [];
     level flag::init("ap_map_locked");
     level.archi.map_key_item = undefined;
 
@@ -269,6 +270,25 @@ function game_start()
     mapName = GetDvarString( "mapname" );
 
     level.archi._mapName = mapName;
+
+    // Setup mystery box
+    archi_mappings::init_weapon_item_names();
+    level.archi.ap_weapon_bits = archi_items::get_box_bit_table(mapName, level.archi.mystery_box_regular_items, level.archi.mystery_box_special_items, level.archi.mystery_box_expanded);
+    box_settings_bits = 0;
+    if (level.archi.mystery_box_regular_items)
+    {
+        box_settings_bits |= 1;
+    }
+    if (level.archi.mystery_box_special_items)
+    {
+        box_settings_bits |= 2;
+    }
+    if (level.archi.mystery_box_expanded)
+    {
+        box_settings_bits |= 4;
+    }
+    level clientfield::set("ap_box_contents", box_settings_bits);
+
     level.archi.wallbuy_mappings = [];
     level.archi.wallbuys = [];
     level.archi.craftable_piece_to_location = [];
@@ -343,15 +363,7 @@ function game_start()
         level.archi.craftable_piece_to_location["police_box_fuse_02"] = level.archi.mapString + " Civil Protector Part Pickup - Canals Fuse";
         level.archi.craftable_piece_to_location["police_box_fuse_03"] = level.archi.mapString + " Civil Protector Part Pickup - Footlight Fuse";
 
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_0",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",2);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            universal_box_registration();
-        }
+        archi_items::RegisterMapWeapons(mapName);
 
         archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
         archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -372,19 +384,6 @@ function game_start()
         archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
         archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-
-        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-        // archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-        archi_items::RegisterWeapon("Wallbuy - Bootlegger",&archi_items::give_Weapon_Bootlegger,"smg_sten");
-        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
         level thread archi_zod::setup_locations();
 
@@ -415,14 +414,7 @@ function game_start()
         level.archi.craftable_piece_to_location["gravityspike_part_guards"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Guards";
         level.archi.craftable_piece_to_location["gravityspike_part_handle"] = level.archi.mapString + " Ragnarok DG-4 Part Pickup - Handle";
 
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            universal_box_registration();
-        }
+        archi_items::RegisterMapWeapons(mapName);
 
         level thread archi_castle::setup_locations();
 
@@ -450,19 +442,6 @@ function game_start()
         archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
     
-        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-        // archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-        archi_items::RegisterWeapon("Wallbuy - BRM",&archi_items::give_Weapon_BRM,"lmg_light");
-        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-
         spawn_shop((895, 684, -48), (0, -170, 0));
 
         level.archi.save_state_manager = &archi_castle::save_state_manager;
@@ -490,15 +469,7 @@ function game_start()
         level.archi.craftable_piece_to_location["gasmask_part_filter"] = level.archi.mapString + " Gasmask Part Pickup - Filter";
         level.archi.craftable_piece_to_location["gasmask_part_strap"] = level.archi.mapString + " Gasmask Part Pickup - Strap";
 
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-            archi_items::RegisterBoxWeapon("Mystery Box - KT-4","hero_mirg2000",2);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            universal_box_registration();
-        }
+        archi_items::RegisterMapWeapons(mapName);
 
         archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
         archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -529,21 +500,6 @@ function game_start()
         archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
 
-        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-        // archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-        archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
-        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-        archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
-        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-        archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
-        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
-        
         spawn_shop((-411, -2048, -426), (0, 6, 0));
 
         level.archi.save_state_manager = &archi_island::save_state_manager;
@@ -577,15 +533,7 @@ function game_start()
         level.archi.excluded_craftable_items["dragonride_part_codes"] = 1;
         level.archi.excluded_craftable_items["dragonride_part_map"] = 1;
 
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 3","raygun_mark3",2);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            universal_box_registration();
-        }
+        archi_items::RegisterMapWeapons(mapName);
 
         archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
         archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
@@ -607,21 +555,6 @@ function game_start()
         archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
         archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-
-        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-        // archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-        archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
-        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-        archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
-        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-        archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
-        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
         spawn_shop((-174, 1903, 176), (0, -138, 0));
 
@@ -656,17 +589,7 @@ function game_start()
         archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
         archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
 
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Apothicon Servant","idgun_genesis_0",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Li'l Arnies","octobomb",1);
-            archi_items::RegisterBoxWeapon("Mystery Box - Ragnarok DG-4s","hero_gravityspikes_melee",2);
-            archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun",3);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",4);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            universal_box_registration();
-        }
+        archi_items::RegisterMapWeapons(mapName);
 
         // Machines
         archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
@@ -680,21 +603,6 @@ function game_start()
         // Wunderfizz
         archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
         archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
-
-        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-        // archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-        archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
-        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-        archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
-        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-        archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
-        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
         spawn_shop((-4757, -264, -448), (0, 87, 0));
 
@@ -714,15 +622,7 @@ function game_start()
 
         archi_factory::setup_locations();
         
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-            archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun",2);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            universal_box_registration();
-        }
+        archi_items::RegisterMapWeapons(mapName);
 
         // Register Possible Global Items - Item name, callback, clientfield
         archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
@@ -732,17 +632,6 @@ function game_start()
         archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
         archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
         archi_items::RegisterPerk("Dead Shot",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-
-        archi_items::RegisterWeapon("Wallbuy - HVK-30",&archi_items::give_Weapon_HVK,"ar_cqb");
-        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-        // archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-        archi_items::RegisterWeapon("Wallbuy - Kuda",&archi_items::give_Weapon_Kuda,"smg_standard");
-        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-        archi_items::RegisterWeapon("Wallbuy - KRM-262",&archi_items::give_Weapon_KRM,"shotgun_pump");
-        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
 
         spawn_shop((-254, 608, 7), (0, -90, 0));
 
@@ -763,30 +652,7 @@ function game_start()
         
         archi_theater::setup_locations();
 
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Monkey Bombs","cymbal_monkey",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","ray_gun",1);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun Mark 2","raygun_mark2",2);
-            archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun",3);
-            archi_items::RegisterBoxWeapon("Mystery Box - Annihilator","hero_annihilator",4);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            universal_box_registration();
-        }
-        
-        archi_items::RegisterWeapon("Wallbuy - RK5",&archi_items::give_Weapon_RK5,"pistol_burst");
-        // archi_items::RegisterWeapon("Wallbuy - Sheiva",&archi_items::give_Weapon_Sheiva,"ar_marksman");
-        archi_items::RegisterWeapon("Wallbuy - Pharo",&archi_items::give_Weapon_Pharo,"smg_burst");
-        archi_items::RegisterWeapon("Wallbuy - KN-44",&archi_items::give_Weapon_KN44,"ar_standard");
-        archi_items::RegisterWeapon("Wallbuy - MP40",&archi_items::give_Weapon_HVK,"smg_mp40_1940");
-        archi_items::RegisterWeapon("Wallbuy - L-CAR",&archi_items::give_Weapon_LCAR,"pistol_fullauto");
-        archi_items::RegisterWeapon("Wallbuy - Vesper",&archi_items::give_Weapon_Vesper,"smg_fastfire");
-        archi_items::RegisterWeapon("Wallbuy - ICR-1",&archi_items::give_Weapon_ICR,"ar_accurate");
-        archi_items::RegisterWeapon("Wallbuy - VMP",&archi_items::give_Weapon_VMP,"smg_versatile");
-        archi_items::RegisterWeapon("Wallbuy - Argus",&archi_items::give_Weapon_Argus,"shotgun_precision");
-        archi_items::RegisterWeapon("Wallbuy - M8A7",&archi_items::give_Weapon_M8A7,"ar_longburst");
-        archi_items::RegisterWeapon("Wallbuy - Bowie Knife",&archi_items::give_Weapon_BowieKnife,"melee_bowie");
+        archi_items::RegisterMapWeapons(mapName);
 
         // Machines
         archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
@@ -834,27 +700,7 @@ function game_start()
 
         archi_westernz::setup_locations();
 
-        if (level.archi.mystery_box_special_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Homunculus Bomb","grenade_homunculus",0);
-            archi_items::RegisterBoxWeapon("Mystery Box - Thundergun","thundergun",1);
-            archi_items::RegisterBoxWeapon("Mystery Box - Blundergat","t8_shotgun_blundergat",2);
-            archi_items::RegisterBoxWeapon("Mystery Box - Raygun","t8_raygun",3);
-            archi_items::RegisterBoxWeapon("Mystery Box - Wunderwaffe DG-2","tesla_gun",4);
-        }
-
-        if (level.archi.mystery_box_regular_items == 1) {
-            archi_items::RegisterBoxWeapon("Mystery Box - Lewis","ww2_lewis",4);
-            archi_items::RegisterBoxWeapon("Mystery Box - M1831 Blundergat","m1831",4);
-            archi_items::RegisterBoxWeapon("Mystery Box - Nightbreaker","bo3_boneglass",4);
-            archi_items::RegisterBoxWeapon("Mystery Box - Model 1897","t8_m1897",4);
-        }
-
-        archi_items::RegisterWeapon("Wallbuy - Winchester Model 94",&archi_items::give_Weapon_Sheiva,"aw_winchester");
-        archi_items::RegisterWeapon("Wallbuy - Escargot",&archi_items::give_Weapon_Sheiva,"bo4_escargot");
-        archi_items::RegisterWeapon("Wallbuy - Ribeyrolles",&archi_items::give_Weapon_Sheiva,"ww2_ribeyrolles");
-        archi_items::RegisterWeapon("Wallbuy - Model 1903",&archi_items::give_Weapon_Sheiva,"m1903_epic");
-        archi_items::RegisterWeapon("Wallbuy - Remington M1889",&archi_items::give_Weapon_Sheiva,"m1889");
-        archi_items::RegisterWeapon("Wallbuy - Red Talon",&archi_items::give_Weapon_Sheiva,"ww2_raven");
+        archi_items::RegisterMapWeapons(mapName);
 
         // Register Possible Global Items - Item name, callback, clientfield
         archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
@@ -1100,23 +946,41 @@ function award_item(item)
         ap_item.count += 1;
         if (isdefined(ap_item.type))
         {
-            if (ap_item.type == "box_weapon" && isdefined(ap_item.weapon_name))
+            if (ap_item.type == "weapon" && isdefined(ap_item.weapon_name))
             {
                 weapon_name = ap_item.weapon_name;
-                weapon = GetWeapon(weapon_name);
-                z_weapon = level.zombie_weapons[weapon];
-                if (isdefined(z_weapon))
+                // Enable wallbuy
+                if (isdefined(level.archi.wallbuys))
                 {
-                    z_weapon.is_in_box = 1;
+                    level.archi.wallbuys[ap_item.weapon_name] = true;
                 }
-                // Update clientfield state
-                level.archi.ap_box_states[weapon_name] = 0;
-                update_box_clientfield();
+
+                // If it's a box weapon (has a bit), add to box
+                if (isdefined(level.archi.ap_weapon_bits[ap_item.weapon_name]))
+                {
+                    IPrintLn("In box");
+                    weapon = GetWeapon(weapon_name);
+                    z_weapon = level.zombie_weapons[weapon];
+                    if (isdefined(z_weapon))
+                    {
+                        z_weapon.is_in_box = 1;
+                        level.archi.ap_box_states[weapon_name] = 1;
+                    } else
+                    {
+                        IPrintLn("cant find " + weapon_name);
+                    }
+                    // Update clientfield state
+                    update_box_clientfield();
+                } else
+                {
+                    IPrintLn("Not in box");
+                }
+
             }
         }
         else
         {
-            self [[ap_item.getFunc]]();
+            self [[ap_item.getFunc]](item);
         }
 
         // Notification on Hud
@@ -1318,37 +1182,19 @@ function custom_perk_validation(player)
     return true;
 }
 
-function wrapper_func_override_wallbuy_prompt(player)
-{
-    weapon = self.weapon;
-    IPrintLn(weapon.name);
-    apItem = level.archi.wallbuy_mappings[weapon.name];
-    if ((!isdefined(apItem)) || (isdefined(level.archi.wallbuys[weapon.name]) && IS_TRUE(level.archi.wallbuys[weapon.name]))) 
-    {
-        if (isdefined(level.archi.original_func_override_wallbuy_prompt))
-        {
-            return self [[level.archi.original_func_override_wallbuy_prompt]](player);
-        }
-        return true;
-    }
-}
-
 // self is weapon spawn
 function func_override_wallbuy_prompt(player)
 {
     weapon = self.weapon;
     apItem = level.archi.wallbuy_mappings[weapon.name];
-    if ((!isdefined(apItem)) || (isdefined(level.archi.wallbuys[weapon.name]) && IS_TRUE(level.archi.wallbuys[weapon.name]))) 
+    wallbuy = level.archi.wallbuys[weapon.name];
+    if ((!isdefined(apItem)) || (isdefined(wallbuy) && IS_TRUE(wallbuy))) 
     {
         return true;
     } 
     else
     {
         hint_string = "'" + apItem + "' is required";
-        if (level.archi.map_specific_wallbuys)
-        {
-            hint_string = "'" + level.archi.mapString + " " + apItem + "' is required";
-        }
         self SetHintString(hint_string);
         return false;
     }
@@ -1358,55 +1204,27 @@ function func_override_wallbuy_prompt(player)
 // self is player
 function check_override_wallbuy_purchase(weapon, weapon_spawn)
 {
-    if (IS_TRUE(level.archi.wallbuys[weapon.name])) 
+    wallbuy = level.archi.wallbuys[weapon.name];
+    if (IS_TRUE(wallbuy)) 
     {
         return false;
     }
     return true;
 }
 
-
-// Good for most official maps
-function universal_box_registration()
-{
-    // 2 best of each, ideally
-    archi_items::RegisterBoxWeapon("Mystery Box - KN-44","ar_standard",5);
-    archi_items::RegisterBoxWeapon("Mystery Box - Argus","shotgun_precision",6);
-    archi_items::RegisterBoxWeapon("Mystery Box - BRM","lmg_light",7);
-    archi_items::RegisterBoxWeapon("Mystery Box - Gorgon","lmg_slowfire",8);
-    archi_items::RegisterBoxWeapon("Mystery Box - MG-08","lmg_mg08",9);
-    archi_items::RegisterBoxWeapon("Mystery Box - STG-44","ar_stg44",10);
-    archi_items::RegisterBoxWeapon("Mystery Box - MP40","smg_mp40_1940",11);
-    archi_items::RegisterBoxWeapon("Mystery Box - M16","ar_m16",12);
-    archi_items::RegisterBoxWeapon("Mystery Box - AK74u","smg_ak74u",13);
-    archi_items::RegisterBoxWeapon("Mystery Box - Galil","ar_galil",14);
-    archi_items::RegisterBoxWeapon("Mystery Box - FFAR","ar_famas",15);
-    archi_items::RegisterBoxWeapon("Mystery Box - Drakon","sniper_fastsemi",16);
-    archi_items::RegisterBoxWeapon("Mystery Box - Locus","sniper_fastbolt",17);
-    archi_items::RegisterBoxWeapon("Mystery Box - Man-o-War","ar_damage",18);
-    archi_items::RegisterBoxWeapon("Mystery Box - HVK-30","ar_cqb",19);
-    archi_items::RegisterBoxWeapon("Mystery Box - ICR-1","ar_accurate",20);
-    archi_items::RegisterBoxWeapon("Mystery Box - Haymaker 12","shotgun_fullauto",21);
-    archi_items::RegisterBoxWeapon("Mystery Box - 205 Brecci","shotgun_semiauto",22);
-    archi_items::RegisterBoxWeapon("Mystery Box - Dingo","lmg_cqb",23);
-    archi_items::RegisterBoxWeapon("Mystery Box - 48 Dredge","lmg_heavy",24);
-    // RPK is on about half the maps
-    archi_items::RegisterBoxWeapon("Mystery Box - RPK","lmg_rpk",25);
-    archi_items::RegisterBoxWeapon("Mystery Box - VMP","smg_versatile",26);
-    archi_items::RegisterBoxWeapon("Mystery Box - Vesper","smg_fastfire",27);
-}
-
 function update_box_clientfield()
 {
-    removed_items = 0;
-    foreach (weapon_name in GetArrayKeys(level.archi.ap_weapon_bits))
+    available_items = 0;
+    weapon_names = GetArrayKeys(level.archi.ap_weapon_bits);
+    foreach (weapon_name in weapon_names)
     {
-        if (level.archi.ap_box_states[weapon_name] == 1)
+        bit_index = level.archi.ap_weapon_bits[weapon_name];
+        if (bit_index <= 30 && level.archi.ap_box_states[weapon_name] == 1)
         {
-            removed_items |= (1 << level.archi.ap_weapon_bits[weapon_name]);
+            available_items |= (1 << bit_index);
         }
     }
-    level clientfield::set("ap_mystery_box_changes", removed_items);
+    level clientfield::set("ap_mystery_box_changes", available_items);
 }
 
 function patch_wunderfizz()
