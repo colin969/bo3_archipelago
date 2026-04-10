@@ -958,24 +958,16 @@ function award_item(item)
                 // If it's a box weapon (has a bit), add to box
                 if (isdefined(level.archi.ap_weapon_bits[ap_item.weapon_name]))
                 {
-                    IPrintLn("In box");
                     weapon = GetWeapon(weapon_name);
                     z_weapon = level.zombie_weapons[weapon];
                     if (isdefined(z_weapon))
                     {
                         z_weapon.is_in_box = 1;
                         level.archi.ap_box_states[weapon_name] = 1;
-                    } else
-                    {
-                        IPrintLn("cant find " + weapon_name);
                     }
                     // Update clientfield state
                     update_box_clientfield();
-                } else
-                {
-                    IPrintLn("Not in box");
                 }
-
             }
         }
         else

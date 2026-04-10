@@ -108,7 +108,6 @@ function update_mystery_box_settings( localclientnum, oldval, newval, bnewent, b
 
 function update_mystery_box( localclientnum, oldval, newval, bnewent, binitialsnap, fieldname, bwastimejump )
 {
-    IPrintLnBold("CHANGING");
     added_weapons = 0;
     if (level._ap_weapon_data.size > 0)
     {
@@ -139,8 +138,6 @@ function update_mystery_box( localclientnum, oldval, newval, bnewent, binitialsn
             AddZombieBoxWeapon(weapon, weapon.worldmodel, weapon.isdualwield);
             added_weapons++;
         }
-
-        IPrintLnBold("Set box weapons for " + added_weapons);
 
         if (added_weapons == 0)
         {
