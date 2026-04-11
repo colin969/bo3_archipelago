@@ -32,6 +32,12 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
         } )
 
 		table.insert( tabList, {
+            models = { tabName = "The Giant", tabWidget = "CoD.StartMenu_ApLocations_TheGiant",
+			 	tabIcon = "" },
+            properties = { tabId = "gameOptions" }
+        } )
+
+		table.insert( tabList, {
             models = { tabName = "Der Eisendrache", tabWidget = "CoD.StartMenu_ApLocations_Castle",
 				tabIcon = "" },
             properties = { tabId = "gameOptions" }
@@ -51,6 +57,18 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
 
 		table.insert( tabList, {
             models = { tabName = "Revelations", tabWidget = "CoD.StartMenu_ApLocations_Genesis",
+			 	tabIcon = "" },
+            properties = { tabId = "gameOptions" }
+        } )
+
+		table.insert( tabList, {
+            models = { tabName = "Kino der Toten", tabWidget = "CoD.StartMenu_ApLocations_KinoDerToten",
+			 	tabIcon = "" },
+            properties = { tabId = "gameOptions" }
+        } )
+
+		table.insert( tabList, {
+            models = { tabName = "Wanted", tabWidget = "CoD.StartMenu_ApLocations_Wanted",
 			 	tabIcon = "" },
             properties = { tabId = "gameOptions" }
         } )

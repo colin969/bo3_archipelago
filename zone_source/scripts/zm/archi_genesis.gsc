@@ -129,8 +129,35 @@ function clear_state()
     LUINotifyEvent(&"ap_clear_data", 0);
 }
 
+function patch_stomach_gas()
+{
+    while(true)
+    {
+        level.var_a5d2ba4 = 1;
+        level waittill("exploderfxexp_106");
+        wait(154);
+        while (level.var_a5d2ba4 != 0)
+        {
+            WAIT_SERVER_FRAME
+        }
+    }
+}
+
+function patch_fury_counter()
+{
+    for(kill_count = 0; kill_count < 40; kill_count++)
+	{
+		level waittill("fury_head_sniper_kill");
+	}
+    level flag::set("fury_head_sniper_kill");
+    playsoundatposition("zmb_wearable_fury_step", (0, 0, 0));
+}
+
 function setup_main_quest()
 {
+    level thread patch_stomach_gas();
+    level thread patch_fury_counter();
+
     level thread _any_power_station(level.archi.mapString + " Main Quest - Override a Corruption Engine");
     level thread _all_power_stations(level.archi.mapString + " Main Quest - Override all 4 Corruption Engines");
     level thread _flag_to_location_thread("apotho_pack_freed", level.archi.mapString + " Main Quest - Free the Pack-A-Punch");

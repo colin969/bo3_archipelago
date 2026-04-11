@@ -53,8 +53,7 @@ function get_map_weapon_lists(map_name)
             );
             lists.special = array(
                 "octobomb",
-                "ray_gun",
-                "idgun_0"
+                "ray_gun"
             );
             break;
             

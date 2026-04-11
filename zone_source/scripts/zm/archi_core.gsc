@@ -1444,10 +1444,10 @@ function deathlink_send_monitor()
         callback::on_connect(&deathlink_any_player_death);
     }
 
-    // Monitor both end game scenarios
-    level thread end_game_via_player_death_monitor();
-
     level waittill("end_game");
+    if (isdefined(level.host_ended_game) && level.host_ended_game == 1) {
+        return;
+    }
     // Check if game ended from a player disconnecting while all others players are on the ground, they'll all be in last stand
     foreach (player in level.players)
     {
@@ -1456,6 +1456,7 @@ function deathlink_send_monitor()
             return;
         }
     }
+
 
     send_deathlink();
 }
@@ -1488,16 +1489,6 @@ function cleared_restart_ready_montior()
             }
             level notify("end_game");
         }
-    }
-}
-
-function end_game_via_player_death_monitor()
-{
-    level endon("end_game");
-
-    level waittill("last_player_died");
-    if (level.host_ended_game != 1) {
-        send_deathlink();
     }
 }
 

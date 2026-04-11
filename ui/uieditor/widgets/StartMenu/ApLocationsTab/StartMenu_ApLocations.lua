@@ -24,7 +24,7 @@ CoD.StartMenu_ApLocations.new = function( menu, controller )
 	self.itemList:setTopBottom( true, false, 0, 0 )
 	self.itemList:setWidgetType( CoD.StartMenu_ApLocations_ListItem )
 	self.itemList:setHorizontalCount( 3 )
-	self.itemList:setVerticalCount( 28 )
+	self.itemList:setVerticalCount( 16 )
 	self.itemList:setVerticalCounter( CoD.verticalCounter )
     self.itemList:setVerticalScrollbar( CoD.verticalScrollbar )
 	menu:registerEventHandler( "menu_opened", function()
@@ -78,5 +78,33 @@ CoD.StartMenu_ApLocations_Genesis = InheritFrom( CoD.StartMenu_ApLocations )
 CoD.StartMenu_ApLocations_Genesis.new = function( menu, controller )
 	self = CoD.StartMenu_ApLocations.new( menu, controller )
 	self.itemList:setDataSource( "StartMenu_ApLocations_Genesis" )
+	return self
+end
+
+CoD.StartMenu_ApLocations_Genesis = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Genesis.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Genesis" )
+	return self
+end
+
+CoD.StartMenu_ApLocations_TheGiant = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_TheGiant.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_TheGiant" )
+	return self
+end
+
+CoD.StartMenu_ApLocations_KinoDerToten = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_KinoDerToten.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_KinoDerToten" )
+	return self
+end
+
+CoD.StartMenu_ApLocations_Wanted = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Wanted.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Wanted" )
 	return self
 end

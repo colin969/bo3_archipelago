@@ -219,3 +219,66 @@ DataSources.StartMenu_ApLocations_Genesis = ListHelper_SetupDataSource( "StartMe
 
     return ApLocations
 end, true )
+
+DataSources.StartMenu_ApLocations_TheGiant = ListHelper_SetupDataSource( "StartMenu_ApLocations_TheGiant", function( controller )
+    local ApLocations = {}
+    local prefixLength = string.len("(The Giant) ")
+
+    for code = 1100, 1999 do
+        local location = locations.IDToLocation[code]
+        local checked = Archi.CheckedLocations[code] == true
+        if location then
+            local trimmedLocation = string.sub(location, prefixLength + 1)
+            if checked then
+                trimmedLocation = "^2" .. trimmedLocation
+            end
+            table.insert( ApLocations, {
+                models = { name = trimmedLocation, code = code }
+            })
+        end
+    end
+
+    return ApLocations
+end, true )
+
+DataSources.StartMenu_ApLocations_KinoDerToten = ListHelper_SetupDataSource( "StartMenu_ApLocations_KinoDerToten", function( controller )
+    local ApLocations = {}
+    local prefixLength = string.len("(Kino der Toten) ")
+
+    for code = 11100, 11999 do
+        local location = locations.IDToLocation[code]
+        local checked = Archi.CheckedLocations[code] == true
+        if location then
+            local trimmedLocation = string.sub(location, prefixLength + 1)
+            if checked then
+                trimmedLocation = "^2" .. trimmedLocation
+            end
+            table.insert( ApLocations, {
+                models = { name = trimmedLocation, code = code }
+            })
+        end
+    end
+
+    return ApLocations
+end, true )
+
+DataSources.StartMenu_ApLocations_Wanted = ListHelper_SetupDataSource( "StartMenu_ApLocations_Wanted", function( controller )
+    local ApLocations = {}
+    local prefixLength = string.len("(Wanted) ")
+
+    for code = 20100, 20999 do
+        local location = locations.IDToLocation[code]
+        local checked = Archi.CheckedLocations[code] == true
+        if location then
+            local trimmedLocation = string.sub(location, prefixLength + 1)
+            if checked then
+                trimmedLocation = "^2" .. trimmedLocation
+            end
+            table.insert( ApLocations, {
+                models = { name = trimmedLocation, code = code }
+            })
+        end
+    end
+
+    return ApLocations
+end, true )

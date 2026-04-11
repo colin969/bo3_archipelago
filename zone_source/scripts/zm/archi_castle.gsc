@@ -637,6 +637,14 @@ function restore_map_state()
         }
     }
     archi_save::restore_flag("death_ray_trap_used");
+    archi_save::restore_flag("ee_fuse_placed");
+    if (level flag::get("ee_fuse_placed"))
+    {
+        fuse_box = getent("fuse_box", "targetname");
+        fuse_box showpart("j_chip01");
+		fuse_box showpart("j_chip02");
+        wait(0.1);
+    }
     archi_save::restore_flag("ee_safe_open");
     // Solve safe puzzle
     if (level flag::get("ee_safe_open"))
@@ -645,6 +653,7 @@ function restore_map_state()
         level.var_ab58bca7 = array(0, 0, 0);
         level.var_a44ebbe8 = array(1, 1, 1);
         level notify("hash_a126360f");
+        level flag::set("dimension_set");
     }
     wait(0.1);
     archi_save::restore_flag("tesla_connector_launch_platform");
@@ -660,13 +669,6 @@ function restore_map_state()
         tower = struct::get("tc_lower_tower");
 	    util::spawn_model("p7_zm_ctl_deathray_base_part", tower.origin, tower.angles);
 	    exploder::exploder("fxexp_711");
-    }
-    archi_save::restore_flag("ee_fuse_placed");
-    if (level flag::get("ee_fuse_placed"))
-    {
-        fuse_box = getent("fuse_box", "targetname");
-        fuse_box showpart("j_chip01");
-		fuse_box showpart("j_chip02");
     }
     wait(0.1);
     archi_save::restore_flag("ee_start_done");
