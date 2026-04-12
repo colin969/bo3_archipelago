@@ -97,7 +97,6 @@ end
 
 Archi.DeathlinkRecv = function(timestamp)
   -- Send to GSC
-  Archi.LogMessage("Deathlink Recieved");
   Engine.SetDvar("ARCHIPELAGO_DEATHNLINK_RECIEVED", "true")
 end
 
@@ -642,10 +641,18 @@ Archi.LogMessageLoop = function()
 end
 
 Archi.KeepConnected = function ()
-  local server, slot, password = settings_file.load_settings();
+  local server, slot, password, usePassword, enableDeathlink = settings_file.load_settings();
+  if usePassword ~= 1 then
+    password = ""
+  end
+  if enableDeathlink == 1 then
+    Engine.SetDvar( "ARCHIPELAGO_CLIENT_DEATHLINK", 1 )
+  else
+    Engine.SetDvar( "ARCHIPELAGO_CLIENT_DEATHLINK", 0 )
+  end
   if Archipelago then
     --TODO: change the \zone (base path) when its workshop
-    Archipelago.Connect(server, slot, "zone\\", password)
+    Archipelago.Connect(server, slot, password, "zone\\")
     --TODO: only do this on an actual connect
     Engine.SetDvar( "ARCHIPELAGO_CONNECTED", "TRUE" )
   end

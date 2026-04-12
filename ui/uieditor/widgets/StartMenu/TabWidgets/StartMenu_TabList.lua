@@ -1,14 +1,14 @@
 require( "ui.uieditor.widgets.StartMenu.TabWidgets.StartMenu_TabWidget" )
 
 local PostLoadFunc = function( self, controller, menu )
-	menu:AddButtonCallbackFunction( menu, controller, Enum.LUIButton.LUI_KEY_LB, nil, function( element, event, controller, menu )
+	menu:AddButtonCallbackFunction( menu, controller, Enum.LUIButton.LUI_KEY_UP, nil, function( element, event, controller, menu )
 		if not PropertyIsTrue( self, "m_disableNavigation" ) then
-			self.grid:navigateItemLeft()
+			self.grid:navigateItemUp()
 		end
 	end, AlwaysFalse, false )
-	menu:AddButtonCallbackFunction( menu, controller, Enum.LUIButton.LUI_KEY_RB, nil, function( element, event, controller, menu )
+	menu:AddButtonCallbackFunction( menu, controller, Enum.LUIButton.LUI_KEY_DOWN, nil, function( element, event, controller, menu )
 		if not PropertyIsTrue( self, "m_disableNavigation" ) then
-			self.grid:navigateItemRight()
+			self.grid:navigateItemDown()
 		end
 	end, AlwaysFalse, false )
 

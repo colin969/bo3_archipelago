@@ -1,3 +1,5 @@
+require( "ui.uieditor.widgets.Scrollbars.verticalScrollbar" )
+
 DataSources.StartMenu_ApItems = ListHelper_SetupDataSource( "StartMenu_ApItems", function( controller )
     local rows = {}
 
@@ -103,7 +105,6 @@ CoD.StartMenu_ApItems.new = function ( menu, controller )
 	self.itemList:setWidgetType( CoD.StartMenu_ApItems_Item )
 	self.itemList:setHorizontalCount( 3 )
 	self.itemList:setVerticalCount( 16 )
-	self.itemList:setVerticalCounter( CoD.verticalCounter )
     self.itemList:setVerticalScrollbar( CoD.verticalScrollbar )
     self.itemList:setDataSource( "StartMenu_ApItems" )
 	self.itemList:setSpacing( 1 )

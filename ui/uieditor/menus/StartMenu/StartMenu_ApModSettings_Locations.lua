@@ -21,7 +21,7 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
     if Engine.IsZombiesGame() then
         
         table.insert( tabList, {
-            models = { tabIcon = CoD.buttonStrings.shoulderl },
+            models = { tabIcon = CoD.buttonStrings.up },
             properties = { m_mouseDisabled = true }
         } )
 
@@ -74,7 +74,7 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
         } )
         
         table.insert( tabList, {
-            models = { tabIcon = CoD.buttonStrings.shoulderr },
+            models = { tabIcon = CoD.buttonStrings.down },
             properties = { m_mouseDisabled = true }
         } )
     end
@@ -106,6 +106,7 @@ CoD.StartMenu_ApModSettings_Locations.new = function( menu, controller )
 	self:addElement( self.TabFrame )
 
 	self.TabList = CoD.StartMenu_TabList.new( menu, controller )
+	self.TabList:makeFocusable()
 	self.TabList:setLeftRight( true, false, 40, 300)
 	self.TabList:setTopBottom( true, false, 0, 0 )
 	self.TabList.grid:setHorizontalCount( 1 )

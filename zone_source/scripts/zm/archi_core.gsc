@@ -195,6 +195,11 @@ function on_archi_connect_settings()
     level.archi.attachments_randomized = GetDvarInt("ARCHIPELAGO_ATTACHMENT_RANDO_ENABLED", 0);
     level.archi.attachments_sight_weight = GetDvarInt("ARCHIPELAGO_ATTACHMENT_RANDO_SIGHT_SIZE_WEIGHT", 25);
     level.archi.deathlink_enabled = GetDvarInt("ARCHIPELAGO_DEATHLINK_ENABLED", 0);
+    clientDeathlink = GetDvarInt("ARCHIPELAGO_CLIENT_DEATHLINK", 0);
+    if (level.archi.deathlink_enabled == 1 && clientDeathlink == 0)
+    {
+        level.archi.deathlink_enabled = 0;
+    }
     level.archi.deathlink_send_mode = GetDvarInt("ARCHIPELAGO_DEATHLINK_SEND_MODE", 0);
     level.archi.deathlink_recv_mode = GetDvarInt("ARCHIPELAGO_DEATHLINK_RECV_MODE", 0);
 
@@ -665,6 +670,8 @@ function game_start()
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
         archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
         archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+
+        spawn_shop((-184, -840, 80), (0, 0, 0));
 
         level.archi.save_state_manager = &archi_theater::save_state_manager;
         level.archi.save_player_data = &archi_theater::save_player_data;
