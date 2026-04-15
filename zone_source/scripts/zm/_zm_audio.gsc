@@ -1,5 +1,4 @@
 #using scripts\codescripts\struct;
-
 #using scripts\shared\array_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\clientfield_shared;
@@ -1274,15 +1273,140 @@ function sndLocationQueue( zone )
 
 function sndMusicSystem_EESetup(state, origin1, origin2, origin3, origin4, origin5)
 {
+	sndeearray = array();
+	if(isdefined(origin1))
+	{
+		if(!isdefined(sndeearray))
+		{
+			sndeearray = [];
+		}
+		else if(!isarray(sndeearray))
+		{
+			sndeearray = array(sndeearray);
+		}
+	}
+	sndeearray[sndeearray.size] = origin1;
+	if(isdefined(origin2))
+	{
+		if(!isdefined(sndeearray))
+		{
+			sndeearray = [];
+		}
+		else if(!isarray(sndeearray))
+		{
+			sndeearray = array(sndeearray);
+		}
+	}
+	sndeearray[sndeearray.size] = origin2;
+	if(isdefined(origin3))
+	{
+		if(!isdefined(sndeearray))
+		{
+			sndeearray = [];
+		}
+		else if(!isarray(sndeearray))
+		{
+			sndeearray = array(sndeearray);
+		}
+	}
+	sndeearray[sndeearray.size] = origin3;
+	if(isdefined(origin4))
+	{
+		if(!isdefined(sndeearray))
+		{
+			sndeearray = [];
+		}
+		else if(!isarray(sndeearray))
+		{
+			sndeearray = array(sndeearray);
+		}
+	}
+	sndeearray[sndeearray.size] = origin4;
+	if(isdefined(origin5))
+	{
+		if(!isdefined(sndeearray))
+		{
+			sndeearray = [];
+		}
+		else if(!isarray(sndeearray))
+		{
+			sndeearray = array(sndeearray);
+		}
+	}
+	sndeearray[sndeearray.size] = origin5;
+	if(sndeearray.size > 0)
+	{
+		level.sndeemax = sndeearray.size;
+		level.sndeecount = 0;
+		foreach(origin in sndeearray)
+		{
+			level thread sndmusicsystem_eewait(origin, state);
+		}
+	}
 }
 function sndMusicSystem_EEWait( origin, state )
 {
+	temp_ent = spawn("script_origin", origin);
+	temp_ent playloopsound("zmb_meteor_loop");
+	temp_ent thread secretuse("main_music_egg_hit", vectorscale((0, 1, 0), 255), &sndmusicsystem_eeoverride);
+	temp_ent waittill("main_music_egg_hit", player);
+	temp_ent stoploopsound(1);
+	player playsound("zmb_meteor_activate");
+	level.sndeecount++;
+	if(level.sndeecount >= level.sndeemax)
+	{
+		level notify("hash_a1b1dadb");
+		level thread sndmusicsystem_playstate(state);
+	}
+	temp_ent delete();
 }
+
 function sndMusicSystem_EEOverride(arg1,arg2)
 {
+	if(isdefined(level.musicsystem.currentplaytype) && level.musicsystem.currentplaytype >= 4)
+	{
+		return false;
+	}
+	return true;
 }
+
 function secretUse(notify_string, color, qualifier_func, arg1, arg2 )
 {
+	WAIT_SERVER_FRAME
+	while(true)
+	{
+		if(!isdefined(self))
+		{
+			return;
+		}
+		/#
+			print3d(self.origin, "", color, 1);
+		#/
+		if(isdefined(level.players) && IsArray(level.players) && level.players.size > 0)
+		{
+			players = level.players;
+			foreach(player in players)
+			{
+				qualifier_passed = 1;
+				if(isdefined(qualifier_func))
+				{
+					qualifier_passed = player [[qualifier_func]](arg1, arg2);
+				}
+				if(IS_TRUE(qualifier_passed) && distancesquared(self.origin, player.origin) < 4096)
+				{
+					if(player laststand::is_facing(self))
+					{
+						if(player usebuttonpressed())
+						{
+							self notify(notify_string, player);
+							return;
+						}
+					}
+				}
+			}
+		}
+		wait(0.1);
+	}
 }
 
 /*
