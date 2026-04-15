@@ -363,7 +363,8 @@ function setup_weapon_quests()
     level thread _flag_to_location_thread("wwup1_found", level.archi.mapString + " Masamune - Collect the Vial of Element 115");
     level thread _flag_to_location_thread("wwup2_found", level.archi.mapString + " Masamune - Take the Spider Queen's Tooth");
     level thread _flag_to_location_thread("wwup3_found", level.archi.mapString + " Masamune - Grow the Rainbow Plant");
-    
+    level thread _flag_to_location_thread("wwup_ready", level.archi.mapString + " Masamune - Build the Wonder Weapon");
+
     level thread _first_skull_cleanse(level.archi.mapString + " Skull of Nan'Sapwe - Cleanse a Ritual Skull");
     level thread _all_skull_cleanse(level.archi.mapString + " Skull of Nan'Sapwe - Cleanse all 4 Ritual Skulls");
     level thread _skull_room_defense(level.archi.mapString + " Skull of Nan'Sapwe - Survive the Skull Room");

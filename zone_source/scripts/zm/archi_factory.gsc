@@ -115,6 +115,7 @@ function setup_locations()
     level thread _all_teleporters_linked();
     level thread _flytrap_targets_shot();
     level thread _flag_to_location_thread("snow_ee_completed", level.archi.mapString + " Reveal the Secret Perk Machine");
+    level thread _flag_to_location_thread("power_on", level.archi.mapString + " Turn on the Power");
 }
 
 function _track_music_boa()

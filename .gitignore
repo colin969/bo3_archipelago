@@ -4,7 +4,7 @@ zone_source/*
 !zone_source/scripts
 !zone_source/*.zone
 sound/zone
-english/sound/zone
+*/sound/zone
 *.pdn
 
 .vscode

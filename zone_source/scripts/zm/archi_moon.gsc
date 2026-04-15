@@ -23,6 +23,7 @@
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
+#insert scripts\Zm\_zm_perks.gsh;
 
 #insert scripts\zm\archi_core.gsh;
 
@@ -358,6 +359,7 @@ function setup_locations()
 {
     level flag::wait_till("initial_blackscreen_passed");
 
+    level archi_core::spawn_perk_machine(PERK_PHDFLOPPER, (-670.9, 1675.5, -468.8), (0, 180, 0), PERK_WIDOWS_WINE);
     level thread patch_nml_supersprint();
 
     // level thread archi_commands::_basic_trigger("ap_ball_print", &show_be_pos);

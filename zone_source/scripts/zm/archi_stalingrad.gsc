@@ -172,6 +172,7 @@ function setup_patches()
 
 function setup_main_quest()
 {
+    level thread _flag_to_location_thread("power_on", level.archi.mapString + " Turn on the Power");
     level thread _flag_to_location_thread("dragonride_crafted", level.archi.mapString + " Main Quest - Repair the Dragonride");
 }
 

@@ -176,3 +176,19 @@ Saved and restored:
     - 3 margwas killed
 - Player Data
   - Current Mask Worn
+
+## Moon
+- Easter Egg steps
+  - Samantha Says
+  - Buttons in the Lab
+  - MPD opened
+  - Tunnel 6 beached (Vril Sphere spawned)
+  - Vril Sphere transported to MPD (only if Buttons in the Lab is complete)
+  - Hexagonal Plates transported to Moon
+  - Hexagonal Plates qed's onto Computer
+  - Wire connecting computer
+  - Vril Generator fully charged
+- Space Dog
+  - Toy Hellhound shot
+  - Teddy Bear shot
+  - Bone shot

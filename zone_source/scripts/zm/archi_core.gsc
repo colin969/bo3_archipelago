@@ -709,7 +709,7 @@ function game_start()
 
         archi_moon::setup_locations();
 
-        level thread setup_spare_change_trackers(4);
+        level thread setup_spare_change_trackers(8);
 
         archi_items::RegisterMapWeapons(mapName);
 
@@ -1012,7 +1012,7 @@ function award_item(item)
         }
         else
         {
-            self [[ap_item.getFunc]](item);
+            self [[ap_item.getFunc]]();
         }
 
         // Notification on Hud
@@ -1220,7 +1220,7 @@ function func_override_wallbuy_prompt(player)
     weapon = self.weapon;
     apItem = level.archi.wallbuy_mappings[weapon.name];
     wallbuy = level.archi.wallbuys[weapon.name];
-    if ((!isdefined(apItem)) || (isdefined(wallbuy) && IS_TRUE(wallbuy))) 
+    if (!isdefined(apItem) || IS_TRUE(wallbuy)) 
     {
         return true;
     } 
@@ -1236,8 +1236,9 @@ function func_override_wallbuy_prompt(player)
 // self is player
 function check_override_wallbuy_purchase(weapon, weapon_spawn)
 {
+    apItem = level.archi.wallbuy_mappings[weapon.name];
     wallbuy = level.archi.wallbuys[weapon.name];
-    if (IS_TRUE(wallbuy)) 
+    if (!isdefined(apItem) || IS_TRUE(wallbuy)) 
     {
         return false;
     }
@@ -1775,4 +1776,30 @@ function notify_trigger_with_player(stub, player, force_visibility = 0)
 function _force_visibility()
 {
     return true;
+}
+
+// If you're using ap_shop_print, add (0, +90, 0) to the angles first
+function spawn_perk_machine(machine, origin, angles, swap_machine)
+{
+    // Phd is backwards compared to other machines for some reason
+    if (machine == PERK_PHDFLOPPER && !isdefined(swap_machine))
+    {
+        angles += (0, 180, 0);
+    }
+
+    zm_perks::perk_machine_spawn_init_late(machine, origin, angles);
+    WAIT_SERVER_FRAME
+    
+    // Swap with Widow's Wine
+    if (isdefined(swap_machine))
+    {
+        swap_trigger = zm_perks::get_perk_trigger(swap_machine);
+        swap_angles = (swap_trigger.angles[0], swap_trigger.angles[1], swap_trigger.angles[2]);
+        if (machine == PERK_PHDFLOPPER)
+        {
+            swap_angles += (0, 180, 0);
+        }
+        zm_perks::move_perk_machine(machine, swap_trigger.origin - (0, 0, 60), swap_angles);
+        zm_perks::move_perk_machine(swap_machine, origin, angles);
+    }
 }

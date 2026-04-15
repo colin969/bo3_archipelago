@@ -69,6 +69,7 @@ function init_commands()
     // level thread _basic_trigger("ap_weapon_box", &_print_weapon_box_states);
     level thread _basic_trigger("ap_perk_machine", &_spawn_perk_machine);
     level thread _basic_trigger("ap_set_round", &_set_round);
+    level thread _basic_trigger("ap_perk_loc", &_get_perk_loc);
   }
 }
 
@@ -759,4 +760,18 @@ function _set_round(val)
 {
   val = Int(val);
   archi_core::change_to_round(val);
+}
+
+function _get_perk_loc(val)
+{
+  trigger = zm_perks::get_perk_trigger(val);
+  if (isdefined(trigger))
+  {
+    IPrintLn(trigger.origin);
+    IPrintLn(trigger.angles);
+  }
+  else
+  {
+    IPrintLn("Could not find perk trigger");
+  }
 }

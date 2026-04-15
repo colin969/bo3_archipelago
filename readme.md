@@ -8,6 +8,8 @@
 5. Generate a yaml via the Options Builder in the Archipelago launcher
 5. Generate and host a game with Archipelago per normal
 
+**It is heavily recommend you use t7patch**
+
 ## Downgrade Instructions
 1. Open `steam://open/console` in your browser to open Steam's console
 2. Run `download_depot 311210 311211 9084453472036406216` and wait for it to finish
@@ -19,8 +21,8 @@
 2. Use the Archipelago Menu to enter your server name and slot name
 3. Validate your connection. If you see 'end of file' it may be taking too long to connect, but try starting a game anyway.
 4. Start your game
-![image1.png](/assets/image1.png)
-![image2.png](/assets/image2.png)
+![Showing the main menu changes](/assets/image1.jpg)
+![Showing the settings menu](/assets/image2.png)
 
 # Features
 
@@ -31,6 +33,11 @@
 - Zetsubou No Shima
 - Gorod Krovi
 - Revelations
+- Kino der Toten
+- Moon
+
+**Unstable**
+- (Workshop) Wanted 
 
 **Fancy notifications in the top left when you send checks or receive items**
 
@@ -43,6 +50,10 @@
   - Train can be called while in beast mode
 - Zetsubou No Shima will always have Anywhere but Here in the 5th slot if you don't have it equipped already
 - Revelations menu button to reset the summoning key when it gets stuck out of bounds
+- Moon
+  - Optional RNG adjustments
+  - PhD Flopper restored
+  - Supersprinters in No Man's Land start after 125 seconds (fixed official script)
 
 **Randomized Weapon Attachments:**
 - Can be disabled
@@ -63,6 +74,7 @@
   - Immediate and simultaneous knuckle cracking
 
 **DeathLink:**
+- Can be turned off in the mod settings after generation
 - Configurable to send:
   - Any Player Downed, Any Player Dies, Game Ends
 - Configurable to receive:
@@ -77,7 +89,7 @@
   - Configurable modifier to default perk limit
   - Configurable number of Progressive perk limit items to increase number of perks you can have
   - Default: Start at 2 with 4 more in the itempool (6 max)
-- Progressive Starting Points in blocks of 500 (2500 total default)
+- Progressive Starting Points in blocks of 500 (3000 total default)
 - Perk Machines (universal or map specific):
   - Cannot buy from the perk machine until item received
   - Wunderfizz will only give unlocked perks
@@ -88,14 +100,11 @@
   - Wonder Weapons (Apothicon Servant, Raygun Mark 3 etc)
   - Specialist Weapons (Ragnarok DG-4s)
   - Special Grenades (Monkey Bombs and Li'l Arnies)
-- Regular Box Weapons (universal): **Important if you want better AP logic**
-  - Most weapons will not be available until found:
-    - FFAR, Man-o-War, HVK-30, ICR-1
-    - Drakon, Locus
-    - Haymaker 12, 205 Brecci
-    - RPK, Dingo, 48 Dredge
-    - Vesper, VMP
-- Wallbuys (universal or map specific)
+- Regular Box Weapons (universal):
+  - Shuffles entire contents of mystery box
+- Expanded Box Weapons:
+  - Add most non-Box weapons into the mystery box (starter pistols, time trial weapons, bowie knife etc)
+- Wallbuys
 - Shuffled shield parts seperately from other craftables
 - Shuffled pieces of a craftable:
   - KT-4, Masamune, Keepers Protector are not craftables, support will come later
@@ -139,17 +148,19 @@
   - Remaining zombies
   - Number of next special round
 - Limited Map State Support:
-  - Shadows of Evil 
-    - Each completed main quest ritual excluding PaP
   - The Giant 
-    - Number of linked teleporters / PaP opened
+  - Kino der Toten
 - Significant Map State Support:
+  - Shadows of Evil
   - Der Eisendrache
-    - Each corruption engines finished, each easter egg step completed
+  - Zetsubou No Shima
   - Gorod Krovi
-    - Each easter egg step completed, each dragon gauntlet step, each of the 3 unlocked side ee equips
   - Revelations
-    - Each easter egg step completed
+  - Moon
+
+**Configurable RNG Adjustments**
+- Moon - Better Digger RNG - Tunnel 6 digger should always appear shortly after Round 16
+- Moon - Better Mystery Box RNG - Revelations style weighted box to give Wave Gun, Gersh Devices and QEDs in a more reasonable time
 
 **Configurable Difficulty Adjustment - Checkpoints:**
 - Saves a checkpoint after specific easter egg steps or every X rounds.
@@ -162,13 +173,10 @@
 ## Debug Commands (use tilde to open console in-game)
 - `/ap_trigger_item <item>` - Force trigger an AP item
 - `/ap_send_location <location>` - Force send an AP location
-- `/ap_gum 1` - Give all players a random gobblegum
 - `/ap_godmode <1/0>` - Enables or disables godmode on host player
 - `/ap_testkit 1` - Awards 50000 points, all perks and unlimited sprint to host player
 - `/ap_sv_cheats on` - Enables cheat commands like noclip
 - `/ap_debug_craftables 1` - Print craftables with their names and piece stub names
-- `/ap_debug_magicbox 1` - Prints a csv with the weapon data for the map into the mod folder
-- `/ap_grand_tour 1` - Starts the grand tour (summoning key step) on Revelations early
 - `/ap_set_flag <flag>` - Sets a level flag
 - `/ap_get_flag <flag>` - Prints a level flag
 - `/ap_set_player_flag <flag>` - Sets host player flag
@@ -183,9 +191,10 @@
 1. Clone to `Call of Duty Black Ops III\mods\bo3_archipelago`
 2. Install L3akMod from https://wiki.modme.co/wiki/black_ops_3/lua_(lui)/Installation.html
 3. Install T7MTEnhancements from https://github.com/Scobalula/T7MTEnhancements
-3. Open Black Ops III - Mod Tools
-4. Tick `core_mod` and `zm_mod` under `bo3_archipelago` on the left side, `Compile` and `Link` on the right side, and `Run` if you want to test
-5. Press `Build`
+4. Follow additional instructions in the 'dev_install' folder
+5. Open Black Ops III - Mod Tools
+6. Tick `core_mod` and `zm_mod` under `bo3_archipelago` on the left side, `Compile` and `Link` on the right side, and `Run` if you want to test
+7. Press `Build`
 
 ## Special Thanks
 T7 Overcharged https://github.com/JariKCoding/T7Overcharged, which I heavily mangled to run the AP Code

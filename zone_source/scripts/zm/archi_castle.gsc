@@ -1006,7 +1006,7 @@ function _track_player_connection_bow()
     else if (self hasweapon(void_bow))
     {
         level _restore_void_bow(self);
-        level flag::set("demon_gate_upgraded");
+        //level flag::set("demon_gate_upgraded");
         wait(1);
         restored++;
     }
@@ -1032,7 +1032,7 @@ function _track_player_connection_bow()
     }
     if (level.archi.void_owner == xuid && !(self hasweapon(void_bow)))
     {
-        level _restore_void_bow(self);
+        //level _restore_void_bow(self);
         wait(1);
         restored++;
     }
