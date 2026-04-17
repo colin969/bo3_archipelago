@@ -414,10 +414,10 @@ function setup_locations()
 
     level thread space_dog_objects(level.archi.mapString + " Space Dog - Wave Gun Target Practice");
     level thread _flag_kval("sd_hound", level.archi.mapString + " Space Dog - Wave Gun the Toy Hellhound in Area 51");
-    level thread _flag_kval("sd_bear", level.archi.mapString + " Space Dog - Wave Gun the Bone near the Moon Teleporter");
-    level thread _flag_kval("sd_bone", level.archi.mapString + " Space Dog - Wave Gun the Teddy Bear in the Bidome");
+    level thread _flag_kval("sd_bear", level.archi.mapString + " Space Dog - Wave Gun the Teddy Bear in the Biodome");
+    level thread _flag_kval("sd_bone", level.archi.mapString + " Space Dog - Wave Gun the Bone near the Moon Teleporter");
     level thread _flag_to_location_thread("sd_large_complete", level.archi.mapString + " Space Dog - Fill the Dog Bowl with 30 Zombie Souls");
-    level thread _flag_to_location_thread("sd_small_complete", level.archi.mapString + " Space Dog - Fill the Dog Bowl with 15 Hellhound Souls");
+    level thread _flag_to_location_thread("sd_small_complete", level.archi.mapString + " Space Dog - Fill the Dog Bowl with 15 Gas Crawler Souls");
 
     level thread _flag_to_location_thread("snd_song_completed", level.archi.mapString + " Music EE - Coming Home");
 }
