@@ -31,6 +31,7 @@
 #using scripts\zm\archi_factory;
 #using scripts\zm\archi_theater;
 #using scripts\zm\archi_moon;
+#using scripts\zm\archi_tomb;
 #using scripts\zm\archi_westernz;
 
 #using scripts\zm\archi_items;
@@ -92,6 +93,7 @@ function __init__()
     mapName = GetDvarString( "mapname" );
     switch(mapName)
     {
+        case "zm_zod":
         case "zm_westernz":
             break;
         default:
@@ -461,7 +463,7 @@ function game_start()
 
         // Wunderfizz
         archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
     
@@ -577,7 +579,7 @@ function game_start()
 
         // Wunderfizz
         archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
@@ -627,7 +629,7 @@ function game_start()
 
         // Wunderfizz
         archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_WidowsWine,PERK_ELECTRIC_CHERRY);
+        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
         spawn_shop((-4757, -264, -448), (0, 87, 0));
@@ -727,6 +729,120 @@ function game_start()
         level.archi.save_player_data = &archi_moon::save_player_data;
         level.archi.load_state_manager = &archi_moon::load_state;
         level.archi.restore_player_data = &archi_moon::restore_player_data;
+    }
+
+    if (mapName == "zm_tomb")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_ORIGINS;
+        level.archi.map_key_item = "Map Unlock - Origins";
+
+        archi_tomb::setup_locations();
+
+        level thread setup_spare_change_trackers(5);
+
+        replace_craftable_onPickup("craft_shield_zm");
+        level.archi.craftable_piece_to_location["craft_shield_zm_dolly"] = level.archi.mapString + " Shield Part Pickup - Dolly";
+        level.archi.craftable_piece_to_location["craft_shield_zm_door"] = level.archi.mapString + " Shield Part Pickup - Door";
+        level.archi.craftable_piece_to_location["craft_shield_zm_clamp"] = level.archi.mapString + " Shield Part Pickup - Clamp";
+
+        archi_items::RegisterItem("Shield Part - Door",&archi_items::give_ShieldPart_Door,undefined,true);
+        archi_items::RegisterItem("Shield Part - Dolly",&archi_items::give_ShieldPart_Dolly,undefined,true);
+        archi_items::RegisterItem("Shield Part - Clamp",&archi_items::give_ShieldPart_Clamp,undefined,true);
+
+        replace_craftable_onPickup("gramophone");
+        level.archi.craftable_piece_to_location["gramophone_vinyl_player"] = level.archi.mapString + " Gramophone Part Pickup - Gramophone Player";
+        level.archi.craftable_piece_to_location["gramophone_vinyl_master"] = level.archi.mapString + " Gramophone Part Pickup - Blank Disc";
+        level.archi.craftable_piece_to_location["gramophone_vinyl_fire"] = level.archi.mapString + " Gramophone Part Pickup - Fire Disc";
+        level.archi.craftable_piece_to_location["gramophone_vinyl_air"] = level.archi.mapString + " Gramophone Part Pickup - Wind Disc";
+        level.archi.craftable_piece_to_location["gramophone_vinyl_elec"] = level.archi.mapString + " Gramophone Part Pickup - Lightning Disc";
+        level.archi.craftable_piece_to_location["gramophone_vinyl_ice"] = level.archi.mapString + " Gramophone Part Pickup - Ice Disc";
+
+        archi_items::RegisterItem("Gramophone Part - Gramophone Player",&archi_tomb::give_GramophonePart_Player,undefined,false);
+        archi_items::RegisterItem("Gramophone Part - Blank Disc",&archi_tomb::give_GramophonePart_BlankDisc,undefined,false);
+        archi_items::RegisterItem("Gramophone Part - Fire Disc",&archi_tomb::give_GramophonePart_FireDisc,undefined,false);
+        archi_items::RegisterItem("Gramophone Part - Wind Disc",&archi_tomb::give_GramophonePart_WindDisc,undefined,false);
+        archi_items::RegisterItem("Gramophone Part - Lightning Disc",&archi_tomb::give_GramophonePart_LightningDisc,undefined,false);
+        archi_items::RegisterItem("Gramophone Part - Ice Disc",&archi_tomb::give_GramophonePart_IceDisc,undefined,false);
+
+        level.archi.excluded_craftable_items["gramophone_vinyl_player"] = 1;
+        level.archi.excluded_craftable_items["gramophone_vinyl_master"] = 1;
+
+        replace_craftable_onPickup("equip_dieseldrone");
+        level.archi.craftable_piece_to_location["equip_dieseldrone_body"] = level.archi.mapString + " Maxis Drone Part Pickup - Body";
+        level.archi.craftable_piece_to_location["equip_dieseldrone_brain"] = level.archi.mapString + " Maxis Drone Part Pickup - Brain";
+        level.archi.craftable_piece_to_location["equip_dieseldrone_engine"] = level.archi.mapString + " Maxis Drone Part Pickup - Engine";
+
+        archi_items::RegisterItem("Maxis Drone Part - Body",&archi_tomb::give_MaxisDronePart_Body,undefined,false);
+        archi_items::RegisterItem("Maxis Drone Part - Brain",&archi_tomb::give_MaxisDronePart_Brain,undefined,false);
+        archi_items::RegisterItem("Maxis Drone Part - Engine",&archi_tomb::give_MaxisDronePart_Engine,undefined,false);
+
+        replace_craftable_onPickup("elemental_staff_water");
+        replace_craftable_onPickup("elemental_staff_fire");
+        replace_craftable_onPickup("elemental_staff_lightning");
+        replace_craftable_onPickup("elemental_staff_air");
+
+        archi_items::RegisterItem("Ice Staff Part - Gem", &archi_tomb::give_ElementalStaffPart_Ice_Gem, undefined, false);
+        archi_items::RegisterItem("Ice Staff Part - Upper Staff", &archi_tomb::give_ElementalStaffPart_Ice_UpperStaff, undefined, false);
+        archi_items::RegisterItem("Ice Staff Part - Middle Staff", &archi_tomb::give_ElementalStaffPart_Ice_MiddleStaff, undefined, false);
+        archi_items::RegisterItem("Ice Staff Part - Lower Staff", &archi_tomb::give_ElementalStaffPart_Ice_LowerStaff, undefined, false);
+
+        archi_items::RegisterItem("Fire Staff Part - Gem", &archi_tomb::give_ElementalStaffPart_Fire_Gem, undefined, false);
+        archi_items::RegisterItem("Fire Staff Part - Upper Staff", &archi_tomb::give_ElementalStaffPart_Fire_UpperStaff, undefined, false);
+        archi_items::RegisterItem("Fire Staff Part - Middle Staff", &archi_tomb::give_ElementalStaffPart_Fire_MiddleStaff, undefined, false);
+        archi_items::RegisterItem("Fire Staff Part - Lower Staff", &archi_tomb::give_ElementalStaffPart_Fire_LowerStaff, undefined, false);
+
+        archi_items::RegisterItem("Wind Staff Part - Gem", &archi_tomb::give_ElementalStaffPart_Air_Gem, undefined, false);
+        archi_items::RegisterItem("Wind Staff Part - Upper Staff", &archi_tomb::give_ElementalStaffPart_Air_UpperStaff, undefined, false);
+        archi_items::RegisterItem("Wind Staff Part - Middle Staff", &archi_tomb::give_ElementalStaffPart_Air_MiddleStaff, undefined, false);
+        archi_items::RegisterItem("Wind Staff Part - Lower Staff", &archi_tomb::give_ElementalStaffPart_Air_LowerStaff, undefined, false);
+
+        archi_items::RegisterItem("Lightning Staff Part - Gem", &archi_tomb::give_ElementalStaffPart_Lightning_Gem, undefined, false);
+        archi_items::RegisterItem("Lightning Staff Part - Upper Staff", &archi_tomb::give_ElementalStaffPart_Lightning_UpperStaff, undefined, false);
+        archi_items::RegisterItem("Lightning Staff Part - Middle Staff", &archi_tomb::give_ElementalStaffPart_Lightning_MiddleStaff, undefined, false);
+        archi_items::RegisterItem("Lightning Staff Part - Lower Staff", &archi_tomb::give_ElementalStaffPart_Lightning_LowerStaff, undefined, false);
+
+        level.archi.excluded_craftable_items["elemental_staff_water_gem"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_water_upper_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_water_middle_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_water_lower_staff"] = 1;
+
+        level.archi.excluded_craftable_items["elemental_staff_water_gem"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_water_upper_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_water_middle_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_water_lower_staff"] = 1;
+
+        level.archi.excluded_craftable_items["elemental_staff_fire_gem"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_fire_upper_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_fire_middle_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_fire_lower_staff"] = 1;
+
+        level.archi.excluded_craftable_items["elemental_staff_air_gem"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_air_upper_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_air_middle_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_air_lower_staff"] = 1;
+
+        level.archi.excluded_craftable_items["elemental_staff_lightning_gem"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_lightning_upper_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_lightning_middle_staff"] = 1;
+        level.archi.excluded_craftable_items["elemental_staff_lightning_lower_staff"] = 1;
+
+        archi_items::RegisterMapWeapons(mapName);
+
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Dead Shot",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+        archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
+        archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
+
+        level.archi.save_state_manager = &archi_tomb::save_state_manager;
+        level.archi.save_player_data = &archi_tomb::save_player_data;
+        level.archi.load_state_manager = &archi_tomb::load_state;
+        level.archi.restore_player_data = &archi_tomb::restore_player_data;
     }
 
     // === Modded Maps ===
@@ -1710,6 +1826,10 @@ function replace_craftable_onPickup( craftableName )
 function wrapped_craftable_onPickup( player )
 {
     fullName = self.craftableName + "_" + self.pieceName;
+    if ( isdefined(level.archi.map_kvals) && isdefined(level.archi.map_kvals["_craftable_" + fullName]))
+    {
+        level.archi.map_kvals["_craftable_" + fullName] = 1;
+    }
     if ( isdefined(level.archi.craftable_piece_to_location[fullName]) )
     {
         ap_location = level.archi.craftable_piece_to_location[fullName];

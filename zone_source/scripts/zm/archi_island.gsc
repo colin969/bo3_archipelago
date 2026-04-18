@@ -49,7 +49,6 @@ function save_state_manager()
 
     level.archi.save_state = &save_state;
     level thread archi_save::save_on_round_change();
-    level thread archi_save::round_checkpoints();
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)

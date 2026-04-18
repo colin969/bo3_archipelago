@@ -889,7 +889,6 @@ function get_map_weapon_lists(map_name)
                 "smg_ak74u",
                 "sniper_fastbolt",
                 "sniper_fastsemi",
-                "special_crossbow",
                 "lmg_rpk",
                 "ar_m14"
             );
@@ -907,6 +906,70 @@ function get_map_weapon_lists(map_name)
                 "black_hole_bomb",
                 "ray_gun",
                 "microwavegundw"
+            );
+            break;
+        case "zm_tomb":
+            lists.vanilla = array(
+                "ar_accurate",
+                "ar_cqb",
+                "ar_damage",
+                "ar_longburst",
+                "ar_marksman",
+                "ar_standard",
+                "ar_stg44",
+                "lmg_cqb",
+                "lmg_heavy",
+                "lmg_light",
+                "lmg_mg08",
+                "lmg_slowfire",
+                "pistol_burst",
+                "pistol_fullauto",
+                "shotgun_fullauto",
+                "shotgun_precision",
+                "shotgun_pump",
+                "shotgun_semiauto",
+                "launcher_multi",
+                "launcher_standard",
+                "smg_burst",
+                "smg_capacity",
+                "smg_fastfire",
+                "smg_mp40_1940",
+                "smg_standard",
+                "smg_thompson",
+                "smg_versatile",
+                "smg_ak74u",
+                "sniper_fastbolt",
+                "sniper_fastsemi",
+                "lmg_rpk",
+                "ar_m14"
+            );
+            lists.expanded = array(
+                "bouncingbetty",
+                "bowie_knife",
+                "pistol_c96"
+            );
+            lists.wallbuys = array(
+                "pistol_burst",
+                "ar_marksman",
+                "shotgun_pump",
+                "ar_standard",
+                "smg_standard",
+                "pistol_fullauto",
+                "smg_fastfire",
+                "ar_accurate",
+                "ar_cqb",
+                "smg_versatile",
+                "shotgun_precision",
+                "ar_longburst",
+                "smg_mp40_1940",
+                "ar_stg44",
+                "smg_thompson"
+            );
+            lists.special = array(
+                "cymbal_monkey",
+                "ray_gun",
+                "raygun_mark2",
+                "hero_annihilator"
             );
             break;
         case "zm_westernz":

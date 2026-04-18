@@ -22,6 +22,7 @@ scriptparsetree,scripts/zm/archi_genesis.gsc
 scriptparsetree,scripts/zm/archi_factory.gsc
 scriptparsetree,scripts/zm/archi_theater.gsc
 scriptparsetree,scripts/zm/archi_moon.gsc
+scriptparsetree,scripts/zm/archi_tomb.gsc
 scriptparsetree,scripts/zm/archi_westernz.gsc
 scriptparsetree,scripts/zm/archi_items.csc
 scriptparsetree,scripts/zm/archi_items.gsc

@@ -26,9 +26,9 @@
 
 function save_state_manager()
 {
+    level.archi.map_kvals = [];
     level.archi.save_state = &save_state;
     level thread archi_save::save_on_round_change();
-    level thread archi_save::round_checkpoints();
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
@@ -131,6 +131,27 @@ function _flag_to_location_thread(flag, location)
     archi_core::send_location(location);
 }
 
+function _flag_kval(flag, location)
+{
+    level.archi.map_kvals[flag] = 0;
+    level endon("end_game");
+
+    if (IsArray(flag))
+    {
+        level flag::wait_till_all(flag);
+    }
+    else
+    {
+        level flag::wait_till(flag);
+    }
+
+    if (isdefined(location))
+    {
+        archi_core::send_location(location);
+    }
+    level.archi.map_kvals[flag] = 1;
+}
+
 // Collect a check when a level notification happens
 // level thread _notify_to_location_thread("notification", level.archi.mapString + " locationName");
 function _notify_to_location_thread(str, location)
@@ -141,6 +162,20 @@ function _notify_to_location_thread(str, location)
     archi_core::send_location(location);
 }
 
+function _notify_kval(str, location)
+{
+    level.archi.map_kvals[str] = 0;
+    level endon("end_game");
+
+    level waittill(str);
+    if (isdefined(location))
+    {
+        archi_core::send_location(location);
+    }
+
+    level.archi.map_kvals[str] = 1;
+}
+
 function save_map_state()
 {
     
@@ -149,4 +184,23 @@ function save_map_state()
 function restore_map_state()
 {
     
+}
+
+function save_map_kval(key)
+{
+    archi_save::save_val(key, level.archi.map_kvals[key]);
+}
+
+function restore_map_kval(key)
+{
+    level.archi.map_kvals[key] = archi_save::restore_val_bool(key);
+}
+
+function has_map_kval(key)
+{
+    if (isdefined(level.archi.map_kvals[key]) && level.archi.map_kvals[key] != 0)
+    {
+        return true;
+    }
+    return false;
 }

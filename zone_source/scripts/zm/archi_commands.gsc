@@ -17,6 +17,7 @@
 #using scripts\zm\_zm_weapons;
 #using scripts\zm\_zm_utility;
 #using scripts\zm\_zm_perks;
+#using scripts\zm\craftables\_zm_craftables;
 #using scripts\zm\gametypes\_globallogic_score;
 
 #insert scripts\shared\shared.gsh;
@@ -70,6 +71,7 @@ function init_commands()
     level thread _basic_trigger("ap_perk_machine", &_spawn_perk_machine);
     level thread _basic_trigger("ap_set_round", &_set_round);
     level thread _basic_trigger("ap_perk_loc", &_get_perk_loc);
+    level thread _basic_trigger("ap_craft", &_build_craftable);
   }
 }
 
@@ -774,4 +776,9 @@ function _get_perk_loc(val)
   {
     IPrintLn("Could not find perk trigger");
   }
+}
+
+function _build_craftable(craftable_name)
+{
+  zm_craftables::complete_craftable(craftable_name);
 }

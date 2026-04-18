@@ -33,7 +33,6 @@ function save_state_manager()
     level.archi.opened_airlocks = [];
     level.archi.save_state = &save_state;
     level thread archi_save::save_on_round_change();
-    level thread archi_save::round_checkpoints();
 
 	airlock_buys = getentarray("zombie_airlock_buy", "targetname");
     for (i = 0; i < airlock_buys.size; i++)
@@ -114,9 +113,14 @@ function load_state()
     archi_save::restore_doors_and_debris();
     restore_airlocks();
 
+    IPrintLn("restoring moon");
+
     restore_map_state();
 
+    IPrintLn("moon restored");
+
     wait(10);
+    IPrintLn("clearing");
     level flag::clear("ap_prevent_checkpoints");
 }
 
@@ -703,6 +707,8 @@ function restore_ee2()
         level._charge_sound_ent notify("press");
         wait(0.1);
     }
+
+    level flag::set("ap_restore_ee2");
 }
 
 function delayed_minigun_restore()
