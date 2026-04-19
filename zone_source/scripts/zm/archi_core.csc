@@ -31,6 +31,7 @@ function __init__()
 
     switch(mapName)
     {
+        case "zm_zod":
         case "zm_westernz":
             break;
         default:
