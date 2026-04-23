@@ -10,6 +10,7 @@
 #using scripts\shared\hud_message_shared;
 #using scripts\shared\hud_util_shared;
 #using scripts\shared\lui_shared;
+#using scripts\shared\scene_shared;
 #using scripts\shared\clientfield_shared;
 #using scripts\zm\_zm_blockers;
 #using scripts\zm\_zm_perks;
@@ -179,45 +180,59 @@ function setup_locations()
     level thread archi_commands::_basic_trigger("ap_solve_staff", &debug_solve_staff);
     level thread archi_commands::_basic_trigger("ap_build_staff", &restore_staff_built);
     level thread archi_commands::_basic_trigger("ap_generator", &start_generator);
+    level thread archi_commands::_basic_trigger("ap_debug_quest", &debug_quest);
 
     level thread watch_teleports();
     level thread watch_mound_opened();
     level thread watch_generators();
+    level thread watch_boxes_filled();
+    
+    a_boxes = getentarray("foot_box", "script_noteworthy");
+    foreach (box in a_boxes)
+    {
+        box thread watch_box_filled();
+    }
+
+    level thread _notify_to_location_thread("ap_music_archangel", level.archi.mapString + " Music EE - Archangel");
+    level thread _notify_to_location_thread("ap_music_aether", level.archi.mapString + " Music EE - Aether");
+    level thread _notify_to_location_thread("ap_music_shepherd_of_fire", level.archi.mapString + " Music EE - Sheperd of Fire");
 
     level thread _notify_kval("elemental_staff_air_crafted", level.archi.mapString + " Wind Staff - Craft the Staff");
     level thread _flag_kval("air_puzzle_1_complete", level.archi.mapString + " Wind Staff - Solve the Crazy Place Puzzle");
     level thread _flag_kval("air_puzzle_2_complete", level.archi.mapString + " Wind Staff - Redirect all the Smoke Stacks");
-    level thread _flag_kval("staff_air_upgrade_unlocked", level.archi.mapString + " Wind Staff - Send the Orb to the Crazy Place");
+    level thread _flag_kval("staff_air_upgrade_unlocked");
     level thread _watch_staff_upgraded("staff_air", level.archi.mapString + " Wind Staff - Upgrade the Staff");
 
     level thread _notify_kval("elemental_staff_fire_crafted", level.archi.mapString + " Fire Staff - Craft the Staff");
     level thread _flag_kval("fire_puzzle_1_complete", level.archi.mapString + " Fire Staff - Light the Crazy Place Braziers");
     level thread _flag_kval("fire_puzzle_2_complete", level.archi.mapString + " Fire Staff - Solve the Church Torch Puzzle");
-    level thread _flag_kval("staff_fire_upgrade_unlocked", level.archi.mapString + " Fire Staff - Send the Orb to the Crazy Place");
+    level thread _flag_kval("staff_fire_upgrade_unlocked");
     level thread _watch_staff_upgraded("staff_fire", level.archi.mapString + " Fire Staff - Upgrade the Staff");
 
     level thread _notify_kval("elemental_staff_lightning_crafted", level.archi.mapString + " Lightning Staff - Craft the Staff");
     level thread _flag_kval("electric_puzzle_1_complete", level.archi.mapString + " Lightning Staff - Solve the Crazy Place Piano Puzzle");
     level thread _flag_kval("electric_puzzle_2_complete", level.archi.mapString + " Lightning Staff - Correctly set the Electrical Boxes");
-    level thread _flag_kval("staff_lightning_upgrade_unlocked", level.archi.mapString + " Lightning Staff - Send the Orb to the Crazy Place");
+    level thread _flag_kval("staff_lightning_upgrade_unlocked");
     level thread _watch_staff_upgraded("staff_lightning", level.archi.mapString + " Lightning Staff - Upgrade the Staff");
 
     level thread _notify_kval("elemental_staff_water_crafted", level.archi.mapString + " Ice Staff - Craft the Staff");
     level thread _flag_kval("ice_puzzle_1_complete", level.archi.mapString + " Ice Staff - Solve the Crazy Place Puzzle");
     level thread _flag_kval("ice_puzzle_2_complete", level.archi.mapString + " Ice Staff - Smash the Three Gravestones");
-    level thread _flag_kval("staff_water_upgrade_unlocked", level.archi.mapString + " Ice Staff - Send the Orb to the Crazy Place");
+    level thread _flag_kval("staff_water_upgrade_unlocked");
     level thread _watch_staff_upgraded("staff_water", level.archi.mapString + " Ice Staff - Upgrade the Staff");
 
     level thread _flag_kval("ee_all_staffs_upgraded", level.archi.mapString + " Main Easter Egg - Upgrade all Elemental Staffs");
     level thread _flag_kval("ee_all_staffs_placed", level.archi.mapString + " Main Easter Egg - Placed all 4 Upgraded Elemental Staffs");
     level thread _flag_kval("ee_mech_zombie_hole_opened", level.archi.mapString + " Main Easter Egg - Blow open the Panzer Hole");
-    level thread _flag_kval("ee_maxis_drone_retrieved", level.archi.mapString + " Main Easter Egg - Retrieve Maxis Drone from Zombie Blood Plane");
-    level thread _flag_kval("ee_souls_absorbed", level.archi.mapString + " Main Easter Egg - Charge the Mound with Souls");
-    level thread _flag_to_location_thread("ee_samantha_released", level.archi.mapString + " Main Easter Egg - Send Maxis to Samantha");
+    level thread _flag_kval("ee_maxis_drone_retrieved", level.archi.mapString + " Main Easter Egg - Retrieve Maxis Drone from Invisible Zombie");
+    level thread _flag_kval("ee_all_players_upgraded_punch", level.archi.mapString + " Main Easter Egg - Upgrade everyone's One Inch Punch");
+    level thread _flag_kval("ee_souls_absorbed", level.archi.mapString + " Main Easter Egg - Open the portal to Samantha");
     level thread _flag_to_location_thread("ee_samantha_released", level.archi.mapString + " Main Easter Egg - Victory");
+}
 
-    level thread _flag_kval("ee_all_players_upgraded_punch");
-    level thread _flag_kval("ee_mech_zombie_fight_completed");
+function debug_quest()
+{
+    IPrintLn("stage: " + level._cur_stage_name);
 }
 
 function watch_generators()
@@ -350,10 +365,36 @@ function _notify_kval(str, location)
     level.archi.map_kvals[str] = 1;
 }
 
+function watch_boxes_filled()
+{
+    any_done = false;
+    while(true)
+    {
+        level waittill("ap_box_check");
+        wait(0.1);
+        if (!any_done && level.n_soul_boxes_completed > 0)
+        {
+            any_done = true;
+            archi_core::send_location(level.archi.mapString + " Fill any Soul Box");
+            WAIT_SERVER_FRAME
+        }
+        if (level.n_soul_boxes_completed >= 4)
+        {
+            archi_core::send_location(level.archi.mapString + " Fill all 4 Soul Box");
+            break;
+        }
+    }
+}
+
+function watch_box_filled()
+{
+    self waittill("box_finished");
+    level notify("ap_box_check");
+}
+
 function save_map_state()
 {
     save_map_kval("ee_all_staffs_placed");
-    save_map_kval("ee_mech_zombie_fight_completed");
     save_map_kval("ee_maxis_drone_retrieved");
     save_map_kval("ee_all_players_upgraded_punch");
     save_map_kval("ee_souls_absorbed");
@@ -463,16 +504,13 @@ function restore_map_state()
     {
         level flag::set("ee_all_staffs_placed");
     }
-    restore_map_kval("ee_mech_zombie_fight_completed");
-    if (has_map_kval("ee_mech_zombie_fight_completed"))
-    {
-        level flag::set("ee_mech_zombie_fight_completed");
-        level flag::set("ee_mech_zombie_hole_opened");
-    }
     restore_map_kval("ee_maxis_drone_retrieved");
     if (has_map_kval("ee_maxis_drone_retrieved"))
     {
+        level flag::set("ee_mech_zombie_fight_completed");
+        level flag::set("ee_mech_zombie_hole_opened");
         level flag::set("ee_maxis_drone_retrieved");
+        level flag::set("ee_quadrotor_disabled");
     }
     restore_map_kval("ee_all_players_upgraded_punch");
     if (has_map_kval("ee_all_players_upgraded_punch"))
@@ -613,7 +651,6 @@ function restore_map_state()
 
 function restore_staff_built(craftable_name)
 {
-    IPrintLn("restoring " + craftable_name);
     craftable = zm_craftables::find_craftable_stub(craftable_name);
     foreach (s_piece in craftable.a_piecestubs)
     {

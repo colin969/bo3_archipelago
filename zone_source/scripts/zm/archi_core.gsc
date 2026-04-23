@@ -365,6 +365,7 @@ function game_start()
     archi_commands::init_commands();
     level thread round_end_noti();
     level thread repaired_board_noti();
+    level thread stats_checks_monitor();
 
     if (mapName == "zm_zod")
     {
@@ -523,8 +524,6 @@ function game_start()
         archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
         archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
         archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
-        archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
         spawn_shop((-411, -2048, -426), (0, 6, 0));
 
@@ -658,9 +657,6 @@ function game_start()
         archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
         archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
         archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
-        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
-        archi_items::RegisterPerk("Dead Shot",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
-        archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
         spawn_shop((-254, 608, 7), (0, -90, 0));
 
@@ -770,11 +766,11 @@ function game_start()
         replace_craftable_onPickup("equip_dieseldrone");
         level.archi.craftable_piece_to_location["equip_dieseldrone_body"] = level.archi.mapString + " Maxis Drone Part Pickup - Body";
         level.archi.craftable_piece_to_location["equip_dieseldrone_brain"] = level.archi.mapString + " Maxis Drone Part Pickup - Brain";
-        level.archi.craftable_piece_to_location["equip_dieseldrone_engine"] = level.archi.mapString + " Maxis Drone Part Pickup - Engine";
+        level.archi.craftable_piece_to_location["equip_dieseldrone_engine"] = level.archi.mapString + " Maxis Drone Part Pickup - Valve";
 
         archi_items::RegisterItem("Maxis Drone Part - Body",&archi_tomb::give_MaxisDronePart_Body,undefined,false);
         archi_items::RegisterItem("Maxis Drone Part - Brain",&archi_tomb::give_MaxisDronePart_Brain,undefined,false);
-        archi_items::RegisterItem("Maxis Drone Part - Engine",&archi_tomb::give_MaxisDronePart_Engine,undefined,false);
+        archi_items::RegisterItem("Maxis Drone Part - Valve",&archi_tomb::give_MaxisDronePart_Engine,undefined,false);
 
         replace_craftable_onPickup("elemental_staff_water");
         replace_craftable_onPickup("elemental_staff_fire");
@@ -1921,5 +1917,87 @@ function spawn_perk_machine(machine, origin, angles, swap_machine)
         }
         zm_perks::move_perk_machine(machine, swap_trigger.origin - (0, 0, 60), swap_angles);
         zm_perks::move_perk_machine(swap_machine, origin, angles);
+    }
+}
+
+function stats_checks_monitor()
+{
+    kills_75_sent = false; // Round 6
+    kills_150_sent = false; // Round 12
+    kills_300_sent = false; // Round 16
+    kills_500_sent = false; // Round 22
+    kills_1000_sent = false; // Round 30
+
+    headshots_25_sent = false;
+    headshots_75_sent = false;
+    headshots_125_sent = false;
+    headshots_250_sent = false;
+    headshots_400_sent = false;
+
+    while(true)
+    {
+        total_kills = 0;
+        total_headshots = 0;
+        foreach (player in level.players)
+        {
+            total_kills += player.kills;
+            total_headshots += player.headshots;
+        }
+        
+        // Kill thresholds
+        if (total_kills >= 75 && !kills_75_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 75 + " Kills");
+            kills_75_sent = true;
+        }
+        if (total_kills >= 150 && !kills_150_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 150 + " Kills");
+            kills_150_sent = true;
+        }
+        if (total_kills >= 300 && !kills_300_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 300 + " Kills");
+            kills_300_sent = true;
+        }
+        if (total_kills >= 500 && !kills_500_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 500 + " Kills");
+            kills_500_sent = true;
+        }
+        if (total_kills >= 1000 && !kills_1000_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 1000 + " Kills");
+            kills_1000_sent = true;
+        }
+        
+        // Headshot thresholds
+        if (total_headshots >= 25 && !headshots_25_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 25 + " Headshots");
+            headshots_25_sent = true;
+        }
+        if (total_headshots >= 75 && !headshots_75_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 75 + " Headshots");
+            headshots_75_sent = true;
+        }
+        if (total_headshots >= 125 && !headshots_125_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 125 + " Headshots");
+            headshots_125_sent = true;
+        }
+        if (total_headshots >= 250 && !headshots_250_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 250 + " Headshots");
+            headshots_250_sent = true;
+        }
+        if (total_headshots >= 400 && !headshots_400_sent)
+        {
+            archi_core::send_location(level.archi.mapString + " " + 400 + " Headshots");
+            headshots_400_sent = true;
+        }
+        
+        wait(2);
     }
 }

@@ -37,6 +37,7 @@
 - Moon
 
 **Unstable**
+- Origins
 - (Workshop) Wanted 
 
 **Fancy notifications in the top left when you send checks or receive items**
@@ -157,6 +158,7 @@
   - Gorod Krovi
   - Revelations
   - Moon
+  - Origins
 
 **Configurable RNG Adjustments**
 - Moon - Better Digger RNG - Tunnel 6 digger should always appear shortly after Round 16
@@ -175,7 +177,7 @@
 - `/ap_send_location <location>` - Force send an AP location
 - `/ap_godmode <1/0>` - Enables or disables godmode on host player
 - `/ap_testkit 1` - Awards 50000 points, all perks and unlimited sprint to host player
-- `/ap_sv_cheats on` - Enables cheat commands like noclip
+- `/ap_sv_cheats 1` - Enables cheat commands like noclip
 - `/ap_debug_craftables 1` - Print craftables with their names and piece stub names
 - `/ap_set_flag <flag>` - Sets a level flag
 - `/ap_get_flag <flag>` - Prints a level flag
@@ -191,7 +193,7 @@
 1. Clone to `Call of Duty Black Ops III\mods\bo3_archipelago`
 2. Install L3akMod from https://wiki.modme.co/wiki/black_ops_3/lua_(lui)/Installation.html
 3. Install T7MTEnhancements from https://github.com/Scobalula/T7MTEnhancements
-4. Follow additional instructions in the 'dev_install' folder
+4. Follow additional instructions in the `dev_install` folder
 5. Open Black Ops III - Mod Tools
 6. Tick `core_mod` and `zm_mod` under `bo3_archipelago` on the left side, `Compile` and `Link` on the right side, and `Run` if you want to test
 7. Press `Build`

@@ -178,6 +178,7 @@ Saved and restored:
   - Current Mask Worn
 
 ## Moon
+
 - Easter Egg steps
   - Samantha Says
   - Buttons in the Lab
@@ -192,3 +193,23 @@ Saved and restored:
   - Toy Hellhound shot
   - Teddy Bear shot
   - Bone shot
+
+## Origins
+
+- Easter Egg steps
+  - All 4 staffs placed in correct positions
+  - Maxis drone retrieved after Panzer fight completed
+  - All players gotten an upgraded one inch punch (will ignore disconnected players)
+  - All souls absorbed in the crypt
+- Each of the 6 Generators powered on
+- Gramophone Player picked up
+- Gramophone Blank Disc picked up
+- Each of the 12 staff parts picked up (Discs are AP items, held gems are not restored)
+- Each of the 4 teleporter being used once (opens plinth of that element)
+- Staff upgrades
+  - Puzzle 1 complete
+  - Puzzle 2 complete
+  - Staff charger unlocked (orb position will not restore)
+  - Number of souls in the staff charger
+  - Staff charged and ready
+- Number of souls in each of the 4 soul boxes
