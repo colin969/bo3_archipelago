@@ -40,6 +40,7 @@ scriptparsetree,scripts/zm/_zm_pack_a_punch.gsc
 scriptparsetree,scripts/zm/_zm_perks.gsc
 scriptparsetree,scripts/zm/_zm_weapons.gsc
 scriptparsetree,scripts/zm/_zm_powerups.gsc
+scriptparsetree,scripts/zm/_zm_weap_one_inch_punch.gsc
 
 //The point our UI injects its widget
 rawfile,ui/archipelago/hudInject.lua

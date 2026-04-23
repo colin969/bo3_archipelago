@@ -17,6 +17,7 @@
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_weapons;
 #using scripts\zm\_zm_utility;
+#using scripts\zm\_zm_weap_one_inch_punch;
 
 #using scripts\zm\archi_core;
 
@@ -621,7 +622,17 @@ function restore_player_loadout(xuid, no_hero_weapon)
                 // We're restoring, so remove the starting weapon
                 self zm_weapons::weapon_take(level.start_weapon);
             }
+
             weapon = GetWeapon(weapon_name);
+            if (IsSubStr(weapon_name, "one_inch_punch"))
+            {
+                self GiveWeapon(weapon);
+                self zm_utility::set_player_melee_weapon(weapon);
+                self thread _zm_weap_one_inch_punch::one_inch_punch_melee_attack();
+                i++;
+                continue;
+            }
+
             self zm_weapons::weapon_give(weapon, 0, 0, 1);
             weapon_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_CLIP", 0);
             weapon_lh_clip = GetDvarInt("ARCHIPELAGO_LOAD_DATA_XUID_WEAPON_" + xuid + "_" + i + "_LHCLIP", 0);
@@ -947,7 +958,7 @@ function save_player_val(key, value, xuid)
 {
     if (isdefined(value))
     {
-        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" + xuid + "_KVAL_" + ToUpper(key), value);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_XUID_" + xuid + "_KVAL_" + ToUpper(key), "" + value);
     }
 }
 
@@ -955,7 +966,7 @@ function save_val(key, value)
 {
     if (isdefined(value))
     {
-        SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_KVAL_" + key, value);
+        SetDvar("ARCHIPELAGO_SAVE_DATA_MAP_KVAL_" + key, "" + value);
     }
 }
 
@@ -973,6 +984,20 @@ function restore_val_bool(key)
     if (val != "" && val != "0")
     {
         return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+function restore_val_int(key)
+{
+    val = GetDvarString("ARCHIPELAGO_LOAD_DATA_MAP_KVAL_" + ToUpper(key), "");
+    SetDvar("ARCHIPELAGO_LOAD_DATA_MAP_KVAL_" + ToUpper(key), "");
+    if (val != "" && val != "0")
+    {
+        return Int(val);
     }
     else
     {

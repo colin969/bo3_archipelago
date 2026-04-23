@@ -17,6 +17,7 @@
 #using scripts\zm\_zm_magicbox;
 #using scripts\zm\_zm_weapons;
 #using scripts\zm\_zm_unitrigger;
+#using scripts\zm\_zm_utility;
 #using scripts\zm\craftables\_zm_craftables;
 
 #using scripts\zm\archi_core;
@@ -101,6 +102,40 @@ function restore_player_data(xuid)
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
     }
+
+    w_beacon = getweapon("beacon");
+    loadout = self zm_weapons::player_get_loadout();
+    m_weapon = self zm_utility::get_player_melee_weapon();
+    if (isdefined(m_weapon) && IsSubStr(m_weapon.name, "one_inch_punch") && m_weapon.name != "one_inch_punch")
+    {
+        parts = StrTok(m_weapon.name, "_");
+        self.b_punch_upgraded = 1;
+        self.str_punch_element = parts[3];
+        all_upgraded = 1;
+        foreach(player in level.players)
+		{
+			if(!isdefined(player.b_punch_upgraded) || !player.b_punch_upgraded)
+			{
+				all_upgraded = 0;
+			}
+		}
+        if (all_upgraded == 1)
+        {
+            level flag::set("ee_all_players_upgraded_punch");
+        }
+    }
+    foreach (weapon_data in loadout)
+    {
+        if (weapon_data.weapon.name == w_beacon.name)
+        {
+            self.beacon_ready = 1;
+            if(isdefined(level.zombie_include_weapons[w_beacon]) && !level.zombie_include_weapons[w_beacon])
+			{
+				level.zombie_include_weapons[w_beacon] = 1;
+				level.zombie_weapons[w_beacon].is_in_box = 1;
+			}
+        }
+    }
 }
 
 function clear_state()
@@ -111,7 +146,14 @@ function clear_state()
 
 function setup_locations()
 {
-    level flag::init("ap_orb_solving");
+	a_boxes = getentarray("foot_box", "script_noteworthy");
+    id = 0;
+    foreach (box in a_boxes)
+    {
+        box.ap_id = id;
+        id++;
+    }
+
     level.archi.map_kvals["_craftable_gramophone_vinyl_player"] = 0;
     level.archi.map_kvals["_craftable_gramophone_vinyl_master"] = 0;
 
@@ -135,31 +177,32 @@ function setup_locations()
 
     level thread archi_commands::_basic_trigger("ap_gem_print", &print_gem_targets);
     level thread archi_commands::_basic_trigger("ap_solve_staff", &debug_solve_staff);
+    level thread archi_commands::_basic_trigger("ap_build_staff", &restore_staff_built);
     level thread archi_commands::_basic_trigger("ap_generator", &start_generator);
 
     level thread watch_teleports();
     level thread watch_mound_opened();
     level thread watch_generators();
 
-    level thread _notify_kval("staff_air_zm_crafted", level.archi.mapString + " Wind Staff - Craft the Staff");
+    level thread _notify_kval("elemental_staff_air_crafted", level.archi.mapString + " Wind Staff - Craft the Staff");
     level thread _flag_kval("air_puzzle_1_complete", level.archi.mapString + " Wind Staff - Solve the Crazy Place Puzzle");
     level thread _flag_kval("air_puzzle_2_complete", level.archi.mapString + " Wind Staff - Redirect all the Smoke Stacks");
     level thread _flag_kval("staff_air_upgrade_unlocked", level.archi.mapString + " Wind Staff - Send the Orb to the Crazy Place");
     level thread _watch_staff_upgraded("staff_air", level.archi.mapString + " Wind Staff - Upgrade the Staff");
 
-    level thread _notify_kval("staff_fire_zm_crafted", level.archi.mapString + " Wind Staff - Craft the Staff");
+    level thread _notify_kval("elemental_staff_fire_crafted", level.archi.mapString + " Fire Staff - Craft the Staff");
     level thread _flag_kval("fire_puzzle_1_complete", level.archi.mapString + " Fire Staff - Light the Crazy Place Braziers");
     level thread _flag_kval("fire_puzzle_2_complete", level.archi.mapString + " Fire Staff - Solve the Church Torch Puzzle");
     level thread _flag_kval("staff_fire_upgrade_unlocked", level.archi.mapString + " Fire Staff - Send the Orb to the Crazy Place");
     level thread _watch_staff_upgraded("staff_fire", level.archi.mapString + " Fire Staff - Upgrade the Staff");
 
-    level thread _notify_kval("staff_lightning_zm_crafted", level.archi.mapString + " Wind Staff - Craft the Staff");
+    level thread _notify_kval("elemental_staff_lightning_crafted", level.archi.mapString + " Lightning Staff - Craft the Staff");
     level thread _flag_kval("electric_puzzle_1_complete", level.archi.mapString + " Lightning Staff - Solve the Crazy Place Piano Puzzle");
     level thread _flag_kval("electric_puzzle_2_complete", level.archi.mapString + " Lightning Staff - Correctly set the Electrical Boxes");
     level thread _flag_kval("staff_lightning_upgrade_unlocked", level.archi.mapString + " Lightning Staff - Send the Orb to the Crazy Place");
     level thread _watch_staff_upgraded("staff_lightning", level.archi.mapString + " Lightning Staff - Upgrade the Staff");
 
-    level thread _notify_kval("staff_water_zm_crafted", level.archi.mapString + " Wind Staff - Craft the Staff");
+    level thread _notify_kval("elemental_staff_water_crafted", level.archi.mapString + " Ice Staff - Craft the Staff");
     level thread _flag_kval("ice_puzzle_1_complete", level.archi.mapString + " Ice Staff - Solve the Crazy Place Puzzle");
     level thread _flag_kval("ice_puzzle_2_complete", level.archi.mapString + " Ice Staff - Smash the Three Gravestones");
     level thread _flag_kval("staff_water_upgrade_unlocked", level.archi.mapString + " Ice Staff - Send the Orb to the Crazy Place");
@@ -350,28 +393,49 @@ function save_map_state()
     save_map_kval("crypt_opened");
 
     // Ice Staff
-    save_map_kval("staff_water_zm_crafted");
+    save_map_kval("elemental_staff_water_crafted");
     save_map_kval("ice_puzzle_1_complete");
     save_map_kval("ice_puzzle_2_complete");
     save_map_kval("staff_water_upgrade_unlocked");
+    level.archi.map_kvals["staff_water_upgrade_charges"] = level.a_elemental_staffs["staff_water"].charger.charges_received;
+    save_map_kval("staff_water_upgrade_charges");
     
     // Fire Staff
-    save_map_kval("staff_fire_zm_crafted");
+    save_map_kval("elemental_staff_fire_crafted");
     save_map_kval("fire_puzzle_1_complete");
     save_map_kval("fire_puzzle_2_complete");
     save_map_kval("staff_fire_upgrade_unlocked");
+    level.archi.map_kvals["staff_fire_upgrade_charges"] = level.a_elemental_staffs["staff_fire"].charger.charges_received;
+    save_map_kval("staff_fire_upgrade_charges");
     
     // Air/Wind Staff
-    save_map_kval("staff_air_zm_crafted");
+    save_map_kval("elemental_staff_air_crafted");
     save_map_kval("air_puzzle_1_complete");
     save_map_kval("air_puzzle_2_complete");
     save_map_kval("staff_air_upgrade_unlocked");
+    level.archi.map_kvals["staff_air_upgrade_charges"] = level.a_elemental_staffs["staff_air"].charger.charges_received;
+    save_map_kval("staff_air_upgrade_charges");
     
     // Lightning Staff
-    save_map_kval("staff_lightning_zm_crafted");
+    save_map_kval("elemental_staff_lightning_crafted");
     save_map_kval("electric_puzzle_1_complete");
     save_map_kval("electric_puzzle_2_complete");
     save_map_kval("staff_lightning_upgrade_unlocked");
+    level.archi.map_kvals["staff_lightning_upgrade_charges"] = level.a_elemental_staffs["staff_lightning"].charger.charges_received;
+    save_map_kval("staff_lightning_upgrade_charges");
+
+    a_boxes = getentarray("foot_box", "script_noteworthy");
+    for(i = 0; i < 4; i++)
+    {
+        foreach (box in a_boxes)
+        {
+            level.archi.map_kvals["box_souls" + box.ap_id] = box.n_souls_absorbed;
+            save_map_kval("box_souls" + box.ap_id);
+            continue;
+        }
+        level.archi.map_kvals["box_souls" + i] = 30;
+        save_map_kval("box_souls" + i);
+    }
 }
 
 function restore_nonap_piece(craftable_name, piece_name)
@@ -454,13 +518,21 @@ function restore_map_state()
     restore_map_kval("teleporter_used_3");
     restore_map_kval("teleporter_used_4");
     restore_map_kval("crypt_opened");
+    // Trigger teleport funcs - MUST BE BEFORE STAFF RESTORE
+    restore_teleports();
+    wait(1);
     level thread restore_crypt_opened();
 
     // Ice Staff
-    restore_map_kval("staff_water_zm_crafted");
-    if (has_map_kval("staff_water_zm_crafted"))
+    restore_map_kval_int("staff_water_upgrade_charges");
+    restore_map_kval("elemental_staff_water_crafted");
+    if (has_map_kval("elemental_staff_water_crafted"))
     {
-        restore_staff_built("staff_water_zm", 4);
+        piecespawn = zm_craftables::get_craftable_piece("elemental_staff_water", "gem");
+        piecespawn zm_craftables::piece_unspawn();
+        archi_items::give_piece("gramophone", "vinyl_ice");
+        WAIT_SERVER_FRAME
+        restore_staff_built("elemental_staff_water");
         WAIT_SERVER_FRAME
     }
     restore_map_kval("ice_puzzle_1_complete");
@@ -468,10 +540,15 @@ function restore_map_state()
     restore_map_kval("staff_water_upgrade_unlocked");
     
     // Fire Staff
-    restore_map_kval("staff_fire_zm_crafted");
-    if (has_map_kval("staff_fire_zm_crafted"))
+    restore_map_kval_int("staff_fire_upgrade_charges");
+    restore_map_kval("elemental_staff_fire_crafted");
+    if (has_map_kval("elemental_staff_fire_crafted"))
     {
-        restore_staff_built("staff_fire_zm", 1);
+        piecespawn = zm_craftables::get_craftable_piece("elemental_staff_fire", "gem");
+        piecespawn zm_craftables::piece_unspawn();
+        archi_items::give_piece("gramophone", "vinyl_fire");
+        WAIT_SERVER_FRAME
+        restore_staff_built("elemental_staff_fire");
         WAIT_SERVER_FRAME
     }
     restore_map_kval("fire_puzzle_1_complete");
@@ -479,10 +556,15 @@ function restore_map_state()
     restore_map_kval("staff_fire_upgrade_unlocked");
     
     // Air/Wind Staff
-    restore_map_kval("staff_air_zm_crafted");
-    if (has_map_kval("staff_air_zm_crafted"))
+    restore_map_kval_int("staff_air_upgrade_charges");
+    restore_map_kval("elemental_staff_air_crafted");
+    if (has_map_kval("elemental_staff_air_crafted"))
     {
-        restore_staff_built("staff_air_zm", 2);
+        piecespawn = zm_craftables::get_craftable_piece("elemental_staff_air", "gem");
+        piecespawn zm_craftables::piece_unspawn();
+        archi_items::give_piece("gramophone", "vinyl_air");
+        WAIT_SERVER_FRAME
+        restore_staff_built("elemental_staff_air");
         WAIT_SERVER_FRAME
     }
     restore_map_kval("air_puzzle_1_complete");
@@ -490,76 +572,77 @@ function restore_map_state()
     restore_map_kval("staff_air_upgrade_unlocked");
     
     // Lightning Staff
-    restore_map_kval("staff_lightning_zm_crafted");
-    if (has_map_kval("staff_lightning_zm_crafted"))
+    restore_map_kval_int("staff_lightning_upgrade_charges");
+    restore_map_kval("elemental_staff_lightning_crafted");
+    if (has_map_kval("elemental_staff_lightning_crafted"))
     {
-        restore_staff_built("staff_lightning_zm", 3);
+        piecespawn = zm_craftables::get_craftable_piece("elemental_staff_lightning", "gem");
+        piecespawn zm_craftables::piece_unspawn();
+        archi_items::give_piece("gramophone", "vinyl_elec");
+        WAIT_SERVER_FRAME
+        restore_staff_built("elemental_staff_lightning");
         WAIT_SERVER_FRAME
     }
     restore_map_kval("electric_puzzle_1_complete");
     restore_map_kval("electric_puzzle_2_complete");
     restore_map_kval("staff_lightning_upgrade_unlocked");
 
-    // Trigger teleport funcs
-    level thread restore_teleports();
-
+    level.archi.staff_restore_id = 0;
     level thread restore_air_staff();
-    WAIT_SERVER_FRAME
     level thread restore_fire_staff();
-    WAIT_SERVER_FRAME
     level thread restore_lightning_staff();
-    WAIT_SERVER_FRAME
     level thread restore_ice_staff();
+
+    a_boxes = getentarray("foot_box", "script_noteworthy");
+    foreach (box in a_boxes)
+    {
+        restore_map_kval_int("box_souls" + box.ap_id);
+        souls_absorbed = get_map_kval("box_souls" + box.ap_id);
+        box.n_souls_absorbed = souls_absorbed;
+        if (box.n_souls_absorbed >= 30)
+        {
+            box notify("soul_absorbed", level.players[0]);
+        }
+        else if (box.n_souls_absorbed >= 1)
+        {
+            box thread scene::play("p7_fxanim_zm_ori_challenge_box_open_bundle", box);
+            box util::delay(1, undefined, &clientfield::set, "foot_print_box_glow", 1);
+        }
+    }
 }
 
-function restore_staff_built(craftable_name, element_num)
+function restore_staff_built(craftable_name)
 {
-    staff_name = "craftable_" + craftable_name;
-    staff_model = getent(craftable_name, "targetname");
-    staff_info = get_staff_info_from_element_index(element_num);
-    staff_model useweaponmodel(staff_info.w_weapon);
-    staff_model showallparts();
-    switch(staff_info.craftable_name)
-	{
-		case "elemental_staff_air":
-		{
-			staff_model.angles = vectorscale((0, 1, 0), 130);
-			break;
-		}
-		case "elemental_staff_fire":
-		{
-			staff_model.angles = vectorscale((0, 1, 0), 50);
-			break;
-		}
-		case "elemental_staff_lightning":
-		{
-			staff_model.angles = vectorscale((0, 1, 0), 90);
-			break;
-		}
-		case "elemental_staff_water":
-		{
-			staff_model.angles = (0, 0, 0);
-			break;
-		}
-	}
-    if(!isdefined(staff_model.inused))
-	{
-		staff_model.origin = staff_model.origin - vectorscale((0, 0, 1), 30);
-		staff_model show();
-		staff_model.inused = 1;
-		level.n_staffs_crafted++;
-		if(level.n_staffs_crafted == 4)
-		{
-			level flag::set("ee_all_staffs_crafted");
-		}
-	}
-    str_fieldname = staff_info.element + "_staff.quest_state";
-    level clientfield::set(str_fieldname, 3);
+    IPrintLn("restoring " + craftable_name);
+    craftable = zm_craftables::find_craftable_stub(craftable_name);
+    foreach (s_piece in craftable.a_piecestubs)
+    {
+        level.players[0] zm_craftables::player_take_piece(s_piece.piecespawn);
+        WAIT_SERVER_FRAME
+    }
+
+    zm_craftables::complete_craftable(craftable_name);
+    // WAIT_SERVER_FRAME
+
+    player = level.players[0];
+	// zm_unitrigger::complete_craftable doesn't like things that aren't open tables!
+    foreach (uts_craftable in level.a_uts_craftables)
+    {
+        if (uts_craftable.craftablestub.name == craftable_name)
+        {
+            // Restart craftable place think
+            // Don't call onfullycrafted, the place think will do it itself after restarting!
+            zm_unitrigger::unregister_unitrigger(uts_craftable);
+            WAIT_SERVER_FRAME
+            zm_unitrigger::register_static_unitrigger(uts_craftable, &zm_craftables::craftable_place_think);
+            break;
+        }
+    }
 }
 
 function get_staff_info_from_element_index(n_index)
 {
-	foreach(s_staff in level.a_elemental_staffs)
+	foreach (s_staff in level.a_elemental_staffs)
 	{
 		if(s_staff.enum == n_index)
 		{
@@ -621,9 +704,13 @@ function restore_air_staff()
 {
     w_staff = getweapon("staff_air");
 
+    staff = level.a_elemental_staffs["staff_air"];
+    staff.charger.charges_received = get_map_kval("staff_air_upgrade_charges");
+
     if(has_map_kval("air_puzzle_1_complete"))
     {
         level flag::set("air_puzzle_1_complete");
+        WAIT_SERVER_FRAME
     }
 
 
@@ -634,28 +721,39 @@ function restore_air_staff()
         {
             a_smoke.solved = 1;
         }
+        WAIT_SERVER_FRAME
         level notify("air_puzzle_smoke_solved");
+        level flag::wait_till("air_puzzle_2_complete");
     }
 
     if(has_map_kval("staff_air_upgrade_unlocked"))
     {
-        level flag::wait_till_clear("ap_orb_solving");
-        level flag::set("ap_orb_solving");
-        // Set up the discs
-        set_discs_for_gem("crypt_gem_air");
-        wait(0.1);
-        // Charge orb
-        e_model = get_crypt_orb("crypt_gem_air");
-        e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
-        level flag::wait_till("disc_rotation_active");
-        level flag::wait_till_clear("disc_rotation_active");
-        level flag::clear("ap_orb_solving");
+        // while(true)
+        // {
+        //     if (level.archi.staff_restore_id == 0)
+        //     {
+        //         break;
+        //     }
+        //     wait(0.1);
+        // }
+        // // Set up the discs
+        // set_discs_for_gem("crypt_gem_air");
+        // wait(0.1);
+        // // Charge orb
+        // e_model = get_crypt_orb("crypt_gem_air");
+        // e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
+        // level flag::wait_till("staff_air_upgrade_unlocked");
+        level flag::set("staff_air_upgrade_unlocked");
     }
+    level.archi.staff_restore_id++;
 }
 
 function restore_lightning_staff()
 {
     w_staff = getweapon("staff_lightning");
+
+    staff = level.a_elemental_staffs["staff_lightning"];
+    staff.charger.charges_received = get_map_kval("staff_lightning_upgrade_charges");
 
     if(has_map_kval("electric_puzzle_1_complete"))
     {
@@ -680,23 +778,32 @@ function restore_lightning_staff()
 
     if(has_map_kval("staff_lightning_upgrade_unlocked"))
     {
-        level flag::wait_till_clear("ap_orb_solving");
-        level flag::set("ap_orb_solving");
-        // Set up the discs
-        set_discs_for_gem("crypt_gem_elec");
-        wait(0.1);
-        // Charge orb
-        e_model = get_crypt_orb("crypt_gem_elec");
-        e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
-        level flag::wait_till("disc_rotation_active");
-        level flag::wait_till_clear("disc_rotation_active");
-        level flag::clear("ap_orb_solving");
+        // while(true)
+        // {
+        //     if (level.archi.staff_restore_id == 1)
+        //     {
+        //         break;
+        //     }
+        //     wait(0.1);
+        // }
+        // // Set up the discs
+        // set_discs_for_gem("crypt_gem_elec");
+        // wait(0.1);
+        // // Charge orb
+        // e_model = get_crypt_orb("crypt_gem_elec");
+        // e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
+        // level flag::wait_till("staff_lightning_upgrade_unlocked");
+        level flag::set("staff_lightning_upgrade_unlocked");
     }
+    level.archi.staff_restore_id++;
 }
 
 function restore_fire_staff()
 {
     w_staff = getweapon("staff_fire");
+
+    staff = level.a_elemental_staffs["staff_fire"];
+    staff.charger.charges_received = get_map_kval("staff_fire_upgrade_charges");
 
     if(has_map_kval("fire_puzzle_1_complete"))
     {
@@ -718,18 +825,24 @@ function restore_fire_staff()
 
     if(has_map_kval("staff_fire_upgrade_unlocked"))
     {
-        level flag::wait_till_clear("ap_orb_solving");
-        level flag::set("ap_orb_solving");
-        // Set up the discs
-        set_discs_for_gem("crypt_gem_fire");
-        wait(0.1);
-        // Charge orb
-        e_model = get_crypt_orb("crypt_gem_fire");
-        e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
-        level flag::wait_till("disc_rotation_active");
-        level flag::wait_till_clear("disc_rotation_active");
-        level flag::clear("ap_orb_solving");
+        // while(true)
+        // {
+        //     if (level.archi.staff_restore_id == 2)
+        //     {
+        //         break;
+        //     }
+        //     wait(0.1);
+        // }
+        // // Set up the discs
+        // set_discs_for_gem("crypt_gem_fire");
+        // wait(0.1);
+        // // Charge orb
+        // e_model = get_crypt_orb("crypt_gem_fire");
+        // e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
+        // level flag::wait_till("staff_fire_upgrade_unlocked");
+        level flag::set("staff_fire_upgrade_unlocked");
     }
+    level.archi.staff_restore_id++;
 }
 
 function restore_ice_staff()
@@ -737,6 +850,9 @@ function restore_ice_staff()
     w_staff = getweapon("staff_water");
     // We need a projectile weapon for breaking the gravestones
     w_manowar = getweapon("ar_damage");
+
+    staff = level.a_elemental_staffs["staff_water"];
+    staff.charger.charges_received = get_map_kval("staff_water_upgrade_charges");
 
     if(has_map_kval("ice_puzzle_1_complete"))
     {
@@ -766,17 +882,22 @@ function restore_ice_staff()
 
     if(has_map_kval("staff_water_upgrade_unlocked"))
     {
-        level flag::wait_till_clear("ap_orb_solving");
-        level flag::set("ap_orb_solving");
-        // Set up the discs
-        set_discs_for_gem("crypt_gem_ice");
-        wait(0.1);
-        // Charge orb
-        e_model = get_crypt_orb("crypt_gem_ice");
-        e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
-        level flag::wait_till("disc_rotation_active");
-        level flag::wait_till_clear("disc_rotation_active");
-        level flag::clear("ap_orb_solving");
+        // while(true)
+        // {
+        //     if (level.archi.staff_restore_id == 3)
+        //     {
+        //         break;
+        //     }
+        //     wait(0.1);
+        // }
+        // // Set up the discs
+        // set_discs_for_gem("crypt_gem_ice");
+        // wait(0.1);
+        // // Charge orb
+        // e_model = get_crypt_orb("crypt_gem_ice");
+        // e_model notify("damage", 1, level.players[0], (0, 0, 0), (0, 0, 0), "", "", "", "", w_staff);
+        // level flag::wait_till("staff_water_upgrade_unlocked");
+        level flag::set("staff_water_upgrade_unlocked");
     }
 }
 
@@ -786,7 +907,7 @@ function start_generator(str_generator_name)
     s_generator = level.zone_capture.zones[str_generator_name];
     
     if(isdefined(s_generator) && !s_generator flag::get("player_controlled"))
-    {        
+    {
         s_generator flag::set("player_controlled");
         s_generator flag::clear("attacked_by_recapture_zombies");
         level clientfield::set("zone_capture_hud_generator_" + s_generator.script_int, 1);
@@ -897,6 +1018,11 @@ function restore_map_kval(key)
     level.archi.map_kvals[key] = archi_save::restore_val_bool(key);
 }
 
+function restore_map_kval_int(key)
+{
+    level.archi.map_kvals[key] = archi_save::restore_val_int(key);
+}
+
 function has_map_kval(key)
 {
     if (isdefined(level.archi.map_kvals[key]) && level.archi.map_kvals[key] != 0)
@@ -904,6 +1030,15 @@ function has_map_kval(key)
         return true;
     }
     return false;
+}
+
+function get_map_kval(key)
+{
+    if (isdefined(level.archi.map_kvals[key]) && level.archi.map_kvals[key] != 0)
+    {
+        return level.archi.map_kvals[key];
+    }
+    return 0;
 }
 
 function debug_solve_staff(val)

@@ -212,7 +212,6 @@ Archi.FromGSC = function (model)
 
     if not saveData["universal"] then
       saveData["universal"] = {
-        players = {},
         mapItems = {}
       }
     end
@@ -257,6 +256,13 @@ Archi.FromGSC = function (model)
         }
       end
 
+      if not saveData["universal"]["player_stats"] then
+        saveData["universal"]["player_stats"] = {}
+      end
+      if not saveData["universal"]["player_stats"][mapName] then
+        saveData["universal"]["player_stats"][mapName] = {}
+      end
+
       local mapSave = save_system.map_saves[mapName]
       if mapSave then
         players = {}
@@ -270,6 +276,7 @@ Archi.FromGSC = function (model)
           kvals = {},
         }
         mapSave(saveData[checkpointName], saveData["universal"])
+        save_system.save_universal_players(mapName, saveData["universal"])
       end
 
       Archi.SaveData()
@@ -290,7 +297,14 @@ Archi.FromGSC = function (model)
         }
       end
 
-      save_system.save_universal_player(xuid, saveData["universal"])
+      if not saveData["universal"]["player_stats"] then
+        saveData["universal"]["player_stats"] = {}
+      end
+      if not saveData["universal"]["player_stats"][mapName] then
+        saveData["universal"]["player_stats"][mapName] = {}
+      end
+
+      save_system.save_universal_player(mapName, xuid, saveData["universal"])
 
       local playerSave = save_system.player_saves[mapName]
       if playerSave then
@@ -331,7 +345,14 @@ Archi.FromGSC = function (model)
         }
       end
 
-      save_system.restore_universal_player(xuid, saveData["universal"])
+      if not saveData["universal"]["player_stats"] then
+        saveData["universal"]["player_stats"] = {}
+      end
+      if not saveData["universal"]["player_stats"][mapName] then
+        saveData["universal"]["player_stats"][mapName] = {}
+      end
+
+      save_system.restore_universal_player(mapName, xuid, saveData["universal"])
 
       local playerRestore = save_system.player_restores[mapName]
       if playerRestore then
@@ -340,7 +361,7 @@ Archi.FromGSC = function (model)
         if saveData[mapName] and saveData[mapName]["players"] then
           playerData = saveData[mapName]["players"][xuid]
           if playerData then
-            save_system.restore_map_player(xuid, playerData)
+            save_system.restore_map_player(mapName, xuid, playerData)
             playerRestore(xuid, playerData)
             Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_XUID_READY_" .. xuid, "true" )
           end
@@ -368,6 +389,13 @@ Archi.FromGSC = function (model)
         }
       end
 
+      if not saveData["universal"]["player_stats"] then
+        saveData["universal"]["player_stats"] = {}
+      end
+      if not saveData["universal"]["player_stats"][mapName] then
+        saveData["universal"]["player_stats"][mapName] = {}
+      end
+
       local mapSave = save_system.map_saves[mapName]
       if mapSave then
         players = {}
@@ -381,6 +409,7 @@ Archi.FromGSC = function (model)
           kvals = {},
         }
         mapSave(saveData[mapName], saveData["universal"])
+        save_system.save_universal_players(mapName, saveData["universal"])
       end
 
       Archi.SaveData()

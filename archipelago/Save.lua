@@ -1,5 +1,5 @@
 -- Der Eisendrache
-function map_save_zm_castle(mapData, uniData)
+function map_save_zm_castle(mapData)
   Archi.LogMessage("Saving map data for Der Eisendrache");
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -44,7 +44,7 @@ function map_save_zm_castle(mapData, uniData)
   save_val(mapData, "fire_owner")
   save_val(mapData, "void_owner")
 
-  save_players(mapData, uniData, player_save_zm_castle)
+  save_players(mapData, player_save_zm_castle)
 end
 
 function player_save_zm_castle(xuid, playerData)
@@ -106,7 +106,7 @@ function player_restore_zm_castle(xuid, playerData)
 end
 
 -- Shadows of Evil
-function map_save_zm_zod(mapData, uniData)
+function map_save_zm_zod(mapData)
   Archi.LogMessage("Saving map data for Shadows of Evil");
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -133,7 +133,7 @@ function map_save_zm_zod(mapData, uniData)
 
   save_val(mapData, "smashed")
 
-  save_players(mapData, uniData, player_save_zm_zod)
+  save_players(mapData, player_save_zm_zod)
 end
 
 function player_save_zm_zod(xuid, playerData)
@@ -181,7 +181,7 @@ function player_restore_zm_zod(xuid, playerData)
 end
 
 -- Zetsubou No Shima
-function map_save_zm_island(mapData, uniData)
+function map_save_zm_island(mapData)
   Archi.LogMessage("Saving map data for Zetsubou No Shima");
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -205,7 +205,7 @@ function map_save_zm_island(mapData, uniData)
   save_flag(mapData, "valve3_found")
   save_flag(mapData, "a_player_got_skullgun")
 
-  save_players(mapData, uniData, player_save_zm_island)
+  save_players(mapData, player_save_zm_island)
 end
 
 function player_save_zm_island(xuid, playerData)
@@ -268,7 +268,7 @@ function player_restore_zm_island(xuid, playerData)
 end
 
 -- Gorod Krovi
-function map_save_zm_stalingrad(mapData, uniData)
+function map_save_zm_stalingrad(mapData)
   Archi.LogMessage("Saving map data for Gorod Krovi")
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -300,7 +300,7 @@ function map_save_zm_stalingrad(mapData, uniData)
   save_flag(mapData, "drshup_factory_rune_hit");
   save_flag(mapData, "drshup_rune_step_done");
 
-  save_players(mapData, uniData, player_save_zm_stalingrad)
+  save_players(mapData, player_save_zm_stalingrad)
 end
 
 function player_save_zm_stalingrad(xuid, playerData)
@@ -367,7 +367,7 @@ function player_restore_zm_stalingrad(xuid, playerData)
 end
 
 -- Revelations
-function map_save_zm_genesis(mapData, uniData)
+function map_save_zm_genesis(mapData)
   Archi.LogMessage("Saving map data for Revelations")
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -417,7 +417,7 @@ function map_save_zm_genesis(mapData, uniData)
   -- Siegfried
   save_val(mapData, "helm_of_siegfried")
 
-  save_players(mapData, uniData, player_save_zm_genesis)
+  save_players(mapData, player_save_zm_genesis)
 end
 
 function player_save_zm_genesis(xuid, playerData)
@@ -498,7 +498,7 @@ function player_restore_zm_genesis(xuid, playerData)
 end
 
 -- The Giant
-function map_save_zm_factory(mapData, uniData)
+function map_save_zm_factory(mapData)
   Archi.LogMessage("Saving map data for The Giant")
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -509,7 +509,7 @@ function map_save_zm_factory(mapData, uniData)
   save_flag(mapData, "teleporter_pad_link_2")
   save_flag(mapData, "teleporter_pad_link_3")
 
-  save_players(mapData, uniData, player_save_zm_factory)
+  save_players(mapData, player_save_zm_factory)
 end
 
 function player_save_zm_factory(xuid, playerData)
@@ -537,7 +537,7 @@ function player_restore_zm_factory(xuid, playerData)
 end
 
 -- Kino der Toten
-function map_save_zm_theater(mapData, uniData)
+function map_save_zm_theater(mapData)
   Archi.LogMessage("Saving map data for Kino der Toten")
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -545,7 +545,7 @@ function map_save_zm_theater(mapData, uniData)
   save_power_on(mapData)
   save_doors_and_debris(mapData)
 
-  save_players(mapData, uniData, player_save_zm_theater)
+  save_players(mapData, player_save_zm_theater)
 end
 
 function player_save_zm_theater(xuid, playerData)
@@ -570,7 +570,7 @@ function player_restore_zm_theater(xuid, playerData)
 end
 
 -- Moon
-function map_save_zm_moon(mapData, uniData)
+function map_save_zm_moon(mapData)
   Archi.LogMessage("Saving map data for Moon")
   save_spent_tokens(mapData)
   save_zombie_count(mapData)
@@ -594,7 +594,7 @@ function map_save_zm_moon(mapData, uniData)
   save_val(mapData, "sd_bear")
   save_val(mapData, "sd_bone")
 
-  save_players(mapData, uniData, player_save_zm_theater)
+  save_players(mapData, player_save_zm_theater)
 end
 
 function player_save_zm_moon(xuid, playerData)
@@ -634,6 +634,167 @@ function player_restore_zm_moon(xuid, playerData)
   restore_player_loadout(xuid, playerData)
 end
 
+-- Origins
+function map_save_zm_tomb(mapData)
+  Archi.LogMessage("Saving map data for Origins")
+  save_spent_tokens(mapData)
+  save_zombie_count(mapData)
+  save_round_number(mapData)
+  save_power_on(mapData)
+  save_doors_and_debris(mapData)
+
+  save_val(mapData, "ee_all_staffs_placed")
+  save_val(mapData, "ee_mech_zombie_fight_completed")
+  save_val(mapData, "ee_maxis_drone_retrieved")
+  save_val(mapData, "ee_all_players_upgraded_punch")
+  save_val(mapData, "ee_souls_absorbed")
+
+  save_val(mapData, "generator_start_bunker")
+  save_val(mapData, "generator_tank_trench")
+  save_val(mapData, "generator_mid_trench")
+  save_val(mapData, "generator_nml_right")
+  save_val(mapData, "generator_nml_left")
+  save_val(mapData, "generator_church")
+
+  save_val(mapData, "_craftable_gramophone_vinyl_player")
+  save_val(mapData, "_craftable_gramophone_vinyl_master")
+
+  -- Teleporter usage (reveals gems)
+  save_val(mapData, "teleporter_used_1")
+  save_val(mapData, "teleporter_used_2")
+  save_val(mapData, "teleporter_used_3")
+  save_val(mapData, "teleporter_used_4")
+  save_val(mapData, "crypt_opened")
+
+  save_val(mapData, "_craftable_elemental_staff_water_upper_staff")
+  save_val(mapData, "_craftable_elemental_staff_water_middle_staff")
+  save_val(mapData, "_craftable_elemental_staff_water_lower_staff")
+  save_val(mapData, "elemental_staff_water_crafted")
+  save_val(mapData, "ice_puzzle_1_complete")
+  save_val(mapData, "ice_puzzle_2_complete")
+  save_val(mapData, "staff_water_upgrade_unlocked")
+  save_val(mapData, "staff_water_upgrade_charges")
+  
+  save_val(mapData, "_craftable_elemental_staff_fire_upper_staff")
+  save_val(mapData, "_craftable_elemental_staff_fire_middle_staff")
+  save_val(mapData, "_craftable_elemental_staff_fire_lower_staff")
+  save_val(mapData, "elemental_staff_fire_crafted")
+  save_val(mapData, "fire_puzzle_1_complete")
+  save_val(mapData, "fire_puzzle_2_complete")
+  save_val(mapData, "staff_fire_upgrade_unlocked")
+  save_val(mapData, "staff_fire_upgrade_charges")
+  
+  save_val(mapData, "_craftable_elemental_staff_air_upper_staff")
+  save_val(mapData, "_craftable_elemental_staff_air_middle_staff")
+  save_val(mapData, "_craftable_elemental_staff_air_lower_staff")
+  save_val(mapData, "elemental_staff_air_crafted")
+  save_val(mapData, "air_puzzle_1_complete")
+  save_val(mapData, "air_puzzle_2_complete")
+  save_val(mapData, "staff_air_upgrade_unlocked")
+  save_val(mapData, "staff_air_upgrade_charges")
+  
+  save_val(mapData, "_craftable_elemental_staff_lightning_upper_staff")
+  save_val(mapData, "_craftable_elemental_staff_lightning_middle_staff")
+  save_val(mapData, "_craftable_elemental_staff_lightning_lower_staff")
+  save_val(mapData, "elemental_staff_lightning_crafted")
+  save_val(mapData, "electric_puzzle_1_complete")
+  save_val(mapData, "electric_puzzle_2_complete")
+  save_val(mapData, "staff_lightning_upgrade_unlocked")
+  save_val(mapData, "staff_lightning_upgrade_charges")
+
+  save_val(mapData, "box_souls0")
+  save_val(mapData, "box_souls1")
+  save_val(mapData, "box_souls2")
+  save_val(mapData, "box_souls3")
+
+  save_players(mapData, player_save_zm_theater)
+end
+
+function player_save_zm_tomb(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
+end
+
+function map_restore_zm_tomb(mapData)
+  Archi.LogMessage("Restoring map data for Origins")
+  restore_spent_tokens(mapData)
+  restore_zombie_count(mapData)
+  restore_round_number(mapData)
+  restore_power_on(mapData)
+  restore_doors_and_debris(mapData)
+
+  restore_val(mapData, "ee_all_staffs_placed")
+  restore_val(mapData, "ee_mech_zombie_fight_completed")
+  restore_val(mapData, "ee_maxis_drone_retrieved")
+  restore_val(mapData, "ee_all_players_upgraded_punch")
+  restore_val(mapData, "ee_souls_absorbed")
+
+  restore_val(mapData, "generator_start_bunker")
+  restore_val(mapData, "generator_tank_trench")
+  restore_val(mapData, "generator_mid_trench")
+  restore_val(mapData, "generator_nml_right")
+  restore_val(mapData, "generator_nml_left")
+  restore_val(mapData, "generator_church")
+
+  restore_val(mapData, "_craftable_gramophone_vinyl_player")
+  restore_val(mapData, "_craftable_gramophone_vinyl_master")
+
+  -- Teleporter usage (reveals gems)
+  restore_val(mapData, "teleporter_used_1")
+  restore_val(mapData, "teleporter_used_2")
+  restore_val(mapData, "teleporter_used_3")
+  restore_val(mapData, "teleporter_used_4")
+  restore_val(mapData, "crypt_opened")
+
+  restore_val(mapData, "_craftable_elemental_staff_water_upper_staff")
+  restore_val(mapData, "_craftable_elemental_staff_water_middle_staff")
+  restore_val(mapData, "_craftable_elemental_staff_water_lower_staff")
+  restore_val(mapData, "elemental_staff_water_crafted")
+  restore_val(mapData, "ice_puzzle_1_complete")
+  restore_val(mapData, "ice_puzzle_2_complete")
+  restore_val(mapData, "staff_water_upgrade_unlocked")
+  restore_val(mapData, "staff_water_upgrade_charges")
+  
+  restore_val(mapData, "_craftable_elemental_staff_fire_upper_staff")
+  restore_val(mapData, "_craftable_elemental_staff_fire_middle_staff")
+  restore_val(mapData, "_craftable_elemental_staff_fire_lower_staff")
+  restore_val(mapData, "elemental_staff_fire_crafted")
+  restore_val(mapData, "fire_puzzle_1_complete")
+  restore_val(mapData, "fire_puzzle_2_complete")
+  restore_val(mapData, "staff_fire_upgrade_unlocked")
+  restore_val(mapData, "staff_fire_upgrade_charges")
+  
+  restore_val(mapData, "_craftable_elemental_staff_air_upper_staff")
+  restore_val(mapData, "_craftable_elemental_staff_air_middle_staff")
+  restore_val(mapData, "_craftable_elemental_staff_air_lower_staff")
+  restore_val(mapData, "elemental_staff_air_crafted")
+  restore_val(mapData, "air_puzzle_1_complete")
+  restore_val(mapData, "air_puzzle_2_complete")
+  restore_val(mapData, "staff_air_upgrade_unlocked")
+  restore_val(mapData, "staff_air_upgrade_charges")
+  
+  restore_val(mapData, "_craftable_elemental_staff_lightning_upper_staff")
+  restore_val(mapData, "_craftable_elemental_staff_lightning_middle_staff")
+  restore_val(mapData, "_craftable_elemental_staff_lightning_lower_staff")
+  restore_val(mapData, "elemental_staff_lightning_crafted")
+  restore_val(mapData, "electric_puzzle_1_complete")
+  restore_val(mapData, "electric_puzzle_2_complete")
+  restore_val(mapData, "staff_lightning_upgrade_unlocked")
+  restore_val(mapData, "staff_lightning_upgrade_charges")
+
+  restore_val(mapData, "box_souls0")
+  restore_val(mapData, "box_souls1")
+  restore_val(mapData, "box_souls2")
+  restore_val(mapData, "box_souls3")
+end
+
+function player_restore_zm_tomb(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+end
+
 -- Wanted
 function map_save_zm_westernz(mapData, uniData)
   Archi.LogMessage("Saving map data for Wanted");
@@ -647,7 +808,7 @@ function map_save_zm_westernz(mapData, uniData)
   save_val(mapData, "skulls_collected")
   save_val(mapData, "barn_open")
 
-  save_players(mapData, uniData, player_save_zm_westernz)
+  save_players(mapData, player_save_zm_westernz)
 end
 
 function player_save_zm_westernz(xuid, playerData)
@@ -741,6 +902,14 @@ function restore_round_number(mapData)
   if mapData["next_astro_round"] then
     Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_NEXT_ASTRO_ROUND", mapData["next_astro_round"])
   end
+
+  if mapData["last_rain_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_LAST_RAIN_ROUND", mapData["last_rain_round"])
+  end
+
+  if mapData["last_snow_round"] then
+    Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_LAST_SNOW_ROUND", mapData["last_snow_round"])
+  end
 end
 
 function restore_doors_and_debris(mapData)
@@ -783,12 +952,9 @@ function restore_zombie_count(mapData)
   end
 end
 
-function save_players(mapData, uniData, cb)
+function save_players(mapData, cb)
   if not mapData["players"] then
     mapData["players"] = {}
-  end
-  if not uniData["players"] then
-    uniData["players"] = {}
   end
   local xuidList = Engine.DvarString("","ARCHIPELAGO_SAVE_DATA_XUIDS")
   for xuid in string.gmatch(xuidList, "[^;]+") do
@@ -798,8 +964,14 @@ function save_players(mapData, uniData, cb)
     }
     cb(xuid, playerData)
     save_map_player(xuid, playerData)
-    save_universal_player(xuid, uniData)
     mapData["players"][xuid] = playerData
+  end
+end
+
+function save_universal_players(mapName, uniData)
+  local xuidList = Engine.DvarString("","ARCHIPELAGO_SAVE_DATA_XUIDS")
+  for xuid in string.gmatch(xuidList, "[^;]+") do
+    save_universal_player(mapName, xuid, uniData)
   end
 end
 
@@ -950,6 +1122,18 @@ function save_round_number(mapData)
   if astroRound and astroRound > 0 then
     Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_NEXT_ASTRO_ROUND", "")
     mapData.next_astro_round = astroRound
+  end
+
+  local last_rain_round = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_LAST_RAIN_ROUND")
+  if last_rain_round and last_rain_round > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_LAST_RAIN_ROUND", "")
+    mapData.last_rain_round = last_rain_round
+  end
+
+  local last_snow_round = Engine.DvarInt(nil, "ARCHIPELAGO_SAVE_DATA_LAST_SNOW_ROUND")
+  if last_snow_round and last_snow_round > 0 then
+    Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_LAST_SNOW_ROUND", "")
+    mapData.last_snow_round = last_snow_round
   end
 end
 
@@ -1103,31 +1287,31 @@ function save_universal(uniData)
 
 end
 
-function save_universal_player(xuid, uniData)
-  uniData.players[xuid] = {}
+function save_universal_player(mapName, xuid, uniData)
+  uniData["player_stats"][mapName][xuid] = {}
 
   local kills = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" .. xuid)
   Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_KILLS_" .. xuid, -1)
   if kills and kills >= 0 then
-    uniData.players[xuid]["kills"] = kills
+    uniData["player_stats"][mapName][xuid]["kills"] = kills
   end
   
   local headshots = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid)
   Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid, -1)
   if headshots and headshots >= 0 then
-    uniData.players[xuid]["headshots"] = headshots
+    uniData["player_stats"][mapName][xuid]["headshots"] = headshots
   end
   
   local revives = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid)
   Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid, -1)
   if revives and revives >= 0 then
-    uniData.players[xuid]["revives"] = revives
+    uniData["player_stats"][mapName][xuid]["revives"] = revives
   end
   
   local downs = Engine.DvarInt(-1,"ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid)
   Engine.SetDvar("ARCHIPELAGO_SAVE_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid, -1)
   if downs and downs >= 0 then
-    uniData.players[xuid]["downs"] = downs
+    uniData["player_stats"][mapName][xuid]["downs"] = downs
   end
 end
 
@@ -1137,23 +1321,23 @@ function restore_universal(uniData)
   end
 end
 
-function restore_universal_player(xuid, uniData)
-  playerData = uniData["players"][xuid]
+function restore_universal_player(mapName, xuid, uniData)
+  playerStats = uniData["player_stats"][mapName][xuid]
   
-  if playerData then
+  if playerStats then
     Engine.SetDvar( "ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_READY_" .. xuid, "true" )
 
-    if playerData["kills"] then
-      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" .. xuid, playerData["kills"])
+    if playerStats["kills"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_KILLS_" .. xuid, playerStats["kills"])
     end
-    if playerData["headshots"] then
-      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid, playerData["headshots"])
+    if playerStats["headshots"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_HEADSHOTS_" .. xuid, playerStats["headshots"])
     end
-    if playerData["revives"] then
-      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid, playerData["revives"])
+    if playerStats["revives"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_REVIVES_" .. xuid, playerStats["revives"])
     end
-    if playerData["downs"] then
-      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid, playerData["downs"])
+    if playerStats["downs"] then
+      Engine.SetDvar("ARCHIPELAGO_LOAD_DATA_UNIVERSAL_XUID_DOWNS_" .. xuid, playerStats["downs"])
     end
   end
 end
@@ -1166,7 +1350,7 @@ function save_map_player(xuid, playerData)
   save_player_val(xuid, playerData, "spent_legendary_gum_tokens")
 end
 
-function restore_map_player(xuid, playerData)
+function restore_map_player(mapName, xuid, playerData)
   restore_player_val(xuid, playerData, "progressive_starting_points")
   restore_player_val(xuid, playerData, "spent_perk_tokens")
   restore_player_val(xuid, playerData, "spent_gum_tokens")
@@ -1198,6 +1382,7 @@ map_saves = {
   zm_theater = map_save_zm_theater,
   zm_westernz = map_save_zm_westernz,
   zm_moon = map_save_zm_moon,
+  zm_tomb = map_save_zm_tomb,
 }
 
 player_saves = {
@@ -1210,6 +1395,7 @@ player_saves = {
   zm_theater = player_save_zm_theater,
   zm_westernz = player_save_zm_westernz,
   zm_moon = player_save_zm_moon,
+  zm_tomb = player_save_zm_tomb,
 }
 
 map_restores = {
@@ -1222,6 +1408,7 @@ map_restores = {
   zm_theater = map_restore_zm_theater,
   zm_westernz = map_restore_zm_westernz,
   zm_moon = map_restore_zm_moon,
+  zm_tomb = map_restore_zm_tomb,
 }
 
 player_restores = {
@@ -1234,6 +1421,7 @@ player_restores = {
   zm_theater = player_restore_zm_theater,
   zm_westernz = player_restore_zm_westernz,
   zm_moon = player_restore_zm_moon,
+  zm_tomb = player_restore_zm_tomb,
 }
 
 return {
@@ -1244,6 +1432,7 @@ return {
   save_universal = save_universal,
   restore_universal = restore_universal,
   save_universal_player = save_universal_player,
+  save_universal_players = save_universal_players,
   restore_universal_player = restore_universal_player,
   save_map_player = save_map_player,
   restore_map_player = restore_map_player,
