@@ -24,7 +24,7 @@ LogQueue = List.new()
 LocationQueue = List.new()
 Archi = {}
 Archi.Debug = true
-Archi.CheckedLocations = {}
+Archi.LocationList = {}
 --
 
 oneTimeItems = {
@@ -473,9 +473,11 @@ Archi.FromGSC = function (model)
     if location ~= "NONE" then
       locationID = locations.LocationToID[location]
       if locationID then
-        Archipelago.CheckLocation(locationID)
+        if not Archi.LocationList[locationID] then
+          Archipelago.CheckLocation(locationID)
+        end
       else
-        Archi.LogMessage("Failed to convert location name to id")
+        Archi.LogMessage("Failed to convert location name to id - " + location)
       end
 
       Engine.SetDvar( "ARCHIPELAGO_LOCATION_SEND", "NONE" )
@@ -547,12 +549,8 @@ Archi.LocationNotifyLoop = function()
 	UIRootFull.LocHUDRefreshTimer = LUI.UITimer.newElementTimer(250, false, function()
     while not List.isEmpty(LocationQueue) and goalCondInitialized and saveLoaded do
       local code = List.popleft(LocationQueue)
-      if not Archi.CheckedLocations[code] then
-        Archi.CheckedLocations[code] = true
-      end
-      code_str = tostring(code)
-      if not saveData["universal"]["locationsFound"][code] then
-        saveData["universal"]["locationsFound"][code] = true
+      if Archi.LocationList[code] ~= nil and not Archi.LocationList[code] then
+        Archi.LocationList[code] = true
         local name = locations.IDToLocation[code] or "Unknown Location"
         if notifyFunc then
           -- Send scout to get notify data
@@ -669,6 +667,28 @@ Archi.LogMessageLoop = function()
 	UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
 end
 
+Archi.ReceiveCheckedLocations = function (id_list)
+  for _, id in ipairs(id_list) do
+    Archi.LocationList[id] = true
+  end
+end
+
+Archi.ReceiveMissingLocations = function (id_list)
+  for _, id in ipairs(id_list) do
+    Archi.LocationList[id] = false
+  end
+end
+
+Archi.SlotConnected = function ()
+  for code in pairs(Archi.LocationList) do
+    Archi.LocationList[code] = false
+  end
+  if not Archi.CheckedMissingLocs then
+    Archipelago.GetMissingLocations()
+  end
+  Archipelago.GetCheckedLocations()
+end
+
 Archi.KeepConnected = function ()
   local server, slot, password, usePassword, enableDeathlink = settings_file.load_settings();
   if usePassword ~= 1 then
@@ -723,19 +743,6 @@ Archi.LoadData = function ()
           locationsFound = {}
         }
       end
-
-      -- Load array into table for faster lookup
-      if saveData["universal"]["locationsFoundArray"] then
-        saveData["universal"]["locationsFound"] = arrayToLocations(saveData["universal"]["locationsFoundArray"])
-        saveData["universal"]["locationsFoundArray"] = nil
-      elseif not saveData["universal"]["locationsFound"] then
-        saveData["universal"]["locationsFound"] = {}
-      end
-
-      -- Restore LUA side table
-      for code, _ in pairs(saveData["universal"]["locationsFound"]) do
-        Archi.CheckedLocations[code] = true
-      end
     end
   else
     saveData = {}
@@ -746,7 +753,6 @@ Archi.LoadData = function ()
       players = {},
       mapItems = {},
       itemsReceived = {},
-      locationsFound = {}
     }
   end
 
@@ -756,10 +762,6 @@ Archi.LoadData = function ()
 
   if not saveData["universal"]["itemsReceived"] then
     saveData["universal"]["itemsReceived"] = {}
-  end
-
-  if not saveData["universal"]["locationsFound"] then
-    saveData["universal"]["locationsFound"] = {}
   end
 end
 

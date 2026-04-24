@@ -753,6 +753,11 @@ function game_start()
         level.archi.craftable_piece_to_location["gramophone_vinyl_elec"] = level.archi.mapString + " Gramophone Part Pickup - Lightning Disc";
         level.archi.craftable_piece_to_location["gramophone_vinyl_ice"] = level.archi.mapString + " Gramophone Part Pickup - Ice Disc";
 
+        level thread gramophone_disc_pickup_watcher("vinyl_air", "air_staff.quest_state", "zmInventory.air_staff.visible");
+        level thread gramophone_disc_pickup_watcher("vinyl_ice", "water_staff.quest_state", "zmInventory.water_staff.visible");
+        level thread gramophone_disc_pickup_watcher("vinyl_fire", "fire_staff.quest_state", "zmInventory.fire_staff.visible");
+        level thread gramophone_disc_pickup_watcher("vinyl_elec", "lightning_staff.quest_state", "zmInventory.lightning_staff.visible");
+
         archi_items::RegisterItem("Gramophone Part - Gramophone Player",&archi_tomb::give_GramophonePart_Player,undefined,false);
         archi_items::RegisterItem("Gramophone Part - Blank Disc",&archi_tomb::give_GramophonePart_BlankDisc,undefined,false);
         archi_items::RegisterItem("Gramophone Part - Fire Disc",&archi_tomb::give_GramophonePart_FireDisc,undefined,false);
@@ -1797,6 +1802,46 @@ function force_player_spawn()
 {
     wait(5);
     self zm::spectator_respawn_player();
+}
+
+// Gramophone disc parts have weird extra clientfields attached, outside of zm_craftables logic.
+function gramophone_disc_pickup_watcher(str_piece, clientfield_str, inv_key)
+{
+    craftablestub = level.zombie_include_craftables["gramophone"];
+    foreach (piecestub in craftablestub.a_piecestubs)
+    {
+        if (piecestub.piecename == str_piece)
+        {
+            piecestub.piecespawn = zm_craftables::get_craftable_piece("gramophone", piecestub.pieceName);
+            fullName = piecestub.craftableName + "_" + piecestub.pieceName;
+            piecestub.piecespawn waittill("pickup");
+            wait(0.1);
+            if (!isdefined(level.archi.craftable_parts[fullName]))
+            {
+                level clientfield::set(clientfield_str, 0);
+                // Run another watcher so the item being given later will work
+                piecestub thread gramophone_replacement_watch_part_pickup(clientfield_str, 1, inv_key);
+            }
+            return;
+        }
+    }
+}
+
+function gramophone_replacement_watch_part_pickup(str_quest_clientfield, n_clientfield_val, inv_key)
+{
+	self.piecespawn waittill("pickup");
+	level notify(((self.craftablename + "_") + self.piecename) + "_picked_up");
+	if(isdefined(str_quest_clientfield) && isdefined(n_clientfield_val))
+	{
+		level clientfield::set(str_quest_clientfield, n_clientfield_val);
+	}
+	if(isdefined(inv_key))
+	{
+		foreach(e_player in level.players)
+		{
+			e_player thread zm_craftables::player_show_craftable_parts_ui(undefined, inv_key, 0);
+		}
+	}
 }
 
 function replace_craftable_onPickup( craftableName )
