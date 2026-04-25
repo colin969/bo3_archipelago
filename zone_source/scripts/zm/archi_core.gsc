@@ -895,6 +895,8 @@ function game_start()
         level.archi.restore_player_data = &archi_westernz::restore_player_data;
     }
 
+    zm_weapons::init_chalk_locks();
+
     level thread map_lock();
 
     level thread init_attachment_rando();
@@ -1110,6 +1112,7 @@ function award_item(item)
                 if (isdefined(level.archi.wallbuys))
                 {
                     level.archi.wallbuys[ap_item.weapon_name] = true;
+                    zm_weapons::remove_chalk_lock(ap_item.weapon_name);
                 }
 
                 // If it's a box weapon (has a bit), add to box

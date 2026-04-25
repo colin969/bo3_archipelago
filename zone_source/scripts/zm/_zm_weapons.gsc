@@ -47,6 +47,8 @@
 #precache( "triggerstring", "ZOMBIE_WEAPONAMMOHACKED_CFILL" );
 #precache( "triggerstring", "ZOMBIE_WEAPONAMMOHACKED_CFILL_BGB_SECRET_SHOPPER" );
 
+#precache( "model", "archipelago_chalk_lock" );
+
 #namespace zm_weapons;
 
 function init()
@@ -3644,4 +3646,48 @@ function is_wonder_weapon( w_to_check )
 	}
 	
 	return false;
+}
+
+function init_chalk_locks()
+{
+	IPrintLn("wallbuys: " + level._spawned_wallbuys.size);
+	locked = 0;
+
+	foreach(wallbuy in level._spawned_wallbuys)
+	{
+		if (isdefined(wallbuy.ap_lock))
+		{
+			continue;
+		}
+
+		weapon = wallbuy.weapon;
+		ap_item = level.archi.wallbuy_mappings[weapon.name];
+		unlocked = IS_TRUE(level.archi.wallbuys[weapon.name]);
+		if (isdefined(ap_item) && !unlocked)
+		{
+			locked++;
+			// Spawn the lock just in front of the wallbuy
+			lock = Spawn( "script_model", (0,0,0) );
+			forward = AnglesToForward(wallbuy.angles);
+			lock.origin = wallbuy.origin + (forward * 1.2);
+			lock.angles = wallbuy.angles + (0, 90, 0);
+			lock SetModel("archipelago_chalk_lock");
+
+			wallbuy.ap_lock = lock;
+		}
+	}
+
+	IPrintLn("locked: " + locked);
+}
+
+function remove_chalk_lock(weapon_name)
+{
+	foreach(wallbuy in level._spawned_wallbuys)
+	{
+		if (wallbuy.weapon.name == weapon_name && isdefined(wallbuy.ap_lock))
+		{
+			wallbuy.ap_lock delete();
+			wallbuy.ap_lock = undefined;
+		}
+	}
 }

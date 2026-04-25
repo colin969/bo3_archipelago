@@ -105,6 +105,7 @@ image,i_t7_attach_optic_reflex_reticle_loot_10_fun_c
 //Models
 xmodel,archipelago_logo
 xmodel,archipelago_shop
+xmodel,archipelago_chalk_lock
 
 sound,zm_mod
 

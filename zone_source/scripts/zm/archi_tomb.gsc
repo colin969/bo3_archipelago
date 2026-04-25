@@ -74,6 +74,12 @@ function save_player_data(xuid)
     self archi_save::save_player_score(xuid);
     self archi_save::save_player_perks(xuid);
     self archi_save::save_player_loadout(xuid);
+
+    archi_save::save_player_val("has_shovel", self.dig_vars["has_shovel"], xuid);
+    archi_save::save_player_val("has_upgraded_shovel", self.dig_vars["has_upgraded_shovel"], xuid);
+    archi_save::save_player_val("has_helmet", self.dig_vars["has_helmet"], xuid);
+    archi_save::save_player_val("n_spots_dug", self.dig_vars["n_spots_dug"], xuid);
+    archi_save::save_player_val("n_losing_streak", self.dig_vars["n_losing_streak"], xuid);
 }
 
 function load_state()
@@ -137,6 +143,42 @@ function restore_player_data(xuid)
 			}
         }
     }
+
+    n_player = self GetEntityNumber();
+    self.dig_vars["has_shovel"] = archi_save::restore_player_val_int("has_shovel", xuid);
+    self.dig_vars["has_upgraded_shovel"] = archi_save::restore_player_val_int("has_upgraded_shovel", xuid);
+    if (self.dig_vars["has_shovel"] == 1 && self.dig_vars["has_upgraded_shovel"] != 1)
+    {
+        level clientfield::set(("player" + n_player) + "hasItem", 1);
+    }
+    if (self.dig_vars["has_upgraded_shovel"] == 1)
+    {
+        level clientfield::set(("player" + n_player) + "hasItem", 2);
+    }
+    self.dig_vars["has_helmet"] = archi_save::restore_player_val_int("has_helmet", xuid);
+    if (self.dig_vars["has_helmet"] == 1)
+    {
+        self add_player_helmet(n_player);
+    }
+    self.dig_vars["n_spots_dug"] = archi_save::restore_player_val_int("n_spots_dug", xuid);
+    self.dig_vars["n_losing_streak"] = archi_save::restore_player_val_int("n_losing_streak", xuid);
+}
+
+function add_player_helmet(n_player)
+{
+    level clientfield::set(("player" + n_player) + "wearableItem", 1);
+	if(!isdefined(self.var_8e065802))
+	{
+		self.var_8e065802 = spawnstruct();
+	}
+	self.var_8e065802.model = "c_t7_zm_dlchd_origins_golden_helmet";
+	self.var_8e065802.tag = "j_head";
+	self.var_ae07e72c = "golden_helmet";
+	self attach(self.var_8e065802.model, self.var_8e065802.tag);
+	if(self.characterindex == 1)
+	{
+		self setcharacterbodystyle(2);
+	}
 }
 
 function clear_state()
@@ -186,6 +228,7 @@ function setup_locations()
     level thread watch_mound_opened();
     level thread watch_generators();
     level thread watch_boxes_filled();
+    level thread patch_giant_strike_pattern();
     
     a_boxes = getentarray("foot_box", "script_noteworthy");
     foreach (box in a_boxes)
@@ -263,6 +306,14 @@ function watch_generators()
             break;
         }
     }
+}
+
+function patch_giant_strike_pattern()
+{
+    level flag::wait_till("ee_all_staffs_placed");
+    level flag::set("all_robot_hatch");
+    level flag::wait_till("ee_mech_zombie_hole_opened");
+    level flag::clear("all_robot_hatch");
 }
 
 function watch_mound_opened()
@@ -732,7 +783,9 @@ function restore_teleports()
         if (has_map_kval(notif))
         {
             level notify("player_teleported", level.players[0], i);
+            level flag::set("enable_teleporter_" + i); // Force build teleporter so it makes exit appear
             WAIT_SERVER_FRAME
+            level util::delay(2, undefined, &flag::clear, "enable_teleporter_" + i);
         }
     }
 }
