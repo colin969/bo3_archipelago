@@ -213,3 +213,8 @@ Saved and restored:
   - Number of souls in the staff charger
   - Staff charged and ready
 - Number of souls in each of the 4 soul boxes
+- Player Data:
+  - Has Shovel / Golden Shovel / Golden Helmet
+    - Zombie blood dig sites are not restored yet
+  - Holes dug
+  - Streak of bad digs

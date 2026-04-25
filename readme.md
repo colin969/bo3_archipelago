@@ -55,6 +55,8 @@
   - Optional RNG adjustments
   - PhD Flopper restored
   - Supersprinters in No Man's Land start after 125 seconds (fixed official script)
+- Origins
+  - When all staffs are placed, all giants will have a hatch until the hole is blown open
 
 **Randomized Weapon Attachments:**
 - Can be disabled
