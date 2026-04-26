@@ -135,6 +135,7 @@ function __init__()
 
 	callback::on_start_gametype( &wait_for_start );
 	callback::on_connect( &on_player_connect );
+    callback::on_connect( &patch_solo_quick_revive );
     // callback::on_connect( &force_player_spawn );
     callback::on_spawned( &watch_max_ammo );
     callback::on_spawned( &watch_carpenter );
@@ -470,6 +471,8 @@ function game_start()
         archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
+
+        level.custom_random_perk_weights = &unweighted_random_perks;
     
         spawn_shop((895, 684, -48), (0, -170, 0));
 
@@ -585,6 +588,8 @@ function game_start()
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
+        level.custom_random_perk_weights = &unweighted_random_perks;
+
         spawn_shop((-174, 1903, 176), (0, -138, 0));
 
         level.archi.save_state_manager = &archi_stalingrad::save_state_manager;
@@ -633,6 +638,8 @@ function game_start()
         archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
         archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
+
+        level.custom_random_perk_weights = &unweighted_random_perks;
 
         spawn_shop((-4757, -264, -448), (0, 87, 0));
 
@@ -843,7 +850,9 @@ function game_start()
         archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
-        level.archi.save_state_mAanager = &archi_tomb::save_state_manager;
+        level.custom_random_perk_weights = &unweighted_random_perks;
+
+        level.archi.save_state_manager = &archi_tomb::save_state_manager;
         level.archi.save_player_data = &archi_tomb::save_player_data;
         level.archi.load_state_manager = &archi_tomb::load_state;
         level.archi.restore_player_data = &archi_tomb::restore_player_data;
@@ -2050,5 +2059,24 @@ function stats_checks_monitor()
         }
         
         wait(2);
+    }
+}
+
+function unweighted_random_perks()
+{
+    temp_array = [];
+    temp_array = array::randomize(temp_array);
+    level._random_perk_machine_perk_list = array::randomize(level._random_perk_machine_perk_list);
+	level._random_perk_machine_perk_list = arraycombine(level._random_perk_machine_perk_list, temp_array, 1, 0);
+	keys = getarraykeys(level._random_perk_machine_perk_list);
+	return keys;
+}
+
+function patch_solo_quick_revive()
+{
+    while(true)
+    {
+        self waittill("player_revived");
+        level.solo_lives_given = 0;
     }
 }

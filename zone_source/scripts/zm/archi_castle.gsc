@@ -160,6 +160,7 @@ function load_state()
 
     // Pretend VO playing until we're fully restored
     level flag::set("story_playing");
+    level flag::set("ap_stop_flashing");
 
     level.archi.storm_owner = archi_save::restore_val("storm_owner");
     level.archi.wolf_owner = archi_save::restore_val("wolf_owner");
@@ -180,6 +181,7 @@ function load_state()
     wait(10);
     level flag::clear("ap_prevent_checkpoints");
     level flag::clear("story_playing");
+    level flag::clear("ap_stop_flashing");
 }
 
 // self is player

@@ -44,6 +44,8 @@ function map_save_zm_castle(mapData)
   save_val(mapData, "fire_owner")
   save_val(mapData, "void_owner")
 
+  save_val(mapData, "vo_round_counter")
+
   save_players(mapData, player_save_zm_castle)
 end
 
@@ -97,6 +99,8 @@ function map_restore_zm_castle(mapData)
   restore_val(mapData, "wolf_owner")
   restore_val(mapData, "fire_owner")
   restore_val(mapData, "void_owner")
+
+  restore_val(mapData, "vo_round_counter")
 end
 
 function player_restore_zm_castle(xuid, playerData)
