@@ -10,6 +10,7 @@
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
 #using scripts\zm\_zm_magicbox;
+#using scripts\zm\_zm_pack_a_punch_util;
 #using scripts\zm\_zm_unitrigger;
 
 #using scripts\zm\archi_core;
@@ -36,22 +37,19 @@ function init()
 
 function patch_chest_triggers()
 {
-    if (isdefined(self.unitrigger_stub))
+    if (isdefined(self.unitrigger_stub) && !(isdefined(self.ap_original_data)))
     {
-        self.ap_original_data = SpawnStruct();
         if (isdefined(self.unitrigger_stub.prompt_and_visibility_func))
         {
-            self.ap_original_data.prompt_and_visibility_func = self.unitrigger_stub.prompt_and_visibility_func;
+            self.unitrigger_stub.ap_original_prompt_and_visibility_func = self.unitrigger_stub.prompt_and_visibility_func;
             self.unitrigger_stub.prompt_and_visibility_func = &magicbox_visibility_func;
         }
-        self.stub zm_unitrigger::run_visibility_function_for_all_triggers();
     }
-
 }
 
 function magicbox_visibility_func(player)
 {
-    can_use = self [[self.stub.ap_original_data.prompt_and_visibility_func]](player);
+    can_use = self [[self.stub.ap_original_prompt_and_visibility_func]](player);
     if (can_use)
     {
         // The map thinks the trigger is visible, let's make sure there's a weapon they can actually get
@@ -69,6 +67,7 @@ function magicbox_visibility_func(player)
         // Did not find a valid weapon in the box, hide the trigger
         if (weapon_found == 0)
         {
+            self SetHintString("No unlocked weapons available");
             return false;
         }
     }

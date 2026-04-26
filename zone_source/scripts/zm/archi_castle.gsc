@@ -158,6 +158,9 @@ function load_state()
     archi_save::restore_doors_and_debris();
     restore_landingpads();
 
+    // Pretend VO playing until we're fully restored
+    level flag::set("story_playing");
+
     level.archi.storm_owner = archi_save::restore_val("storm_owner");
     level.archi.wolf_owner = archi_save::restore_val("wolf_owner");
     level.archi.fire_owner = archi_save::restore_val("fire_owner");
@@ -176,6 +179,7 @@ function load_state()
 
     wait(10);
     level flag::clear("ap_prevent_checkpoints");
+    level flag::clear("story_playing");
 }
 
 // self is player
@@ -619,10 +623,14 @@ function save_map_state()
     archi_save::save_val("wolf_owner", level.archi.wolf_owner);
     archi_save::save_val("fire_owner", level.archi.fire_owner);
     archi_save::save_val("void_owner", level.archi.void_owner);
+
+    archi_save::save_val("vo_round_counter", level.var_1d8d988e);
 }
 
 function restore_map_state()
 {
+    level.var_1d8d988e = archi_save::restore_val_int("vo_round_counter");
+
     archi_save::restore_flag("soul_catchers_charged");
     if (level flag::get("soul_catchers_charged"))
     {

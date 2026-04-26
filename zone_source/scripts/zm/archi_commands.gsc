@@ -677,6 +677,8 @@ function _spawn_shop(val)
       level.archi.test_shop.angles = player.angles;
       level.archi.test_shop.machine.origin = level.archi.test_shop.origin;
       level.archi.test_shop.machine.angles = player.angles;
+      // level.archi.test_shop.collision.origin = level.archi.test_shop.origin;
+      // level.archi.test_shop.collision.angles = player.angles;
     }
   }
 }

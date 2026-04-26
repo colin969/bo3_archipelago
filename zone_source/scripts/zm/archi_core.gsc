@@ -38,6 +38,7 @@
 #using scripts\zm\archi_commands;
 #using scripts\zm\archi_save;
 #using scripts\zm\archi_shop;
+#using scripts\zm\archi_magicbox;
 #using scripts\zm\archi_mappings;
 
 #insert scripts\zm\_zm_perks.gsh;
@@ -366,6 +367,8 @@ function game_start()
     level thread round_end_noti();
     level thread repaired_board_noti();
     level thread stats_checks_monitor();
+
+    archi_magicbox::init();
 
     if (mapName == "zm_zod")
     {
@@ -840,7 +843,7 @@ function game_start()
         archi_items::RegisterPerk("Electric Cherry",&archi_items::give_ElectricCherry,PERK_ELECTRIC_CHERRY);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
-        level.archi.save_state_manager = &archi_tomb::save_state_manager;
+        level.archi.save_state_mAanager = &archi_tomb::save_state_manager;
         level.archi.save_player_data = &archi_tomb::save_player_data;
         level.archi.load_state_manager = &archi_tomb::load_state;
         level.archi.restore_player_data = &archi_tomb::restore_player_data;

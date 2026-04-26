@@ -104,6 +104,13 @@ function shop_spawn_init()
 	self.machine = Spawn( "script_model", self.origin );
 	self.machine.angles = self.angles;
 	self.machine SetModel( self.model );
+
+	// self.collision = Spawn("script_model", self.origin, 1);
+	// self.collision.angles = angles;
+	// self.collision SetModel("zm_collision_perks1");
+	// self.collision.script_noteworthy = "clip";
+	// self.collision DisconnectPaths();
+
     self.origin = self.origin + (0, 0, 20);
 	self.script_unitrigger_type = "unitrigger_box_use";
 	self.cursor_hint = "HINT_NOICON";

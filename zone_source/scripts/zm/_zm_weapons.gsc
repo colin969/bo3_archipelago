@@ -3650,9 +3650,6 @@ function is_wonder_weapon( w_to_check )
 
 function init_chalk_locks()
 {
-	IPrintLn("wallbuys: " + level._spawned_wallbuys.size);
-	locked = 0;
-
 	foreach(wallbuy in level._spawned_wallbuys)
 	{
 		if (isdefined(wallbuy.ap_lock))
@@ -3665,7 +3662,6 @@ function init_chalk_locks()
 		unlocked = IS_TRUE(level.archi.wallbuys[weapon.name]);
 		if (isdefined(ap_item) && !unlocked)
 		{
-			locked++;
 			// Spawn the lock just in front of the wallbuy
 			lock = Spawn( "script_model", (0,0,0) );
 			forward = AnglesToForward(wallbuy.angles);
@@ -3676,8 +3672,6 @@ function init_chalk_locks()
 			wallbuy.ap_lock = lock;
 		}
 	}
-
-	IPrintLn("locked: " + locked);
 }
 
 function remove_chalk_lock(weapon_name)

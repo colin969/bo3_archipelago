@@ -28,6 +28,7 @@ scriptparsetree,scripts/zm/archi_items.csc
 scriptparsetree,scripts/zm/archi_items.gsc
 scriptparsetree,scripts/zm/archi_save.gsc
 scriptparsetree,scripts/zm/archi_staminup.gsc
+scriptparsetree,scripts/zm/archi_magicbox.gsc
 scriptparsetree,scripts/zm/archi_mappings.gsc
 scriptparsetree,scripts/zm/perks/archi_perk_utils.gsc
 
