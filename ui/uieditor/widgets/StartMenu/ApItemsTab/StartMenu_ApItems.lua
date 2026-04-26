@@ -20,23 +20,6 @@ DataSources.StartMenu_ApItems = ListHelper_SetupDataSource( "StartMenu_ApItems",
         })
     end
 
-    -- Get set of strings to display from the gsc
-    -- i = 0
-    -- while true do
-    --     local val = Engine.DvarString(nil, "ARCHIPELAGO_MONITOR_" .. i)
-    --     if val ~= "" then
-    --         if string.sub(val, -1) == "1" then
-    --             val = "^2" .. val
-    --         end
-    --         table.insert( rows, {
-    --             models = { item = val }
-    --         })    
-    --     else
-    --         break
-    --     end
-    --     i = i + 1
-    -- end
-
     return rows
 end, true )
 
@@ -54,7 +37,6 @@ CoD.StartMenu_ApItems_Item.new = function( menu, controller )
 	self.soundSet = "default"
 	self:setLeftRight( true, false, 10, 350 )
 	self:setTopBottom( true, false, 0, 30 )
-	self:makeFocusable()
 	self:setHandleMouse( true )
 
 	self.ItemName = LUI.UIText.new()
@@ -96,7 +78,6 @@ CoD.StartMenu_ApItems.new = function ( menu, controller )
 	self:setLeftRight( true, false, 0, 1150 )
 	self:setTopBottom( true, false, 0, 520 )
 	self:makeFocusable()
-	self.onlyChildrenFocusable = true
 
 	self.itemList = LUI.UIList.new( menu, controller, 2, 0, nil, true, false, 0, 0, false, false )
 	self.itemList:makeFocusable()

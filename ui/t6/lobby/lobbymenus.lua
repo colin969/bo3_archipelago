@@ -155,10 +155,7 @@ function CoD.LobbyMenus.ModeSelectNew(InstanceRef, ButtonList, IsHost)
 				SetLastButtonInGroup(ButtonList)
 			else
 				Lobby_SetMaxLocalPlayers(2.000000)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.CP_ONLINE)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.MP_ONLINE)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.ZM_ONLINE)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.BONUSMODES_ONLINE)
+				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.ZM_ARCHIPELAGO)
 				SetLastButtonInGroup(ButtonList)
 				AddSmallButton(InstanceRef, ButtonList, CoD.LobbyButtons.PLAY_LOCAL)
 				SetLastButtonInGroup(ButtonList)
@@ -179,10 +176,7 @@ function CoD.LobbyMenus.ModeSelectNew(InstanceRef, ButtonList, IsHost)
 				end
 			else
 				Lobby_SetMaxLocalPlayers(4.000000)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.CP_LAN)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.MP_LAN)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.ZM_LAN)
-				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.BONUSMODES_LAN)
+				AddLargeButton(InstanceRef, ButtonList, CoD.LobbyButtons.ZM_ARCHIPELAGO_LAN)
 				SetLastButtonInGroup(ButtonList)
 				if not Dvar.ui_disable_lan:get() then
 					AddSmallButton(InstanceRef, ButtonList, CoD.LobbyButtons.FIND_LAN_GAME)

@@ -1,9 +1,12 @@
 require( "ui.uieditor.widgets.StartMenu.StartMenu_Background" )
+
 require( "ui.uieditor.widgets.Lobby.Common.FE_ButtonPanelShaderContainer" )
 require( "ui.uieditor.widgets.BackgroundFrames.GenericMenuFrame" )
 require( "ui.uieditor.widgets.Groups.GroupsSubTitle" )
 require( "ui.uieditor.widgets.Groups.GroupsInputButtonScroll" )
+require( "ui.uieditor.Actions" )
 require( "ui.archipelago.frontend.Archipelago_Checkbox" )
+
 
 require("ui.util.T7OverchargedUtil")
 
@@ -16,8 +19,19 @@ local savedPassword
 local savedUsePassword
 local savedEnableDeathlink
 
+local topMenu
+local top
+
+ApIsConnected = false
+
 UpdateConnectionStatus = function(update)
 	Engine.SetModelValue(Engine.GetModel(Engine.GetModel( Engine.GetGlobalModel(), "archipelago" ), "connectionValidated"),"Connection: "..update)
+	ApIsConnected = false
+end
+
+SetApConnected = function()
+	Engine.SetModelValue(Engine.GetModel(Engine.GetModel( Engine.GetGlobalModel(), "archipelago" ), "connectionValidated"),"Connection: Ready")
+	ApIsConnected = true
 end
 
 local ConnectArchi = function(savedServer, savedSlot, savedPassword, savedUsePassword)
@@ -382,7 +396,7 @@ LUI.createMenu.ArchipelagoSettings = function ( controller )
 		ConnectArchi(savedServer, savedSlot, savedPassword, savedUsePassword)
 		return true
 	end, function ( f21_arg0, f21_arg1, f21_arg2 )
-		CoD.Menu.SetButtonLabel( f21_arg1, Enum.LUIButton.LUI_KEY_XBY_PSTRIANGLE, "Test Connection" )
+		CoD.Menu.SetButtonLabel( f21_arg1, Enum.LUIButton.LUI_KEY_XBY_PSTRIANGLE, "Connect" )
 		return true
 	end, false )
 

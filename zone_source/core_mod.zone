@@ -21,6 +21,11 @@ rawfile,ui/t6/lobby/lobbymenus.lua
 rawfile,ui/archipelago/frontend/ArchipelagoSettings.lua
 rawfile,ui/archipelago/frontend/Archipelago_Checkbox.lua
 rawfile,archipelago/SettingsFile.lua
+rawfile,archipelago/JsonUtils/Decoder.lua
+rawfile,archipelago/JsonUtils/Encoder.lua
+rawfile,archipelago/JsonUtils/Sax.lua
+rawfile,archipelago/Json.lua
+rawfile,archipelago/Utils.lua
 
 //Customized T7 Overcharged helper scripts
 rawfile,ui/util/T7OverchargedUtil.lua

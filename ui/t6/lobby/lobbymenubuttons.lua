@@ -77,3 +77,37 @@ CoD.LobbyButtons.ZM_BUILD_KITS = {
 	newBreadcrumbFunc = Gunsmith_AnyNewWeaponsOrAttachments,
 	starterPack = CoD.LobbyButtons.STARTERPACK_UPGRADE
 }
+
+CoD.LobbyButtons.ZM_ARCHIPELAGO = {
+	stringRef = "JOIN ARCHIPELAGO",
+	action =
+	function(self, element, controller, param, menu)
+		CoD.LobbyBase.SetLeaderActivity(controller, CoD.LobbyBase.LeaderActivity.EDITING_GAME_RULES)
+		LUI.OverrideFunction_CallOriginalFirst(OpenOverlay(self, "ArchipelagoSettings", controller), "close",
+		function()
+			CoD.LobbyBase.ResetLeaderActivity(controller)
+			if ApIsConnected == true then
+				NavigateToLobby( menu, "ZMLobbyOnline", false, controller )
+			end
+		end)
+	end,
+	customId = "btnZM_ARCHIPELAGO",
+	starterPack = CoD.LobbyButtons.STARTERPACK_UPGRADE
+}
+
+CoD.LobbyButtons.ZM_ARCHIPELAGO_LAN = {
+	stringRef = "JOIN ARCHIPELAGO",
+	action =
+	function(self, element, controller, param, menu)
+		CoD.LobbyBase.SetLeaderActivity(controller, CoD.LobbyBase.LeaderActivity.EDITING_GAME_RULES)
+		LUI.OverrideFunction_CallOriginalFirst(OpenOverlay(self, "ArchipelagoSettings", controller), "close",
+		function()
+			CoD.LobbyBase.ResetLeaderActivity(controller)
+			if ApIsConnected == true then
+				NavigateToLobby( menu, "ZMLobbyLANGame", false, controller )
+			end
+		end)
+	end,
+	customId = "btnZM_ARCHIPELAGO_LAN",
+	starterPack = CoD.LobbyButtons.STARTERPACK_UPGRADE
+}
