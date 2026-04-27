@@ -135,7 +135,7 @@ function restore_player_data(xuid)
     }
     else
     {
-        IPrintLn("Cannot restore " + xuid);
+        self archi_save::initial_loadout();
     }
 }
 

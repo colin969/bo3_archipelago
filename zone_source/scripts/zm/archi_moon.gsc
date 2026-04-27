@@ -41,6 +41,19 @@ function save_state_manager()
     }
     array::thread_all(airlock_buys, &track_airlock_buy);
 
+    // if (level.archi.difficulty_ee_checkpoints >= 3)
+    // {
+    //     level thread easy_checkpoint_trigger();
+    // }
+    // if (level.archi.difficulty_ee_checkpoints >= 2)
+    // {
+    //     level thread medium_checkpoint_trigger();
+    // }
+    // if (level.archi.difficulty_ee_checkpoints >= 1)
+    // {
+    //     level thread hard_checkpoint_trigger();
+    // }
+
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
@@ -51,6 +64,43 @@ function save_state_manager()
         IPrintLn("Host did not end game, clearing data...");
         clear_state();
     }
+}
+
+// Soul swap complete
+function hard_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("soul_swap_done"))
+    {
+        return;
+    }
+    level flag::wait_till("soul_swap_done");
+    WAIT_SERVER_FRAME
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// Vril Generator Charged
+function medium_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    level waittill("kill_press_monitor");
+    WAIT_SERVER_FRAME
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// Buttons in the lab done
+function easy_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    level waittill("release_complete");
+    WAIT_SERVER_FRAME
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
 }
 
 function track_airlock_buy()
@@ -104,6 +154,7 @@ function load_state()
 {
     archi_save::wait_restore_ready("zm_moon");
     level flag::wait_till("ap_attachment_rando_ready");
+    archi_save::restore_spent_tokens();
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     if (level.archi.restored_round_number > 1) {
@@ -113,11 +164,7 @@ function load_state()
     archi_save::restore_doors_and_debris();
     restore_airlocks();
 
-    IPrintLn("restoring moon");
-
     restore_map_state();
-
-    IPrintLn("moon restored");
 
     wait(10);
     IPrintLn("clearing");
@@ -155,6 +202,10 @@ function restore_player_data(xuid)
         self archi_save::restore_player_score(xuid);
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
+    }
+    else
+    {
+        self archi_save::initial_loadout();
     }
 }
 

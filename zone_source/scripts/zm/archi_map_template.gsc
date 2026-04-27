@@ -73,6 +73,7 @@ function load_state()
 {
     archi_save::wait_restore_ready("zm_yourmap");
     level flag::wait_till("ap_attachment_rando_ready");
+    archi_save::restore_spent_tokens();
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     archi_save::restore_power_on();
@@ -95,6 +96,10 @@ function restore_player_data(xuid)
         self archi_save::restore_player_score(xuid);
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
+    }
+    else
+    {
+        self archi_save::initial_loadout();
     }
 }
 

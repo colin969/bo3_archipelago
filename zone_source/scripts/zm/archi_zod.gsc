@@ -225,6 +225,10 @@ function restore_player_data(xuid)
 
         self restore_player_sword_quest(xuid);
     }
+    else
+    {
+        self archi_save::initial_loadout();
+    }
 }
 
 function clear_state()

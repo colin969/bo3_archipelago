@@ -36,6 +36,20 @@ function save_state_manager()
     level.archi.map_kvals = [];
     level.archi.save_state = &save_state;
     level thread archi_save::save_on_round_change();
+
+    // if (level.archi.difficulty_ee_checkpoints >= 3)
+    // {
+    //     level thread easy_checkpoint_trigger();
+    // }
+    // if (level.archi.difficulty_ee_checkpoints >= 2)
+    // {
+    //     level thread medium_checkpoint_trigger();
+    // }
+    // if (level.archi.difficulty_ee_checkpoints >= 1)
+    // {
+    //     level thread hard_checkpoint_trigger();
+    // }
+
     level waittill("end_game");
 
     if (isdefined(level.host_ended_game) && level.host_ended_game == 1)
@@ -68,6 +82,43 @@ function save_state()
     }
 }
 
+// All staffs placed
+function hard_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    if (level flag::get("ee_all_staffs_placed"))
+    {
+        return;
+    }
+    level flag::wait_till("ee_all_staffs_placed");
+    WAIT_SERVER_FRAME
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// Any staff upgraded
+function medium_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    level waittill("any_staff_upgraded");
+    WAIT_SERVER_FRAME
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
+// Any staff built
+function easy_checkpoint_trigger()
+{
+    level flag::wait_till_clear("ap_prevent_checkpoints");
+    level util::waittill_any("elemental_staff_air_crafted", "elemental_staff_fire_crafted", "elemental_staff_lightning_crafted", "elemental_staff_water_crafted");
+    WAIT_SERVER_FRAME
+    level.archi.save_checkpoint = true;
+    save_state();
+    level.archi.save_checkpoint = false;
+}
+
 // self is player
 function save_player_data(xuid)
 {  
@@ -86,6 +137,7 @@ function load_state()
 {
     archi_save::wait_restore_ready("zm_tomb");
     level flag::wait_till("ap_attachment_rando_ready");
+    archi_save::restore_spent_tokens();
     archi_save::restore_zombie_count();
     archi_save::restore_round_number();
     archi_save::restore_power_on();
@@ -108,6 +160,10 @@ function restore_player_data(xuid)
         self archi_save::restore_player_score(xuid);
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
+    }
+    else
+    {
+        self archi_save::initial_loadout();
     }
 
     w_beacon = getweapon("beacon");
@@ -348,6 +404,7 @@ function _watch_staff_upgraded(staff, location)
         }
         wait(1);
     }
+    level notify("any_staff_upgraded");
     archi_core::send_location(location);
 }
 

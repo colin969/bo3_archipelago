@@ -215,6 +215,7 @@ function on_archi_connect_settings()
     level.archi.attachments_randomized = GetDvarInt("ARCHIPELAGO_ATTACHMENT_RANDO_ENABLED", 0);
     level.archi.attachments_sight_weight = GetDvarInt("ARCHIPELAGO_ATTACHMENT_RANDO_SIGHT_SIZE_WEIGHT", 25);
     level.archi.deathlink_enabled = GetDvarInt("ARCHIPELAGO_DEATHLINK_ENABLED", 0);
+    level.archi.super_ee_reward = GetDvarInt("ARCHIPELAGO_SUPER_EE_REWARD", 0);
     clientDeathlink = GetDvarInt("ARCHIPELAGO_CLIENT_DEATHLINK", 0);
     if (level.archi.deathlink_enabled == 1 && clientDeathlink == 0)
     {
@@ -731,6 +732,8 @@ function game_start()
         archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
+        spawn_shop((411.4, -74.6, -2), (0, -180, 0));
+
         level.archi.save_state_manager = &archi_moon::save_state_manager;
         level.archi.save_player_data = &archi_moon::save_player_data;
         level.archi.load_state_manager = &archi_moon::load_state;
@@ -851,6 +854,8 @@ function game_start()
         archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
 
         level.custom_random_perk_weights = &unweighted_random_perks;
+
+        spawn_shop((2568.4, 4279.6, -328), (0, 90, 0));
 
         level.archi.save_state_manager = &archi_tomb::save_state_manager;
         level.archi.save_player_data = &archi_tomb::save_player_data;

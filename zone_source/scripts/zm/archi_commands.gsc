@@ -685,7 +685,7 @@ function _spawn_shop(val)
 
 function _shop_print(val)
 {
-  IPrintLn(level.archi.test_shop.origin);
+  IPrintLn(level.archi.test_shop.origin - (0, 0, 20));
   IPrintLn(level.archi.test_shop.angles);
 }
 

@@ -95,6 +95,10 @@ function restore_player_data(xuid)
         self archi_save::restore_player_perks(xuid);
         self archi_save::restore_player_loadout(xuid);
     }
+    else
+    {
+        self archi_save::initial_loadout();
+    }
 }
 
 function clear_state()

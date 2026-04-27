@@ -654,13 +654,24 @@ function restore_player_loadout(xuid, no_hero_weapon)
         } else {
             if (i == 0)
             {
-                // No saved kit, update the starting weapon
-                self zm_weapons::weapon_take(level.start_weapon);
-                self zm_weapons::weapon_give(level.start_weapon, 0, 0, 1);
+                self initial_loadout();
             }
             break;
         }
         i++;
+    }
+}
+
+function initial_loadout()
+{
+    // No saved kit, update the starting weapon
+    self zm_weapons::weapon_take(level.start_weapon);
+    self zm_weapons::weapon_give(level.start_weapon, 0, 0, 1);
+
+    // If we have Super EE reward enabled, add it here
+    if (level.archi.super_ee_reward != 0)
+    {
+        self zm_weapons::weapon_give(level.super_ee_weapon, 0, 0, 1, 1);
     }
 }
 

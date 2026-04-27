@@ -328,6 +328,10 @@ function restore_player_data(xuid)
             }
         }
     }
+    else
+    {
+        self archi_save::initial_loadout();
+    }
 }
 
 function clear_state()
@@ -407,7 +411,7 @@ function adjust_bgb_pack()
         }
     }
 
-    self.bgb_pack[4] = "zm_bgb_anywhere_but_here";
+    self.bgb_pack[self.bgb_pack.size] = "zm_bgb_anywhere_but_here";
 }
 
 function _track_music_deadflowers()
