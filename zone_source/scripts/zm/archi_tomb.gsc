@@ -294,7 +294,7 @@ function setup_locations()
 
     level thread _notify_to_location_thread("ap_music_archangel", level.archi.mapString + " Music EE - Archangel");
     level thread _notify_to_location_thread("ap_music_aether", level.archi.mapString + " Music EE - Aether");
-    level thread _notify_to_location_thread("ap_music_shepherd_of_fire", level.archi.mapString + " Music EE - Sheperd of Fire");
+    level thread _notify_to_location_thread("ap_music_shepherd_of_fire", level.archi.mapString + " Music EE - Shepherd of Fire");
 
     level thread _notify_kval("elemental_staff_air_crafted", level.archi.mapString + " Wind Staff - Craft the Staff");
     level thread _flag_kval("air_puzzle_1_complete", level.archi.mapString + " Wind Staff - Solve the Crazy Place Puzzle");
