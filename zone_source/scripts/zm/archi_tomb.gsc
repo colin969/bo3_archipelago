@@ -488,7 +488,7 @@ function watch_boxes_filled()
         }
         if (level.n_soul_boxes_completed >= 4)
         {
-            archi_core::send_location(level.archi.mapString + " Fill all 4 Soul Box");
+            archi_core::send_location(level.archi.mapString + " Fill all 4 Soul Boxes");
             break;
         }
     }
