@@ -1788,6 +1788,15 @@ function time_remaining_on_powerup( player_team, str_powerup )
 
 function weapon_powerup( ent_player, time, str_weapon, allow_cycling = false )
 {
+	// Allow Archipelago to block powerup awards
+	if ( isdefined(level.archi.blocked_powerups) )
+	{
+		if ( IS_TRUE(level.archi.blocked_powerups[str_weapon]) )
+		{
+			return;
+		}
+	}
+
 	str_weapon_on 			= "zombie_powerup_" + str_weapon + "_on";
 	str_weapon_time_over 	= str_weapon + "_time_over";
 	

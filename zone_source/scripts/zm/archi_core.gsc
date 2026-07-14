@@ -330,6 +330,7 @@ function game_start()
     level.archi.legendary_gum_tokens = 0;
     level.archi.checkpoint_tokens = 1;
     level.archi.spent_checkpoint_tokens = -1;
+    level.archi.blocked_powerups = [];
 
     // Map State
     level.archi.progressive_perk_limit = 0;
@@ -418,6 +419,10 @@ function game_start()
         level thread archi_zod::setup_locations();
 
         level thread setup_spare_change_trackers(7);
+
+        // Override the slower spawn delay and zombie speed that runs before round 5
+        level.func_get_zombie_spawn_delay = &zm::get_zombie_spawn_delay;
+        level.func_get_delay_between_rounds = &zm::get_delay_between_rounds;
 
         spawn_shop((2267, -5513, 128), (0, 90, 0));
 
@@ -1994,12 +1999,12 @@ function stats_checks_monitor()
     kills_1000_sent = false; // Round 30
 
     headshots_25_sent = false;
-    headshots_75_sent = false;
-    headshots_125_sent = false;
-    headshots_250_sent = false;
-    headshots_400_sent = false;
+    headshots_50_sent = false;
+    headshots_100_sent = false;
+    headshots_175_sent = false;
+    headshots_300_sent = false;
 
-    while(true)
+     while(true)
     {
         total_kills = 0;
         total_headshots = 0;
@@ -2042,25 +2047,25 @@ function stats_checks_monitor()
             archi_core::send_location(level.archi.mapString + " " + 25 + " Headshots");
             headshots_25_sent = true;
         }
-        if (total_headshots >= 75 && !headshots_75_sent)
+        if (total_headshots >= 50 && !headshots_50_sent)
         {
-            archi_core::send_location(level.archi.mapString + " " + 75 + " Headshots");
-            headshots_75_sent = true;
+            archi_core::send_location(level.archi.mapString + " " + 50 + " Headshots");
+            headshots_50_sent = true;
         }
-        if (total_headshots >= 125 && !headshots_125_sent)
+        if (total_headshots >= 100 && !headshots_100_sent)
         {
-            archi_core::send_location(level.archi.mapString + " " + 125 + " Headshots");
-            headshots_125_sent = true;
+            archi_core::send_location(level.archi.mapString + " " + 100 + " Headshots");
+            headshots_100_sent = true;
         }
-        if (total_headshots >= 250 && !headshots_250_sent)
+        if (total_headshots >= 175 && !headshots_175_sent)
         {
-            archi_core::send_location(level.archi.mapString + " " + 250 + " Headshots");
-            headshots_250_sent = true;
+            archi_core::send_location(level.archi.mapString + " " + 175 + " Headshots");
+            headshots_175_sent = true;
         }
-        if (total_headshots >= 400 && !headshots_400_sent)
+        if (total_headshots >= 300 && !headshots_300_sent)
         {
-            archi_core::send_location(level.archi.mapString + " " + 400 + " Headshots");
-            headshots_400_sent = true;
+            archi_core::send_location(level.archi.mapString + " " + 300 + " Headshots");
+            headshots_300_sent = true;
         }
         
         wait(2);

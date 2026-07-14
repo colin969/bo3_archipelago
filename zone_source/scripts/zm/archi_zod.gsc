@@ -99,6 +99,51 @@ function sword_watcher()
     level notify("player_got_sword");
 }
 
+function egg_watcher_1()
+{
+    self endon("disconnect");
+
+    while(!isdefined(self.sword_quest))
+    {
+        wait(1);
+    }
+
+    while(true) 
+    {
+	    for(statue_id = 0; statue_id < level.sword_quest.statues.size; statue_id++)
+        {
+            n_kills = self.sword_quest.kills[statue_id];
+            // 2 is initial egg statues (where the swords are)
+            if(n_kills >= 12 && statue_id != 2)
+            {
+                // Found a full statue
+                archi_core::send_location(level.archi.mapString + " Apothicon Sword - Fill the egg at any statue");
+                return;
+            }
+        }
+        wait(3);
+    }
+}
+
+function egg_watcher_2()
+{
+    self endon("disconnect");
+
+    while(true)
+    {
+        level flag::wait_till("magic_circle_in_progress");
+        level flag::wait_till_clear("magic_circle_in_progress");
+        for(i = 0; i < 4; i++)
+        {
+            if(isdefined(self.sword_quest_2.var_db999762[i]))
+            {
+                archi_core::send_location(level.archi.mapString + " Apothicon Sword - Complete any ritual circle");
+                return;
+            }
+        }
+    }
+}
+
 function hard_checkpoint_trigger()
 {
     level flag::wait_till_clear("ap_prevent_checkpoints");
@@ -285,6 +330,10 @@ function setup_sword_quest()
 
     array::thread_all(level.players, &_player_sword_quest_monitor);
     callback::on_connect(&_player_sword_quest_monitor);
+    array::thread_all(level.players, &egg_watcher_1);
+    callback::on_connect(&egg_watcher_1);
+    array::thread_all(level.players, &egg_watcher_2);
+    callback::on_connect(&egg_watcher_2);
 }
 
 function _track_music_snakeskin()
@@ -349,7 +398,7 @@ function _track_margwa_head()
         level waittill("hash_1a2d33d7");
         counter++;
     }
-    archi_core::send_location(level.archi.mapString + " Unlock the Margwa's Head");
+    archi_core::send_location(level.archi.mapString + " Unlock the Margwa's Head - 6 Margwa Kills");
 }
 
 function _octobomb_upgraded()

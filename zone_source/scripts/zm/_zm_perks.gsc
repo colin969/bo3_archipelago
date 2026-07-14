@@ -468,6 +468,33 @@ function reset_vending_hint_string()
 	perk = self.script_noteworthy;
 	solo = zm_perks::use_solo_revive();
 	
+	if (isdefined(level.archi) && isdefined(level.archi.map_specific_machines) && isdefined(level.archi.mapString))
+	{
+		if (isdefined(level._custom_perks[perk]))
+		{
+			s_custom_perk = level._custom_perks[perk];
+			if (isdefined(level.archi.active_perk_machines[perk]) && level.archi.active_perk_machines[perk] == false)
+			{
+				mapping = level.perk_mappings[perk];
+				if (level.archi.map_specific_machines == 1)
+				{
+					if (isdefined(mapping))
+					{
+						self SetHintString("'" + level.archi.mapString + " " + mapping + "' is required");
+					}
+				}
+				else
+				{
+					if (isdefined(mapping))
+					{
+						self SetHintString("'" + mapping + "' is required");
+					}
+				}
+				return;
+			}
+		}
+	} 
+
 	if( isdefined( level._custom_perks ) )
 	{
 		if ( isdefined( level._custom_perks[ perk ] ) && isdefined( level._custom_perks[ perk ].cost ) && isdefined( level._custom_perks[ perk ].hint_string ) )

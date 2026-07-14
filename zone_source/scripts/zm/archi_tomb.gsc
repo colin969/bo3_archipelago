@@ -336,17 +336,32 @@ function debug_quest()
 
 function watch_generators()
 {
-    level.archi.map_kvals["generator_start_bunker"] = 0;
-    level.archi.map_kvals["generator_tank_trench"] = 0;
-    level.archi.map_kvals["generator_mid_trench"] = 0;
-    level.archi.map_kvals["generator_nml_right"] = 0;
-    level.archi.map_kvals["generator_nml_left"] = 0;
-    level.archi.map_kvals["generator_church"] = 0;
+    gen_names = array(
+        "generator_start_bunker",
+        "generator_tank_trench",
+        "generator_mid_trench",
+        "generator_nml_right",
+        "generator_nml_left",
+        "generator_church"
+    );
+
+    foreach (str_generator_name in gen_names)
+    {
+        level.archi.map_kvals[str_generator_name] = 0;
+    }
 
     while(true)
     {
         level waittill("zone_captured_by_player", zone);
-        level.archi.map_kvals[zone] = 1;
+        foreach (str_generator_name in gen_names)
+        {
+            s_generator = level.zone_capture.zones[str_generator_name];
+            if (isdefined(s_generator) && s_generator.str_zone == zone)
+            {
+                level.archi.map_kvals[str_generator_name] = 1;
+                break;
+            }
+        }
         count = get_captured_zone_count();
         if (count == 1)
         {
@@ -1052,28 +1067,9 @@ function start_generator(str_generator_name)
 {
     // Get the generator struct from the global array
     s_generator = level.zone_capture.zones[str_generator_name];
-    
-    if(isdefined(s_generator) && !s_generator flag::get("player_controlled"))
+    if (isdefined(s_generator) && !s_generator flag::get("player_controlled"))
     {
-        s_generator flag::set("player_controlled");
-        s_generator flag::clear("attacked_by_recapture_zombies");
-        level clientfield::set("zone_capture_hud_generator_" + s_generator.script_int, 1);
-	    level clientfield::set("zone_capture_monolith_crystal_" + s_generator.script_int, 0);
-        if(!isdefined(s_generator.perk_fx_func) || [[s_generator.perk_fx_func]]())
-        {
-            level clientfield::set("zone_capture_perk_machine_smoke_fx_" + s_generator.script_int, 1);
-        }
-        level clientfield::set("state_" + s_generator.script_noteworthy, 1);
-        wait(0.1);
-        level clientfield::set("state_" + s_generator.script_noteworthy, 2);
-        wait(0.1);
-        level clientfield::set("state_" + s_generator.script_noteworthy, 6);
-        update_captured_zone_count();
-        s_generator enable_perk_machines_in_zone();
-        s_generator enable_random_perk_machines_in_zone();
-        s_generator enable_mystery_boxes_in_zone();
-        level flag::set("power_on" + s_generator.script_int);
-        level notify("zone_captured_by_player", s_generator.str_zone);
+        s_generator [[level.ap_map_funcs.start_generator]]();
     }
 }
 
@@ -1394,19 +1390,6 @@ function give_ElementalStaffPart_Lightning_LowerStaff()
     archi_items::give_piece("elemental_staff_lightning", "lower_staff");
 }
 
-function update_captured_zone_count()
-{
-	level.total_capture_zones = get_captured_zone_count();
-	if(level.total_capture_zones == 6)
-	{
-		level flag::set("all_zones_captured");
-	}
-	else
-	{
-		level flag::clear("all_zones_captured");
-	}
-}
-
 function get_captured_zone_count()
 {
 	n_player_controlled_zones = 0;
@@ -1418,263 +1401,4 @@ function get_captured_zone_count()
 		}
 	}
 	return n_player_controlled_zones;
-}
-
-function enable_random_perk_machines_in_zone()
-{
-	if(isdefined(self.perk_machines_random) && isarray(self.perk_machines_random))
-	{
-		foreach(random_perk_machine in self.perk_machines_random)
-		{
-			random_perk_machine.is_locked = 0;
-			if(isdefined(random_perk_machine.current_perk_random_machine) && random_perk_machine.current_perk_random_machine)
-			{
-				random_perk_machine set_perk_random_machine_state("idle");
-				continue;
-			}
-			random_perk_machine set_perk_random_machine_state("away");
-		}
-	}
-}
-
-function enable_mystery_boxes_in_zone()
-{
-	foreach(mystery_box in self.mystery_boxes)
-	{
-		mystery_box.is_locked = 0;
-		mystery_box.zbarrier set_magic_box_zbarrier_state("player_controlled");
-		mystery_box.zbarrier clientfield::set("magicbox_runes", 1);
-	}
-}
-
-function enable_perk_machines_in_zone()
-{
-	if(isdefined(self.perk_machines) && isarray(self.perk_machines))
-	{
-		a_keys = getarraykeys(self.perk_machines);
-		for(i = 0; i < a_keys.size; i++)
-		{
-			level notify(a_keys[i] + "_on");
-		}
-		for(i = 0; i < a_keys.size; i++)
-		{
-			e_perk_trigger = self.perk_machines[a_keys[i]];
-			e_perk_trigger.is_locked = 0;
-			e_perk_trigger zm_perks::reset_vending_hint_string();
-		}
-	}
-}
-
-function set_perk_random_machine_state(state)
-{
-	wait(0.1);
-	for(i = 0; i < self getnumzbarrierpieces(); i++)
-	{
-		self hidezbarrierpiece(i);
-	}
-	self notify("zbarrier_state_change");
-	self [[level.perk_random_machine_state_func]](state);
-}
-
-function set_magic_box_zbarrier_state(state)
-{
-	for(i = 0; i < self getnumzbarrierpieces(); i++)
-	{
-		self hidezbarrierpiece(i);
-	}
-	self notify("zbarrier_state_change");
-	switch(state)
-	{
-		case "away":
-		{
-			self showzbarrierpiece(0);
-			self.state = "away";
-			self.owner.is_locked = 0;
-			break;
-		}
-		case "arriving":
-		{
-			self showzbarrierpiece(1);
-			self thread magic_box_arrives();
-			self.state = "arriving";
-			break;
-		}
-		case "initial":
-		{
-			self showzbarrierpiece(1);
-			self thread zm_magicbox::magic_box_initial();
-			thread zm_unitrigger::register_static_unitrigger(self.owner.unitrigger_stub, &zm_magicbox::magicbox_unitrigger_think);
-			self.state = "close";
-			break;
-		}
-		case "open":
-		{
-			self showzbarrierpiece(2);
-			self thread magic_box_opens();
-			self.state = "open";
-			break;
-		}
-		case "close":
-		{
-			self showzbarrierpiece(2);
-			self thread magic_box_closes();
-			self.state = "close";
-			break;
-		}
-		case "leaving":
-		{
-			self showzbarrierpiece(1);
-			self thread magic_box_leaves();
-			self.state = "leaving";
-			self.owner.is_locked = 0;
-			break;
-		}
-		case "zombie_controlled":
-		{
-			if(isdefined(level.zombie_vars["zombie_powerup_fire_sale_on"]) && level.zombie_vars["zombie_powerup_fire_sale_on"])
-			{
-				self showzbarrierpiece(2);
-				self clientfield::set("magicbox_amb_fx", 0);
-			}
-			if(self.state == "initial" || self.state == "close")
-			{
-				self showzbarrierpiece(1);
-				self clientfield::set("magicbox_amb_fx", 1);
-			}
-			else
-			{
-				if(self.state == "away")
-				{
-					self showzbarrierpiece(0);
-					self clientfield::set("magicbox_amb_fx", 0);
-				}
-				else if(self.state == "open" || self.state == "leaving")
-				{
-					self showzbarrierpiece(2);
-					self clientfield::set("magicbox_amb_fx", 0);
-				}
-			}
-			break;
-		}
-		case "player_controlled":
-		{
-			if(self.state == "arriving" || self.state == "close")
-			{
-				self showzbarrierpiece(2);
-				self clientfield::set("magicbox_amb_fx", 2);
-				break;
-			}
-			if(self.state == "away")
-			{
-				self showzbarrierpiece(0);
-				self clientfield::set("magicbox_amb_fx", 3);
-			}
-			break;
-		}
-		default:
-		{
-			if(isdefined(level.custom_magicbox_state_handler))
-			{
-				self [[level.custom_magicbox_state_handler]](state);
-			}
-			break;
-		}
-	}
-}
-
-function magic_box_opens()
-{
-	self clientfield::set("magicbox_open_fx", 1);
-	self setzbarrierpiecestate(2, "opening");
-	self playsound("zmb_hellbox_open");
-	while(self getzbarrierpiecestate(2) == "opening")
-	{
-		wait(0.1);
-	}
-	self notify("opened");
-	self thread magic_box_open_idle();
-}
-
-function magic_box_closes()
-{
-	self notify("stop_open_idle");
-	self hidezbarrierpiece(5);
-	self showzbarrierpiece(2);
-	self setzbarrierpiecestate(2, "closing");
-	self playsound("zmb_hellbox_close");
-	self clientfield::set("magicbox_open_fx", 0);
-	while(self getzbarrierpiecestate(2) == "closing")
-	{
-		wait(0.1);
-	}
-	self notify("closed");
-}
-
-function magic_box_leaves()
-{
-	self notify("stop_open_idle");
-	self clientfield::set("magicbox_leaving_fx", 1);
-	self clientfield::set("magicbox_open_fx", 0);
-	self setzbarrierpiecestate(1, "closing");
-	self playsound("zmb_hellbox_rise");
-	while(self getzbarrierpiecestate(1) == "closing")
-	{
-		wait(0.1);
-	}
-	self notify("left");
-	s_zone_capture_area = level.zone_capture.zones[self.zone_capture_area];
-	if(isdefined(s_zone_capture_area))
-	{
-		if(s_zone_capture_area flag::get("player_controlled"))
-		{
-			self clientfield::set("magicbox_amb_fx", 3);
-		}
-		else
-		{
-			self clientfield::set("magicbox_amb_fx", 0);
-		}
-	}
-	if(isdefined(level.dig_magic_box_moved) && !level.dig_magic_box_moved)
-	{
-		level.dig_magic_box_moved = 1;
-	}
-}
-
-function magic_box_arrives()
-{
-	self clientfield::set("magicbox_leaving_fx", 0);
-	self setzbarrierpiecestate(1, "opening");
-	while(self getzbarrierpiecestate(1) == "opening")
-	{
-		wait(0.05);
-	}
-	self notify("arrived");
-	self.state = "close";
-	s_zone_capture_area = level.zone_capture.zones[self.zone_capture_area];
-	if(isdefined(s_zone_capture_area))
-	{
-		if(!s_zone_capture_area flag::get("player_controlled"))
-		{
-			self clientfield::set("magicbox_amb_fx", 1);
-		}
-		else
-		{
-			self clientfield::set("magicbox_amb_fx", 2);
-		}
-	}
-}
-
-function magic_box_open_idle()
-{
-	self endon("stop_open_idle");
-	self hidezbarrierpiece(2);
-	self showzbarrierpiece(5);
-	while(true)
-	{
-		self setzbarrierpiecestate(5, "opening");
-		while(self getzbarrierpiecestate(5) != "open")
-		{
-			wait(0.05);
-		}
-	}
 }

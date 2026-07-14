@@ -195,28 +195,41 @@ function give_CheckpointToken()
     level.archi.checkpoint_tokens++;
 }
 
-//General/Universal gives
-function give_1500Points()
+function give_Points(score)
 {
     foreach (player in getPlayers())
     {
-        player zm_score::add_to_player_score(1500);
+        player zm_score::add_to_player_score(score);
+    }
+}
+
+//General/Universal gives
+function give_1500Points()
+{
+    if (level.players.size >= 3)
+    {
+        give_Points(1000);
+    }
+    else
+    {
+        give_Points(1500);
     }
 }
 
 function give_50000Points()
 {
-    foreach (player in getPlayers())
-    {
-        player zm_score::add_to_player_score(50000);
-    }
+    give_Points(50000);
 }
 
 function give_200Points()
 {
-    foreach (player in getPlayers())
+    if (level.players.size >= 3)
     {
-        player zm_score::add_to_player_score(200);
+        give_Points(150);
+    }
+    else
+    {
+        give_Points(200);
     }
 }
 
