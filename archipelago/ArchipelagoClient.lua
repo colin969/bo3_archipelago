@@ -477,7 +477,7 @@ Archi.FromGSC = function (model)
           Archipelago.CheckLocation(locationID)
         end
       else
-        Archi.LogMessage("Failed to convert location name to id - " + location)
+        Archi.LogMessage("Failed to convert location name to id - " .. location)
       end
 
       Engine.SetDvar( "ARCHIPELAGO_LOCATION_SEND", "NONE" )

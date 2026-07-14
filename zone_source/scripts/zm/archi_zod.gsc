@@ -392,13 +392,8 @@ function _player_sword_quest_monitor()
 
 function _track_margwa_head()
 {
-    counter = 0;
-    while (counter < 6)
-    {
-        level waittill("hash_1a2d33d7");
-        counter++;
-    }
-    archi_core::send_location(level.archi.mapString + " Unlock the Margwa's Head - 6 Margwa Kills");
+    level waittill("hash_e87ace62");
+    archi_core::send_location(level.archi.mapString + " Unlock the Margwa's Head");
 }
 
 function _octobomb_upgraded()
