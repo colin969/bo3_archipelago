@@ -724,8 +724,6 @@ LocationToID["(Shadows of Evil) Music EE - Snakeskin Boots"] = 3400
 IDToLocation[3400] = "(Shadows of Evil) Music EE - Snakeskin Boots"
 LocationToID["(Shadows of Evil) Music EE - Cold Hard Cash"] = 3401
 IDToLocation[3401] = "(Shadows of Evil) Music EE - Cold Hard Cash"
-LocationToID["(Shadows of Evil) Unlock the Margwa's Head"] = 3511
-IDToLocation[3511] = "(Shadows of Evil) Unlock the Margwa's Head"
 LocationToID["(Shadows of Evil) Upgrade the Li'l Arnies"] = 3512
 IDToLocation[3512] = "(Shadows of Evil) Upgrade the Li'l Arnies"
 LocationToID["(Shadows of Evil) Main Quest - Magician's Ritual"] = 3100
@@ -748,6 +746,8 @@ LocationToID["(Shadows of Evil) Apothicon Sword - Collect your upgraded Sword"] 
 IDToLocation[3112] = "(Shadows of Evil) Apothicon Sword - Collect your upgraded Sword"
 LocationToID["(Shadows of Evil) Apothicon Sword - Complete any ritual circle"] = 3121
 IDToLocation[3121] = "(Shadows of Evil) Apothicon Sword - Complete any ritual circle"
+LocationToID["(Shadows of Evil) Unlock the Margwa's Head"] = 3511
+IDToLocation[3511] = "(Shadows of Evil) Unlock the Margwa's Head"
 LocationToID["(Shadows of Evil) Main Easter Egg - Find Nero's Book"] = 3200
 IDToLocation[3200] = "(Shadows of Evil) Main Easter Egg - Find Nero's Book"
 LocationToID["(Shadows of Evil) Main Easter Egg - Defeat the Shadowman"] = 3201
