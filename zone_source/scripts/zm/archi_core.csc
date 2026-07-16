@@ -39,6 +39,16 @@ function __init__()
             break;
     }
 
+    // Fix maps without pap
+    switch(mapName)
+    {
+        case "zm_prototype":
+        	clientfield::register("zbarrier", "pap_working_FX", 5000, 1, "int", &pap_working_fx_handler_stub, 0, 0);
+            break;
+        default:
+            break;
+    }
+
     level._ap_weapons_vanilla = 1;
     level._ap_weapons_special = 1;
     level._ap_weapons_expanded = 0;
@@ -62,6 +72,9 @@ function __init__()
         case "zm_factory":
             level._ap_weapons_table = "gamedata/weapons/zm/zm_factory_weapons.csv";
             break;
+        case "zm_prototype":
+            level._ap_weapons_table = "gamedata/weapons/zm/zm_prototype_weapons.csv";
+            break;
         case "zm_theater":
             level._ap_weapons_table = "gamedata/weapons/zm/zm_theater_weapons.csv";
             break;
@@ -81,6 +94,11 @@ function __init__()
 
     clientfield::register("world", "ap_mystery_box_changes", 1, 31, "int", &update_mystery_box, 0, 0);
     clientfield::register("world", "ap_box_contents", 1, 3, "int", &update_mystery_box_settings, 0, 0);
+}
+
+function pap_working_fx_handler_stub(localclientnum, oldval, newval, bnewent, binitialsnap, fieldname, bwastimejump)
+{
+    
 }
 
 function custom_load_csv(table)

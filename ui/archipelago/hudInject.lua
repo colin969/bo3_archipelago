@@ -1,6 +1,7 @@
 require( "ui.archipelago.ingame.widgets.ArchipelagoDisplay")
 require( "ui.archipelago.ingame.widgets.ArchipelagoDisplayClient")
 require( "ui.archipelago.ingame.widgets.ArchipelagoMessageContainer")
+require( "ui.archipelago.ingame.widgets.ArchipelagoLog")
 require( "ui.archipelago.ingame.widgets.ArchipelagoLoadSpinner")
 
 local hudList = {
@@ -28,6 +29,9 @@ for _, hudName in ipairs(hudList) do
             local ArchiDisp
             if CoD.isHost() then
                 ArchiDisp = CoD.ArchipelagoDisplay.new(self, controller)
+                -- Live log from AP printjson messages
+                local ArchiLogs = CoD.ArchipelagoLog.new(self, controller)
+                self:addElement(ArchiLogs)
             else
                 ArchiDisp = CoD.ArchipelagoDisplayClient.new(self, controller)
             end

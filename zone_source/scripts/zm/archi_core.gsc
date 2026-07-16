@@ -29,6 +29,7 @@
 #using scripts\zm\archi_genesis;
 #using scripts\zm\archi_zod;
 #using scripts\zm\archi_factory;
+#using scripts\zm\archi_prototype;
 #using scripts\zm\archi_theater;
 #using scripts\zm\archi_moon;
 #using scripts\zm\archi_tomb;
@@ -116,6 +117,7 @@ function __init__()
     SetDvar("ARCHIPELAGO_LUA_CLEAR_DATA", "");
     SetDvar("ARCHIPELAGO_CLEAR_DATA_CHECKPOINTS", "NONE");
     //Lua Log Passing Dvars
+    SetDvar("ARCHIPELAGO_LOG_BOLD_MESSAGE", "NONE");
     SetDvar("ARCHIPELAGO_LOG_MESSAGE", "NONE");
     SetDvar("ARCHIPELAGO_LOAD_READY", 0);
     SetDvar("ARCHIPELAGO_SEED", "");
@@ -127,6 +129,7 @@ function __init__()
 
     //Server-wide thread to print Log messages from Lua/LUI
     level thread log_from_lua();
+    level thread bold_log_from_lua();
 
     level flag::init("ap_dll_started");
     level flag::init("ap_loaded");
@@ -139,11 +142,6 @@ function __init__()
     // callback::on_connect( &force_player_spawn );
     callback::on_spawned( &watch_max_ammo );
     callback::on_spawned( &watch_carpenter );
-
-    //Clientfields (Mostly Tracker stuff)
-    //TODO Put this in a library?
-    //TODO Figure out if I need to set these to 0 if maps are swapped down the line
-
 }
 
 function __main__()
@@ -684,6 +682,36 @@ function game_start()
 
     // === Zombie Chronicles ===
 
+    if (mapName == "zm_prototype")
+    {
+        level.archi.mapString = ARCHIPELAGO_MAP_NACHT_DER_UNTOTEN;
+        level.archi.map_key_item = "Map Unlock - Nacht der Untoten";
+
+        archi_items::RegisterMapWeapons(mapName);
+
+        level thread archi_prototype::setup_locations();
+
+        // Machines
+        archi_items::RegisterPerk("Mule Kick",&archi_items::give_MuleKick,PERK_ADDITIONAL_PRIMARY_WEAPON);
+
+        // Wunderfizz
+        archi_items::RegisterPerk("Juggernog",&archi_items::give_Juggernog,PERK_JUGGERNOG);
+        archi_items::RegisterPerk("Quick Revive",&archi_items::give_QuickRevive,PERK_QUICK_REVIVE);
+        archi_items::RegisterPerk("Speed Cola",&archi_items::give_SpeedCola,PERK_SLEIGHT_OF_HAND);
+        archi_items::RegisterPerk("Double Tap",&archi_items::give_DoubleTap,PERK_DOUBLETAP2);
+        archi_items::RegisterPerk("Widow's Wine",&archi_items::give_WidowsWine,PERK_WIDOWS_WINE);
+        archi_items::RegisterPerk("Deadshot Daiquiri",&archi_items::give_DeadShot,PERK_DEAD_SHOT);
+        archi_items::RegisterPerk("Stamin-up",&archi_items::give_StaminUp,PERK_STAMINUP);
+        archi_items::RegisterPerk("PhD Flopper",&archi_items::give_PhDFlopper,PERK_PHDFLOPPER);
+
+        spawn_shop((-83, 986.4, 1.1), (0, -60.6, 0));
+
+        level.archi.save_state_manager = &archi_prototype::save_state_manager;
+        level.archi.save_player_data = &archi_prototype::save_player_data;
+        level.archi.load_state_manager = &archi_prototype::load_state;
+        level.archi.restore_player_data = &archi_prototype::restore_player_data;
+    }
+
     if (mapName == "zm_theater")
     {
         level.archi.mapString = ARCHIPELAGO_MAP_KINO_DER_TOTEN;
@@ -1176,6 +1204,26 @@ function log_from_lua()
             
             iPrintln(message);
             SetDvar("ARCHIPELAGO_LOG_MESSAGE","NONE");
+            
+        }
+        wait (0.2);
+    }
+}
+
+function bold_log_from_lua()
+{
+    level endon("end_game");
+	level endon("end_round_think");
+    level waittill( "initial_blackscreen_passed" );
+
+    while(true)
+    {
+        message = GetDvarString("ARCHIPELAGO_LOG_BOLD_MESSAGE");
+        if ( message != "NONE" )
+        {
+            
+            IPrintLnBold(message);
+            SetDvar("ARCHIPELAGO_LOG_BOLD_MESSAGE","NONE");
             
         }
         wait (0.2);

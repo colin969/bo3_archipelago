@@ -1,20 +1,13 @@
 # Black Ops 3 - Zombies Archipelago
 
 ## Setup Instructions
-1. Make sure you've downgraded otherwise this mod will not work, see Downgrade Instructions below
-2. Download `BO3APMod.zip` from Releases
-3. Unpack it into the `/mods` folder inside your Black Ops 3 game folder. E.G `Call of Duty Black Ops III/mods/bo3_archipelago`. You may need to create the mods folder.
-4. Install `cod-bo3.apworld` from Releases
-5. Generate a yaml via the Options Builder in the Archipelago launcher
+1. Download `BO3APMod-CurrentPatch.zip` from Releases
+2. Unpack it into the `/mods` folder inside your Black Ops 3 game folder. E.G `Call of Duty Black Ops III/mods/bo3_archipelago`. You may need to create the mods folder.
+3. Install `cod-bo3.apworld` from Releases
+4. Generate a yaml via the Options Builder in the Archipelago launcher
 5. Generate and host a game with Archipelago per normal
 
 **It is heavily recommend you use t7patch**
-
-## Downgrade Instructions
-1. Open `steam://open/console` in your browser to open Steam's console
-2. Run `download_depot 311210 311211 9084453472036406216` and wait for it to finish
-3. Go to the folder it says it downloaded to, and copy the game executable into your main game folder
-![Downgrade Instructions Visual](/assets/DowngradeInstructions.png)
 
 ## Usage Instructions
 1. Load the mod in the mod menu
@@ -33,11 +26,12 @@
 - Zetsubou No Shima
 - Gorod Krovi
 - Revelations
+- Nacht der Untoten
 - Kino der Toten
 - Moon
+- Origins
 
 **Unstable**
-- Origins
 - (Workshop) Wanted 
 
 **Fancy notifications in the top left when you send checks or receive items**

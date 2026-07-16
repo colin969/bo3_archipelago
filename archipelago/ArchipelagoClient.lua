@@ -11,6 +11,7 @@ local locations = require("Archipelago.Locations")
 local attachment_rando = require("Archipelago.AttachmentRando")
 
 local notifyFunc = nil
+local logFunc = nil
 local goalCondInitialized = false
 local goalItems = {}
 local goalItemsRequired = 0
@@ -21,6 +22,7 @@ local clientInitDone = false
 --
 ItemQueue = List.new()
 LogQueue = List.new()
+LogBoldQueue = List.new()
 LocationQueue = List.new()
 Archi = {}
 Archi.Debug = true
@@ -503,13 +505,23 @@ end
 
 Archi.LogMessage = function (message)
   if message then
-    List.pushright(LogQueue,message)
+    if logFunc then
+      logFunc(message)
+    end
   end
 end
 
 Archi.LogDebugMessage = function (message)
   if Archi.Debug and message then
-    List.pushright(LogQueue,"Debug: "..message)
+    if logFunc then
+      logFunc("Debug: " .. message)
+    end
+  end
+end
+
+Archi.LogBoldMessage = function (message)
+  if message then
+    List.pushright(LogBoldQueue,message)
   end
 end
 
@@ -655,13 +667,27 @@ Archi.UnregisterNotifyFunc = function()
   notifyFunc = nil
 end
 
+Archi.RegisterLogFunc = function(func)
+  logFunc = func
+end
+
+Archi.UnregisterLogFunc = function()
+  logFunc = nil
+end
+
 Archi.LogMessageLoop = function()
   local UIRootFull = LUI.roots.UIRootFull;
 	UIRootFull.HUDRefreshTimer = LUI.UITimer.newElementTimer(400, false, function()
     local item = Engine.DvarString(nil,"ARCHIPELAGO_LOG_MESSAGE")
-    if (not List.isEmpty(LogQueue)) and (item == "NONE") then --if we are free to give an item, and there is one to give
+    if (not List.isEmpty(LogQueue)) and (item == "NONE") then
       local toSend = List.popleft(LogQueue)
       Engine.SetDvar( "ARCHIPELAGO_LOG_MESSAGE", toSend )
+    end
+
+    local item = Engine.DvarString(nil,"ARCHIPELAGO_LOG_BOLD_MESSAGE")
+    if (not List.isEmpty(LogBoldQueue)) and (item == "NONE") then
+      local toSend = List.popleft(LogBoldQueue)
+      Engine.SetDvar( "ARCHIPELAGO_LOG_BOLD_MESSAGE", toSend )
     end
 	end);
 	UIRootFull:addElement(UIRootFull.HUDRefreshTimer);
@@ -687,6 +713,7 @@ Archi.SlotConnected = function ()
     Archipelago.GetMissingLocations()
   end
   Archipelago.GetCheckedLocations()
+  List.pushright(LogBoldQueue,"Archipelago Connected")
 end
 
 Archi.KeepConnected = function ()

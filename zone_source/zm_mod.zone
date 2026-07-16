@@ -20,6 +20,7 @@ scriptparsetree,scripts/zm/archi_island.gsc
 scriptparsetree,scripts/zm/archi_stalingrad.gsc
 scriptparsetree,scripts/zm/archi_genesis.gsc
 scriptparsetree,scripts/zm/archi_factory.gsc
+scriptparsetree,scripts/zm/archi_prototype.gsc
 scriptparsetree,scripts/zm/archi_theater.gsc
 scriptparsetree,scripts/zm/archi_moon.gsc
 scriptparsetree,scripts/zm/archi_tomb.gsc
@@ -53,6 +54,7 @@ rawfile,ui/archipelago/ingame/widgets/ArchipelagoDisplayClient.lua
 
 //Archipelago Messages Lua Display
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoMessageContainer.lua
+rawfile,ui/archipelago/ingame/widgets/ArchipelagoLog.lua
 
 rawfile,ui/archipelago/ingame/widgets/ArchipelagoLoadSpinner.lua
 

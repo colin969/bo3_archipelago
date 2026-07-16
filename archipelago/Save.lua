@@ -540,6 +540,39 @@ function player_restore_zm_factory(xuid, playerData)
   restore_player_loadout(xuid, playerData)
 end
 
+-- Nacht der Untoten
+function map_save_zm_prototype(mapData)
+  Archi.LogMessage("Saving map data for The Giant")
+  save_spent_tokens(mapData)
+  save_zombie_count(mapData)
+  save_round_number(mapData)
+  save_power_on(mapData)
+  save_doors_and_debris(mapData)
+
+  save_players(mapData, player_save_zm_factory)
+end
+
+function player_save_zm_prototype(xuid, playerData)
+  save_player_score(xuid, playerData)
+  save_player_perks(xuid, playerData)
+  save_player_loadout(xuid, playerData)
+end
+
+function map_restore_zm_prototype(mapData)
+  Archi.LogMessage("Restoring map data for The Giant")
+  restore_spent_tokens(mapData)
+  restore_zombie_count(mapData)
+  restore_round_number(mapData)
+  restore_power_on(mapData)
+  restore_doors_and_debris(mapData)
+end
+
+function player_restore_zm_prototype(xuid, playerData)
+  restore_player_score(xuid, playerData)
+  restore_player_perks(xuid, playerData)
+  restore_player_loadout(xuid, playerData)
+end
+
 -- Kino der Toten
 function map_save_zm_theater(mapData)
   Archi.LogMessage("Saving map data for Kino der Toten")
@@ -1387,6 +1420,7 @@ map_saves = {
   zm_westernz = map_save_zm_westernz,
   zm_moon = map_save_zm_moon,
   zm_tomb = map_save_zm_tomb,
+  zm_prototype = map_save_zm_prototype,
 }
 
 player_saves = {
@@ -1400,6 +1434,7 @@ player_saves = {
   zm_westernz = player_save_zm_westernz,
   zm_moon = player_save_zm_moon,
   zm_tomb = player_save_zm_tomb,
+  zm_prototype = player_save_zm_prototype,
 }
 
 map_restores = {
@@ -1413,6 +1448,7 @@ map_restores = {
   zm_westernz = map_restore_zm_westernz,
   zm_moon = map_restore_zm_moon,
   zm_tomb = map_restore_zm_tomb,
+  zm_prototype = map_restore_zm_prototype,
 }
 
 player_restores = {
@@ -1426,6 +1462,7 @@ player_restores = {
   zm_westernz = player_restore_zm_westernz,
   zm_moon = player_restore_zm_moon,
   zm_tomb = player_restore_zm_tomb,
+  zm_prototype = player_restore_zm_prototype,
 }
 
 return {
