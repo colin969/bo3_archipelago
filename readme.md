@@ -1,5 +1,7 @@
 # Black Ops 3 - Zombies Archipelago
 
+**Discord link:** https://discord.gg/Nu4X9gmGDR
+
 ## Setup Instructions
 1. Download `BO3APMod-CurrentPatch.zip` from Releases
 2. Unpack it into the `/mods` folder inside your Black Ops 3 game folder. E.G `Call of Duty Black Ops III/mods/bo3_archipelago`. You may need to create the mods folder.
