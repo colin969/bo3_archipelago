@@ -16,8 +16,20 @@ local savedPassword
 local savedUsePassword
 local savedEnableDeathlink
 
-UpdateConnectionStatus = function(update)
-	Engine.SetModelValue(Engine.GetModel(Engine.GetModel( Engine.GetGlobalModel(), "archipelago" ), "connectionValidated"),"Connection: "..update)
+UpdateConnectionStatus = function(update, startingMaps)
+    local displayText = "Connection: " .. update
+
+    if update == "Validated" and startingMaps and #startingMaps > 0 then
+        displayText = displayText .. "\n\nStarting Maps:"
+        for _, mapName in ipairs(startingMaps) do
+            displayText = displayText .. "\n  " .. mapName
+        end
+    end
+
+    Engine.SetModelValue(
+        Engine.GetModel(Engine.GetModel(Engine.GetGlobalModel(), "archipelago"), "connectionValidated"),
+        displayText
+    )
 end
 
 local ConnectArchi = function(savedServer, savedSlot, savedPassword, savedUsePassword)

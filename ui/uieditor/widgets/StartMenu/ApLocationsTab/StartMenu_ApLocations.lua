@@ -116,6 +116,13 @@ CoD.StartMenu_ApLocations_Origins.new = function( menu, controller )
 	return self
 end
 
+CoD.StartMenu_ApLocations_Nacht = InheritFrom( CoD.StartMenu_ApLocations )
+CoD.StartMenu_ApLocations_Nacht.new = function( menu, controller )
+	self = CoD.StartMenu_ApLocations.new( menu, controller )
+	self.itemList:setDataSource( "StartMenu_ApLocations_Nacht" )
+	return self
+end
+
 CoD.StartMenu_ApLocations_Wanted = InheritFrom( CoD.StartMenu_ApLocations )
 CoD.StartMenu_ApLocations_Wanted.new = function( menu, controller )
 	self = CoD.StartMenu_ApLocations.new( menu, controller )

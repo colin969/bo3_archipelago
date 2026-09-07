@@ -52,5 +52,8 @@ DataSources.StartMenu_ApLocations_Moon = createLocationDataSource(
 DataSources.StartMenu_ApLocations_Origins = createLocationDataSource(
     "StartMenu_ApLocations_Origins", "(Origins) ", 13100, 13999)
 
+DataSources.StartMenu_ApLocations_Nacht = createLocationDataSource(
+    "StartMenu_ApLocations_Nacht", "(Nacht der Untoten) ", 14100, 14999)
+
 DataSources.StartMenu_ApLocations_Wanted = createLocationDataSource(
     "StartMenu_ApLocations_Wanted", "(Wanted) ", 20100, 20999)

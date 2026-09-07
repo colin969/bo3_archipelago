@@ -62,6 +62,12 @@ DataSources.ApModSettingsLocationsTabs = ListHelper_SetupDataSource( "ApModSetti
         } )
 
 		table.insert( tabList, {
+            models = { tabName = "Nacht der Untoten", tabWidget = "CoD.StartMenu_ApLocations_Nacht",
+			 	tabIcon = "" },
+            properties = { tabId = "gameOptions" }
+        } )
+
+		table.insert( tabList, {
             models = { tabName = "Kino der Toten", tabWidget = "CoD.StartMenu_ApLocations_KinoDerToten",
 			 	tabIcon = "" },
             properties = { tabId = "gameOptions" }
