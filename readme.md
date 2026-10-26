@@ -2,11 +2,6 @@
 
 **Discord link:** https://discord.gg/Nu4X9gmGDR
 
-# Downgrade Instructions (Feb 2026 Patch)
-- Win + R to open the Run dialog, enter `steam://open/console`
-- The steam console will open. Enter in `download_depot 311210 311211 7651791086710252932`
-- Open the folder the steam console says it download the file to. Copy `BlackOps3.exe` from this location, into your real game folder.
-
 ## Setup Instructions
 1. Download `BO3APMod-CurrentPatch.zip` from Releases
 2. Unpack it into the `/mods` folder inside your Black Ops 3 game folder. E.G `Call of Duty Black Ops III/mods/bo3_archipelago`. You may need to create the mods folder.
@@ -14,7 +9,7 @@
 4. Generate a yaml via the Options Builder in the Archipelago launcher
 5. Generate and host a game with Archipelago per normal
 
-**It is heavily recommend you use t7patch**
+**It is heavily recommend you use the scroptss t7patch**
 
 ## Usage Instructions
 1. Load the mod in the mod menu
